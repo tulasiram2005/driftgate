@@ -1,0 +1,112 @@
+/* Ink and Signal: all color values live here. Text tokens are opaque. */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c0e12;
+  --surface-1: #12151b;
+  --surface-2: #181c24;
+  --surface-3: #202530;
+  --border: #2a3040;
+  --control-border: #737d91;
+  --text: #ece9e1;
+  --text-dim: #a3a8b5;
+  --accent: #d7ff3f;
+  --on-accent: #14161b;
+  --primary: #d7ff3f;
+  --on-primary: #14161b;
+  --focus: #d7ff3f;
+  --pass: #3ddc97;
+  --fail: #ff5a3c;
+  --warn: #ffb224;
+  --info: #6fb7ff;
+  --flaky: #c792ff;
+  --pass-bg: #142a22;
+  --fail-bg: #30201e;
+  --warn-bg: #2d271b;
+  --info-bg: #1b2733;
+  --flaky-bg: #292235;
+  --shadow-color: #000000;
+  --scrim: #0c0e12cc;
+  --space-unit: 4px;
+  --radius-control: 6px;
+  --radius-dialog: 12px;
+  --type-xs: 12px;
+  --type-sm: 14px;
+  --type-base: 16px;
+  --type-lg: 20px;
+  --type-xl: 28px;
+  --type-display: 40px;
+  --type-number: 64px;
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring-stiffness: 380;
+  --spring-damping: 32;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f2ea;
+  --surface-1: #fbf9f4;
+  --surface-2: #efede6;
+  --surface-3: #e5e3dc;
+  --border: #cfcdc5;
+  --control-border: #77766e;
+  --text: #14161b;
+  --text-dim: #535965;
+  --accent: #d7ff3f;
+  --on-accent: #14161b;
+  --primary: #14161b;
+  --on-primary: #fbf9f4;
+  --focus: #526600;
+  --pass: #086141;
+  --fail: #af2b17;
+  --warn: #744a0c;
+  --info: #245880;
+  --flaky: #69418d;
+  --pass-bg: #e0f0e7;
+  --fail-bg: #f8e4dd;
+  --warn-bg: #f4e9cd;
+  --info-bg: #e1edf5;
+  --flaky-bg: #eee4f5;
+  --shadow-color: #14161b;
+  --scrim: #14161b80;
+}
+
+/* Tailwind v4 theme extension. Remove default palette and font/size/radius scales. */
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --spacing: 4px;
+  --radius-control: 6px;
+  --radius-dialog: 12px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 28px;
+  --text-display: 40px;
+  --text-number: 64px;
+}
+
+@theme inline {
+  --color-canvas: var(--bg);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+  --color-muted: var(--text-dim);
+  --color-signal: var(--accent);
+  --color-pass: var(--pass);
+  --color-fail: var(--fail);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
+  --color-flaky: var(--flaky);
+  --font-ui: var(--font-hanken);
+  --font-display: var(--font-instrument);
+  --font-data: var(--font-jetbrains);
+}

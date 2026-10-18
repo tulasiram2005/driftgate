@@ -1,0 +1,65 @@
+name: Quality Gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+  TURBO_TELEMETRY_DISABLED: "1"
+  HUSKY: "0"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint and formatting
+        run: pnpm lint
+      - name: Unit tests and coverage
+        run: pnpm test
+      - name: Production build
+        run: pnpm build
+      - name: Install browser engines
+        run: pnpm --filter ./apps/web exec playwright install --with-deps chromium firefox webkit
+      - name: Browser and accessibility checks
+        run: pnpm test:e2e
+      - name: Dependency audit
+        run: pnpm audit --audit-level=high
+      - name: Preserve test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-evidence
+          path: |
+            coverage/
+            apps/web/coverage/
+            apps/web/playwright-report/
+            apps/web/test-results/
+          if-no-files-found: warn
+          retention-days: 14

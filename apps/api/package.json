@@ -1,0 +1,13 @@
+{
+  "name": "@driftgate/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Phase 0 tooling scaffold. API implementation starts in phase 2.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  }
+}

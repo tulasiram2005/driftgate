@@ -1,0 +1,94 @@
+ROLE
+You are a principal full-stack engineer, QA architect and senior product designer. Build "DriftGate", a production-grade release sign-off and QA platform for digital-first fashion (D2C) storefronts. This is a portfolio project for a QA internship, so engineering quality, test evidence and polish matter more than feature count.
+
+MISSION
+QA engineers manage test cases, run sanity and regression suites across browsers and devices, detect environment drift (price, discount, stock, images, SEO tags, coupons) across Staging, UAT, Pre-Production and Production, log defects to Jira with evidence, and give a named, tamper-evident sign-off for each environment gate.
+
+HARD RULES
+1. Honesty: never present fake data as real. Demo data is labelled "demo". Every metric (detection rate, run time, coverage) must come from a real run and be saved to docs/METRICS.md with the command that produced it. Do not invent numbers.
+2. Scope and ethics: the tool may only test hosts on an allowlist. The default allowlist is the fictional demo store. Add SSRF protection (block private, loopback and link-local IP ranges, resolve DNS before fetching, redirects limited and re-validated), rate limiting and robots.txt respect.
+3. Do not use the em dash character anywhere (code, UI copy, docs).
+4. Work in the phases below. After each phase: run all checks, update docs, commit (Conventional Commits), then stop with a short summary and wait for me to say "continue".
+5. Free tiers only. Ask before using anything paid.
+6. Read AGENTS.md at the start of every session and keep it current.
+
+STACK (do not substitute)
+- Monorepo: pnpm workspaces + Turborepo, TypeScript strict everywhere.
+- apps/web: Next.js (App Router), Tailwind CSS with custom design tokens only, motion (Framer Motion), TanStack Query and Table, Recharts, Zod, React Hook Form.
+- apps/api: Node.js, Express, Zod validation, Prisma, PostgreSQL (Neon), pino logging with secret redaction, OpenAPI generated from Zod schemas with Swagger UI.
+- Auth: email and password (argon2), JWT access and refresh tokens, roles QA, Developer, Approver, Admin (RBAC), ownership checks.
+- Queue: BullMQ on Upstash Redis. Realtime: Server-Sent Events.
+- apps/runner: Playwright (Chromium, Firefox, WebKit, mobile emulation), axe-core, Lighthouse. Production execution runs inside GitHub Actions via workflow_dispatch (free for public repos) and posts HMAC-signed results back; a Docker Compose local runner is the fallback.
+- apps/demo-store ("Threadline", fictional): Next.js storefront plus small API and its own Postgres, deployed as four environments (staging, uat, preprod, prod) with a feature-flag "bug bank".
+- Storage for evidence: S3-compatible bucket (R2 or Supabase).
+- Quality: Vitest, Supertest, Playwright E2E for DriftGate itself, ESLint, Prettier, Husky, lint-staged, GitHub Actions CI, Dependabot, CodeQL.
+- Deploy: Vercel (web, demo-store), Render (api), Neon (db), Upstash (redis). Docker for api and runner.
+
+FEATURES
+1. Test case manager: requirements, scenarios, test cases (steps, expected result, priority, tags, type manual or automated), versions, CSV import and export (TestRail-style columns), requirement-to-test coverage matrix (RTM).
+2. Manual execution: run a suite per environment and per device or browser, mark pass, fail, blocked, skipped, attach evidence (screenshots, notes), keyboard-first UI.
+3. Automated sanity and regression suites (Playwright): smoke, sanity and regression tags; device matrix; screenshots, video and traces saved as evidence; automatic retry for flaky detection (flaky label with history).
+4. Environment drift engine: collect product data via API and rendered pages (price, discount percent, badge, stock, size availability, image HTTP status and dimensions, title, canonical, JSON-LD product schema, product count, broken links). Diff environments pairwise, normalise currency and formatting, support an "expected differences" allowlist, assign severity (price mismatch S1, missing size S2, missing image S3, SEO tag S3).
+5. Visual regression: baselines per environment, browser and viewport, pixel diff with ignore-regions, reviewer approve or reject.
+6. API and SQL checks: contract checks (JSON schema) and read-only SQL assertions against a read-only DB role (for example no negative stock, order total equals sum of line items, no orphan orders).
+7. Accessibility and performance gates: axe-core violations and Lighthouse budgets on key pages.
+8. Defect management: auto-create a defect from a failed result with steps, expected vs actual, environment, device, severity, evidence links; workflow New, Open, In Progress, Fixed, Retest, Closed, Reopened; Jira Cloud integration (create issue, link back, status sync by polling); defect aging and MTTR.
+9. Release gates and sign-off: pipeline Staging, UAT, Pre-Prod, Production. Each gate has exit criteria and a transparent readiness score (docs/SCORING.md): critical test pass rate 40%, open S1 or S2 defects 25%, unresolved drift 15%, visual diffs reviewed 10%, accessibility and performance budgets 10%. Any open S1 is a hard block. Sign-off requires a named Approver, comment, timestamp and is stored in a hash-chained audit log (each record includes the SHA-256 of the previous one) with a "verify chain" endpoint and screen. Export a PDF release report.
+10. Notifications: Slack or email summary to Engineering Manager and Product Manager roles after each gate decision (optional, behind env flags).
+11. Dashboards: pass-rate trend, defect aging, coverage, drift by environment, flaky tests, run duration.
+12. Optional AI assist (OFF by default, provider-agnostic adapter, mock in tests): draft test cases from a requirement and summarise a failure into a bug report. Human approval required; AI output never marks a test as passed.
+
+DEMO STORE AND BUG BANK
+Build "Threadline", a small fictional fashion store (catalogue, product pages, cart, coupons, checkout with a sandbox payment stub). Add 15 or more feature-flagged defects that can be switched on per environment, for example: price differs between product page and cart, coupon stacking allowed, size shown in stock but cart rejects it, hero image broken on mobile only, checkout button hidden on WebKit small viewport, wrong tax rounding, stale discount badge, 500 error on empty cart, missing alt text, slow LCP regression, wrong canonical on preprod. Record which defects are seeded where in docs/BUG_BANK.md. Success measure: DriftGate detects them; record detection rate and false positives in docs/METRICS.md.
+
+DATA MODEL (Prisma, normalised, with migrations and indexes)
+users, projects, environments, requirements, test_cases, test_steps, suites, runs, results (per device and browser), evidence, defects, defect_events, releases, gates, signoffs, drift_snapshots, drift_findings, visual_baselines, audit_log, integrations (encrypted tokens). Produce docs/ER.md (Mermaid).
+
+API
+Versioned REST under /api/v1 with consistent error shape, cursor pagination, filtering, rate limits on auth and run-trigger routes, idempotency keys on run creation, OpenAPI at /docs.
+
+DESIGN SYSTEM: "INK AND SIGNAL" (follow exactly; do NOT use default Tailwind, shadcn or generic AI palettes)
+Principle: a calm editorial QA lab for fashion releases. Dense data, generous whitespace, one sharp accent.
+Tokens as CSS variables and Tailwind theme extension only; forbid raw Tailwind colour classes (no indigo, blue, purple, slate defaults) and forbid purple or blue gradient heroes, glassmorphism stacks, emoji icons, stock illustration packs.
+Dark (default) "Ink": bg #0C0E12, surface-1 #12151B, surface-2 #181C24, surface-3 #202530, border #2A3040, text #ECE9E1, text-dim #A3A8B5, accent "Signal" #D7FF3F (used sparingly: primary buttons, focus ring, key highlights), pass #3DDC97, fail #FF5A3C, warn #FFB224, info #6FB7FF, flaky #C792FF.
+Light "Paper": bg #F5F2EA, surface #FBF9F4, text #14161B, primary button ink #14161B with Signal as highlight bar, fail #D93A1F, pass #0E9F6E, warn #B7791F.
+Verify WCAG AA contrast for every text and status pair and fix tokens if any fails.
+Typography via next/font (self-hosted): display Instrument Serif for headings and hero numbers, UI Hanken Grotesk, data JetBrains Mono. Type scale 12, 14, 16, 20, 28, 40, 64. Spacing on a 4px grid. Radius 6 and 12. Elevation by borders and subtle shadow, not blur.
+Texture: a very faint SVG noise overlay (about 3% opacity) and hairline grid lines; no gradient blobs.
+Motion (motion library), tokens: ease-out cubic-bezier(0.22, 1, 0.36, 1); durations 120, 200, 320 ms; spring stiffness 380, damping 32. Signature moments:
+ a) Gate "runway": four gates in a row, a pulse travels along the line as checks complete.
+ b) Readiness ring: segments draw in sequence, each segment per criterion, with count-up numbers.
+ c) Sign-off "ink stamp": press and settle animation with a slight rotation, plus audio-free haptic-style bounce; reduced-motion fallback is a simple fade.
+ d) Device matrix: result cells cascade in with 8 ms stagger; running cells pulse softly.
+ e) Drift diff: changed values get an animated underline sweep in the fail colour.
+ f) Layout animations for list reorder, skeleton shimmer for loading, route transitions under 200 ms.
+Respect prefers-reduced-motion everywhere. No parallax, no autoplay loops that distract.
+Components to design by hand: Readiness Ring, Gate Runway, Device Matrix Grid, Drift Diff Table (environments as columns), Evidence Drawer (before and after swipe slider, trace link), Command Palette (Cmd+K), Status Pill, Empty States with custom line-art SVG and helpful copy.
+Non-UI surfaces use the same tokens: PDF release report, email and Slack messages, Swagger UI theme, README banner, CLI output colours.
+Accessibility: keyboard navigation, visible focus, ARIA, axe clean on every route, responsive at 360, 768, 1280 and 1920 px.
+
+SCREENS
+Login, Projects, Project overview (gate runway and readiness), Test cases (list, editor, RTM), Runs (matrix and live results), Run detail (evidence drawer), Drift (environment comparison), Visual review, Defects (board and list), Releases and Sign-off (with audit chain verification), Reports, Integrations (Jira, Slack), Settings (allowlist, roles).
+
+SECURITY
+Argon2 hashing, rate limiting, helmet, strict CORS allowlist, input validation on every route, secrets only in env, encrypted integration tokens, signed runner callbacks (HMAC with timestamp and replay protection), least-privilege read-only DB role for SQL assertions, audit log for sensitive actions, dependency audit in CI.
+
+TESTING AND CI (quality gates; main must stay green)
+Unit and API tests with coverage thresholds, authorization matrix tests (one user cannot read or change another project's data), timezone-safe date tests, SSRF tests, drift diff tests with fixtures, E2E tests of DriftGate with Playwright, accessibility checks, typecheck, lint, production build, and a nightly scheduled run of the demo-store sanity suite. Keep a manual test case suite for DriftGate itself in the app (dogfooding).
+
+DOCS (all must exist)
+README with architecture diagram and screenshots, docs/ARCHITECTURE.md, ER.md, API.md (OpenAPI), SCORING.md, BUG_BANK.md, METRICS.md, RUNBOOK.md (deploy, rollback, rotate secrets), CHANGELOG.md, ADRs for key decisions, setup in under 10 commands, a 5-minute DEMO_SCRIPT.md.
+
+PHASES (stop after each and wait)
+0. Repo, tooling, AGENTS.md (commands, conventions, these rules, definition of done), CI skeleton, design tokens and docs/DESIGN.md with a token preview page.
+1. Demo store with bug bank, four environment configs, seed data.
+2. API, database, auth and RBAC, test case manager, manual execution UI.
+3. Playwright runner, device matrix, evidence storage, live results, GitHub Actions execution.
+4. Drift engine, visual regression, API and SQL checks, accessibility and performance gates.
+5. Defects, Jira integration, release gates, hash-chained sign-off, PDF report, notifications.
+6. Dashboards, motion polish, full accessibility pass, empty and error states.
+7. Deploy all services, run the full demo against the bug bank, fill docs/METRICS.md, finalise README and demo script.
+MVP cut if I run low on usage: phases 0 to 5 only, skip AI assist, notifications and performance budgets.
+
+DEFINITION OF DONE (per phase)
+Typecheck, lint, tests and build pass locally and in CI; docs updated; no TODOs left silently; screenshots of new screens at 3 breakpoints reviewed with Playwright and fixed for alignment, contrast and motion; summary lists what changed, how to run it, what is not done, and any decision I must make.
