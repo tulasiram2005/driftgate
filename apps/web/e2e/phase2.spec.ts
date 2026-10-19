@@ -5,10 +5,21 @@ import AxeBuilder from "@axe-core/playwright";
 const password = "Phase2-Smoke-Password!";
 
 async function expectAccessible(page: Page) {
-  expect(
-    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
-      .violations,
-  ).toEqual([]);
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+  });
+  // WebKit can repaint inherited foregrounds one frame after the theme background.
+  await expect
+    .poll(
+      async () =>
+        (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+          .violations,
+      { timeout: 5000, message: "The settled workspace must pass every accessibility rule" },
+    )
+    .toEqual([]);
 }
 
 test("real API: account, projects, versioned cases, CSV, suite and manual results", async ({
