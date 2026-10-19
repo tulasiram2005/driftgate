@@ -17,6 +17,9 @@ import swaggerUi from "swagger-ui-express";
 import { Prisma } from "../generated/client/index.js";
 import type { PrismaClient } from "../generated/client/index.js";
 import type { Config } from "./config.js";
+import { mountCallback, mountExecution, publicRun } from "./execution.js";
+import { automatedRunBody, callbackBody, screenshotBody } from "./execution-contracts.js";
+import type { EvidenceStorage } from "./storage.js";
 import {
   credentials,
   registration,
@@ -41,6 +44,16 @@ class ApiError extends Error {
 }
 const hash = (v: string) => createHash("sha256").update(v).digest("hex");
 const publicUser = { id: true, name: true, email: true } as const;
+const caseInclude = {
+  steps: { orderBy: { position: "asc" as const }, select: { action: true, expected: true } },
+};
+const suiteInclude = { members: { orderBy: { position: "asc" as const } } };
+const stepCreates = (steps: z.infer<typeof caseBody>["steps"]) =>
+  steps.map((step, position) => ({ ...step, position }));
+function suiteResponse<T extends { members: { caseId: string }[] }>(suite: T) {
+  const { members, ...row } = suite;
+  return { ...row, caseIds: members.map((member) => member.caseId) };
+}
 function fail(status: number, code: string, message: string): never {
   throw new ApiError(status, code, message);
 }
@@ -61,7 +74,7 @@ function page<T extends { id: string }>(req: Request, rows: T[]) {
   };
 }
 
-export function createApp(db: PrismaClient, config: Config) {
+export function createApp(db: PrismaClient, config: Config, evidenceStorage?: EvidenceStorage) {
   const app = express();
   const key = new TextEncoder().encode(config.JWT_SECRET);
   const secure = config.NODE_ENV === "production";
@@ -97,7 +110,14 @@ export function createApp(db: PrismaClient, config: Config) {
       credentials: true,
     }),
   );
-  app.use(express.json({ limit: "1mb" }));
+  app.use(
+    express.json({
+      limit: "1mb",
+      verify: (req, _res, buffer) => {
+        (req as typeof req & { rawBody?: Buffer }).rawBody = Buffer.from(buffer);
+      },
+    }),
+  );
   app.use(cookieParser());
   app.use((req, _res, next) => {
     const origin = req.get("origin");
@@ -279,6 +299,8 @@ export function createApp(db: PrismaClient, config: Config) {
     res.clearCookie(cookieName, cookieOptions).json({ data: { loggedOut: true } });
   });
   document("post", "/api/v1/auth/logout", undefined, false);
+  mountCallback(app, db, config, fail);
+  document("post", "/api/v1/runner/callback", callbackBody, false);
   const authenticate: RequestHandler = async (req, res, next) => {
     try {
       const token = req.get("authorization")?.match(/^Bearer (.+)$/)?.[1];
@@ -298,6 +320,8 @@ export function createApp(db: PrismaClient, config: Config) {
       });
       if (!session) fail(401, "SESSION_EXPIRED", "Please sign in again");
       res.locals.userId = session.userId;
+      res.locals.sessionId = session.id;
+      res.locals.tokenExpiresAt = Number(payload.exp) * 1000;
       next();
     } catch (e) {
       next(e instanceof ApiError ? e : new ApiError(401, "UNAUTHORIZED", "Please sign in again"));
@@ -351,6 +375,15 @@ export function createApp(db: PrismaClient, config: Config) {
   });
   document("post", "/api/v1/projects", projectBody);
   const base = "/api/v1/projects/:projectId";
+  mountExecution(app, db, config, guard, fail, evidenceStorage);
+  document("post", `${base}/automated-runs`, automatedRunBody);
+  document("get", `${base}/automated-runs`);
+  document("get", `${base}/runs/:runId`);
+  document("get", `${base}/runs/:runId/events`);
+  const evidencePath = `${base}/runs/:runId/results/:resultId/evidence`;
+  document("post", evidencePath, screenshotBody);
+  document("post", `${evidencePath}/:evidenceId/complete`);
+  document("get", `${evidencePath}/:evidenceId/url`);
   app.get(base, guard(), async (req, res) => {
     res.json({
       data: {
@@ -419,6 +452,7 @@ export function createApp(db: PrismaClient, config: Config) {
       page(
         req,
         await db.testCase.findMany({
+          include: caseInclude,
           where: {
             projectId: param(req, "projectId"),
             archived: false,
@@ -436,7 +470,10 @@ export function createApp(db: PrismaClient, config: Config) {
     const projectId = param(req, "projectId");
     await validateRequirement(projectId, body.requirementId);
     const data = await db.$transaction(async (tx) => {
-      const row = await tx.testCase.create({ data: { ...body, projectId } });
+      const row = await tx.testCase.create({
+        data: { ...body, projectId, steps: { create: stepCreates(body.steps) } },
+        include: caseInclude,
+      });
       await tx.caseVersion.create({
         data: {
           caseId: row.id,
@@ -457,13 +494,18 @@ export function createApp(db: PrismaClient, config: Config) {
     const data = await db.$transaction(async (tx) => {
       const old = await tx.testCase.findFirst({ where: { id, projectId, archived: false } });
       if (!old) fail(404, "NOT_FOUND", "Test case not found");
+      const { steps, ...fields } = body;
       const changed = await tx.testCase.updateMany({
         where: { id, projectId, version: old.version },
-        data: { ...body, version: { increment: 1 } },
+        data: { ...fields, version: { increment: 1 } },
       });
       if (!changed.count)
         fail(409, "VERSION_CONFLICT", "This case changed. Refresh and try again.");
-      const row = await tx.testCase.findUniqueOrThrow({ where: { id } });
+      await tx.testStep.deleteMany({ where: { caseId: id } });
+      await tx.testStep.createMany({
+        data: stepCreates(steps).map((step) => ({ ...step, caseId: id })),
+      });
+      const row = await tx.testCase.findUniqueOrThrow({ where: { id }, include: caseInclude });
       await tx.caseVersion.create({
         data: {
           caseId: id,
@@ -500,6 +542,7 @@ export function createApp(db: PrismaClient, config: Config) {
   document("get", `${base}/cases/:caseId/versions`);
   app.get(`${base}/cases.csv`, guard(), async (req, res) => {
     const rows = await db.testCase.findMany({
+      include: caseInclude,
       where: { projectId: param(req, "projectId"), archived: false },
       orderBy: { id: "asc" },
       take: 5000,
@@ -560,7 +603,10 @@ export function createApp(db: PrismaClient, config: Config) {
     const rows = await db.$transaction(async (tx) => {
       const created = [];
       for (const body of bodies) {
-        const row = await tx.testCase.create({ data: { ...body, projectId } });
+        const row = await tx.testCase.create({
+          data: { ...body, projectId, steps: { create: stepCreates(body.steps) } },
+          include: caseInclude,
+        });
         await tx.caseVersion.create({
           data: {
             caseId: row.id,
@@ -594,10 +640,13 @@ export function createApp(db: PrismaClient, config: Config) {
     res.json(
       page(
         req,
-        await db.suite.findMany({
-          where: { projectId: param(req, "projectId") },
-          ...pageArgs(req),
-        }),
+        (
+          await db.suite.findMany({
+            where: { projectId: param(req, "projectId") },
+            include: suiteInclude,
+            ...pageArgs(req),
+          })
+        ).map(suiteResponse),
       ),
     );
   });
@@ -612,7 +661,18 @@ export function createApp(db: PrismaClient, config: Config) {
       })) !== body.caseIds.length
     )
       fail(404, "NOT_FOUND", "Some cases do not belong to this project");
-    res.json({ data: await db.suite.create({ data: { ...body, projectId } }) });
+    res.json({
+      data: suiteResponse(
+        await db.suite.create({
+          data: {
+            name: body.name,
+            projectId,
+            members: { create: body.caseIds.map((caseId, position) => ({ caseId, position })) },
+          },
+          include: suiteInclude,
+        }),
+      ),
+    });
   });
   document("post", `${base}/suites`, suiteBody);
   const runLimit = rateLimit({
@@ -630,11 +690,13 @@ export function createApp(db: PrismaClient, config: Config) {
     res.json(
       page(
         req,
-        await db.run.findMany({
-          where: { projectId: param(req, "projectId") },
-          include: { results: { orderBy: { id: "asc" } } },
-          ...pageArgs(req),
-        }),
+        (
+          await db.run.findMany({
+            where: { projectId: param(req, "projectId"), mode: "MANUAL" },
+            include: { results: { orderBy: { id: "asc" } } },
+            ...pageArgs(req),
+          })
+        ).map(publicRun),
       ),
     );
   });
@@ -643,12 +705,17 @@ export function createApp(db: PrismaClient, config: Config) {
     const body = runBody.parse(req.body);
     const projectId = param(req, "projectId");
     const data = await db.$transaction(async (tx) => {
-      const suite = await tx.suite.findFirst({ where: { id: body.suiteId, projectId } });
-      if (!suite) fail(404, "NOT_FOUND", "Suite not found");
-      const cases = await tx.testCase.findMany({
-        where: { projectId, id: { in: suite.caseIds }, archived: false },
+      const suite = await tx.suite.findFirst({
+        where: { id: body.suiteId, projectId },
+        include: suiteInclude,
       });
-      if (cases.length !== suite.caseIds.length)
+      if (!suite) fail(404, "NOT_FOUND", "Suite not found");
+      const caseIds = suite.members.map((member) => member.caseId);
+      const cases = await tx.testCase.findMany({
+        where: { projectId, id: { in: caseIds }, archived: false },
+        include: caseInclude,
+      });
+      if (cases.length !== caseIds.length)
         fail(409, "ARCHIVED_CASE", "A suite case was archived. Create a new suite.");
       return tx.run.create({
         data: {
@@ -660,6 +727,8 @@ export function createApp(db: PrismaClient, config: Config) {
               title: c.title,
               version: c.version,
               steps: c.steps as Prisma.InputJsonValue,
+              browser: body.browser,
+              device: body.device,
             })),
           },
         },
@@ -676,6 +745,7 @@ export function createApp(db: PrismaClient, config: Config) {
         id: param(req, "resultId"),
         runId: param(req, "runId"),
         run: { projectId: param(req, "projectId") },
+        AND: { run: { mode: "MANUAL" } },
       },
       data: body,
     });
@@ -688,7 +758,7 @@ export function createApp(db: PrismaClient, config: Config) {
   const openapi = () =>
     new OpenApiGeneratorV3(registry.definitions).generateDocument({
       openapi: "3.0.0",
-      info: { title: "DriftGate Phase 2 API", version: "1.0.0" },
+      info: { title: "DriftGate API", version: "1.1.0" },
     });
   app.get("/openapi.json", (_req, res) => res.json(openapi()));
   app.use(

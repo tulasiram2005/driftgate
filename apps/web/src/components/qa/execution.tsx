@@ -14,6 +14,7 @@ import {
   type Suite,
 } from "../../lib/qa-api";
 import { CaseSnapshot, useCases } from "./cases";
+import { ManualEvidence } from "./evidence";
 import {
   Empty,
   ErrorNotice,
@@ -525,6 +526,12 @@ function ResultEditor({
   return (
     <>
       <CaseSnapshot record={result} />
+      <ManualEvidence
+        projectId={projectId}
+        runId={runId}
+        resultId={result.id}
+        canWrite={canWrite}
+      />
       {canWrite ? (
         <form
           className="qa-form qa-result-form"

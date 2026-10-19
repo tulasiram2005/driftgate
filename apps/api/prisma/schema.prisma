@@ -76,7 +76,8 @@ model TestCase {
   priority      String
   type          String
   tags          String[]
-  steps         Json
+  steps         TestStep[]
+  suiteCases    SuiteCase[]
   version       Int @default(1)
   archived      Boolean @default(false)
   createdAt     DateTime @default(now())
@@ -84,6 +85,26 @@ model TestCase {
   requirement   Requirement? @relation(fields: [requirementId], references: [id], onDelete: SetNull)
   versions      CaseVersion[]
   @@index([projectId, archived, id])
+}
+
+model TestStep {
+  caseId   String
+  position Int
+  action   String
+  expected String
+  testCase TestCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  @@id([caseId, position])
+}
+
+model SuiteCase {
+  suiteId String
+  caseId String
+  position Int
+  suite Suite @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  testCase TestCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  @@id([suiteId, caseId])
+  @@unique([suiteId, position])
+  @@index([caseId])
 }
 
 model CaseVersion {
@@ -100,7 +121,7 @@ model Suite {
   id        String @id @default(cuid())
   projectId String
   name      String
-  caseIds   String[]
+  members   SuiteCase[]
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   runs      Run[]
   @@index([projectId, id])
@@ -109,14 +130,23 @@ model Suite {
 model Run {
   id          String @id @default(cuid())
   projectId   String
-  suiteId     String
+  suiteId     String?
   environment String
   browser     String
   device      String
   createdAt   DateTime @default(now())
   project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  suite       Suite @relation(fields: [suiteId], references: [id])
+  suite       Suite? @relation(fields: [suiteId], references: [id])
   results     Result[]
+  mode        String @default("MANUAL")
+  status      String @default("PENDING")
+  dispatch    String @default("LOCAL")
+  idempotencyKey String?
+  requestHash String?
+  outbox      DispatchOutbox?
+  events      RunEvent[]
+  receipts    CallbackReceipt[]
+  @@unique([projectId, idempotencyKey])
   @@index([projectId, createdAt])
 }
 
@@ -129,6 +159,67 @@ model Result {
   steps   Json
   status  String @default("NOT_RUN")
   notes   String @default("")
+  browser String @default("Chromium")
+  device String @default("Desktop")
+  flaky Boolean @default(false)
+  attempts ResultAttempt[]
+  evidence Evidence[]
   run     Run @relation(fields: [runId], references: [id], onDelete: Cascade)
-  @@unique([runId, caseId])
+  @@unique([runId, caseId, browser, device])
+}
+
+model ResultAttempt {
+  id String @id @default(cuid())
+  resultId String
+  number Int
+  status String
+  durationMs Int
+  error String @default("")
+  createdAt DateTime @default(now())
+  result Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  @@unique([resultId, number])
+}
+
+model Evidence {
+  id String @id @default(cuid())
+  resultId String
+  key String @unique
+  kind String
+  contentType String
+  sizeBytes Int
+  ready Boolean @default(false)
+  createdAt DateTime @default(now())
+  result Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  @@index([resultId, id])
+}
+
+model DispatchOutbox {
+  id String @id @default(cuid())
+  runId String @unique
+  payload Json
+  status String @default("PENDING")
+  attempts Int @default(0)
+  availableAt DateTime @default(now())
+  leaseUntil DateTime?
+  lastError String?
+  run Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+  @@index([status, availableAt])
+}
+
+model CallbackReceipt {
+  id String @id
+  bodyHash String
+  runId String
+  receivedAt DateTime @default(now())
+  run Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+  @@index([runId])
+}
+
+model RunEvent {
+  id Int @id @default(autoincrement())
+  runId String
+  data Json
+  createdAt DateTime @default(now())
+  run Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+  @@index([runId, id])
 }

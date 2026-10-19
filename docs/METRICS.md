@@ -1,5 +1,24 @@
 # Measured evidence
 
+## Phase 3 local checkpoint (2026-10-20)
+
+Frozen install, typecheck, lint, unit/integration tests and production build passed.
+Full browser regression: DriftGate 24/24 and Threadline 18/18 passed. New automated
+results were checked at 360, 768, 1280 and 1920 pixels, including screenshots and
+automated accessibility checks. See [PHASE3.md](PHASE3.md) for separate fixture,
+actual runner evidence and explicit remaining integration gates. Hosted storage,
+GitHub runner execution and deployment are not claimed by these local results.
+
+Corrected isolated actual-Threadline matrix: 18/18 checks passed across all three
+engines and two viewport modes, with 54 nonempty evidence files whose byte lengths
+matched the callback spool. This is browser emulation, not physical-device testing.
+
+Failures found during verification: proxy buffering delayed SSE; Firefox could
+not write its container home; initial renewed-session tests lacked network access.
+The SSE header/response-close fixes pass all three browser engines; corrected
+pwuser UID/GID 1001 passes isolated Firefox startup. Tests were rerun successfully
+after local-network permission was restored.
+
 ## Phase 2 local verification (2026-10-19)
 
 Node 22.19.0, pnpm 10.18.3. The existing Phase 1 changes were preserved and reverified before adding the Phase 2 API/workspace. Bulk UI implementation used a GPT-6.1 Sol subagent; API integration and verification were performed in the parent session. No Astra delegation was used.

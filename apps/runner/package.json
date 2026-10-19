@@ -3,11 +3,21 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Phase 0 tooling scaffold. Runner implementation starts in phase 3.",
+  "description": "Fixed Threadline Playwright execution worker",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:integration": "node --import tsx integration/browser.ts",
+    "local:compose": "sh docker/run-local.sh"
+  },
+  "dependencies": {
+    "@playwright/test": "1.64.1",
+    "@aws-sdk/client-s3": "3.922.0"
+  },
+  "devDependencies": {
+    "tsx": "4.20.6"
   }
 }

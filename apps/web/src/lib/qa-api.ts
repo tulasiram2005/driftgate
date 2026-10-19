@@ -1,5 +1,7 @@
 "use client";
 
+import { consumeEvents, type RunEvent } from "./run-stream";
+
 export type Role = "ADMIN" | "QA" | "DEVELOPER" | "APPROVER";
 export type User = { id: string; name: string; email: string };
 export type Session = { accessToken: string; user: User };
@@ -139,9 +141,15 @@ async function authorizedFetch(path: string, init: RequestInit = {}) {
   return response;
 }
 
-export async function api<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+export async function api<T>(
+  path: string,
+  method = "GET",
+  body?: unknown,
+  headers?: Record<string, string>,
+): Promise<T> {
   const response = await authorizedFetch(path, {
     method,
+    ...(headers ? { headers } : {}),
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
   if (response.ok && response.status === 204) return undefined as T;
@@ -180,4 +188,23 @@ export async function exportCases(projectId: string) {
 
 export function projectPath(projectId: string, suffix = "") {
   return `/projects/${encodeURIComponent(projectId)}${suffix}`;
+}
+
+export async function runEvents(
+  path: string,
+  signal: AbortSignal,
+  lastEventId: string,
+  receive: (event: RunEvent) => void,
+) {
+  const response = await authorizedFetch(path, {
+    signal,
+    headers: {
+      Accept: "text/event-stream",
+      ...(lastEventId ? { "Last-Event-ID": lastEventId } : {}),
+    },
+  });
+  if (!response.ok) await readData(response);
+  if (!response.body || !response.headers.get("content-type")?.includes("text/event-stream"))
+    throw new Error("Live results are temporarily unavailable.");
+  await consumeEvents(response.body, receive);
 }

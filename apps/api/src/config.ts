@@ -8,6 +8,33 @@ const schema = z.object({
     .url()
     .refine((s) => /^postgres(ql)?:/.test(s)),
   JWT_SECRET: z.string().min(48),
+  RUNNER_CALLBACK_SECRET: z.string().min(32).optional(),
+  RUNNER_CALLBACK_URL: z.string().url().optional(),
+  RUNNER_LOCAL_SANDBOX_ENABLED: z
+    .enum(["0", "1"])
+    .default("0")
+    .transform((v) => v === "1"),
+  REDIS_URL: z
+    .string()
+    .url()
+    .regex(/^rediss?:\/\//)
+    .optional(),
+  GITHUB_TOKEN: z.string().min(1).optional(),
+  GITHUB_REPOSITORY: z
+    .string()
+    .regex(/^[\w.-]+\/[\w.-]+$/)
+    .optional(),
+  GITHUB_WORKFLOW: z
+    .string()
+    .regex(/^[\w.-]+\.ya?ml$/)
+    .default("runner.yml"),
+  GITHUB_REF: z.string().min(1).default("main"),
+  S3_ENDPOINT: z.string().url().optional(),
+  S3_REGION: z.string().default("auto"),
+  S3_BUCKET: z.string().min(1).optional(),
+  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  RUN_TIMEOUT_MS: z.coerce.number().int().min(60000).max(86400000).default(1800000),
   API_CORS_ORIGINS: z
     .string()
     .default("http://localhost:3100,http://127.0.0.1:3100")

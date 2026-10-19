@@ -1,0 +1,56 @@
+.qa-automation-fields {
+  display: grid;
+  gap: 16px;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.qa-device-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+.qa-matrix-cell {
+  display: grid;
+  gap: 12px;
+  min-height: 156px;
+  text-align: left;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-1);
+  color: var(--text);
+  cursor: pointer;
+}
+.qa-matrix-cell .status-pill {
+  justify-self: start;
+}
+.qa-matrix-cell strong {
+  overflow-wrap: anywhere;
+}
+.qa-matrix-cell:hover {
+  border-color: var(--text-dim);
+}
+.qa-attempts {
+  display: grid;
+  gap: 16px;
+  padding-left: 24px;
+}
+.qa-attempts li {
+  padding: 8px 0;
+}
+.qa-attempts pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.qa-evidence-list {
+  display: grid;
+  gap: 12px;
+}
+.qa-evidence-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}

@@ -1,0 +1,47 @@
+name: Threadline runner
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Base64 v1 job (see runner CONTRACT.md)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: runner-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @driftgate/runner build
+      - run: pnpm --filter @driftgate/runner test
+      # Only the bundled Threadline demo runs here. The browser has no external
+      # network or credentials; the separate relay uploads after browser exit.
+      - name: Execute isolated Threadline and relay private evidence
+        run: |
+          test -n "$RUNNER_CALLBACK_URL"
+          test -n "$RUNNER_CALLBACK_SECRET"
+          test -n "$RUNNER_S3_ENDPOINT"
+          test -n "$RUNNER_S3_BUCKET"
+          test -n "$AWS_ACCESS_KEY_ID"
+          test -n "$AWS_SECRET_ACCESS_KEY"
+          sh apps/runner/docker/run-local.sh
+        env:
+          RUNNER_JOB_BASE64: ${{ inputs.job }}
+          RUNNER_CALLBACK_URL: ${{ vars.RUNNER_CALLBACK_URL }}
+          RUNNER_CALLBACK_SECRET: ${{ secrets.RUNNER_CALLBACK_SECRET }}
+          RUNNER_S3_ENDPOINT: ${{ vars.RUNNER_S3_ENDPOINT }}
+          RUNNER_S3_BUCKET: ${{ vars.RUNNER_S3_BUCKET }}
+          RUNNER_S3_REGION: ${{ vars.RUNNER_S3_REGION || 'auto' }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.RUNNER_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.RUNNER_S3_SECRET_ACCESS_KEY }}

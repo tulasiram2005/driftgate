@@ -25,6 +25,47 @@ afterEach(() => {
 });
 
 describe("memory-only authentication", () => {
+  it("authenticates event streams and sends the resume cursor in a header", async () => {
+    const { acceptSession, runEvents, fetchMock } = await setup();
+    acceptSession(session);
+    fetchMock.mockResolvedValueOnce(
+      new Response("id: 8\ndata: updated\n\n", {
+        headers: { "Content-Type": "text/event-stream" },
+      }),
+    );
+    const receive = vi.fn();
+    const signal = new AbortController().signal;
+    await runEvents("/projects/p/runs/r/events", signal, "7", receive);
+    expect(receive).toHaveBeenCalledWith({ id: "8", event: "message", data: "updated" });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/projects/p/runs/r/events",
+      expect.objectContaining({
+        signal,
+        headers: {
+          Accept: "text/event-stream",
+          "Last-Event-ID": "7",
+          Authorization: "Bearer access-original",
+        },
+      }),
+    );
+  });
+  it("reports malformed and denied event streams", async () => {
+    const { runEvents, fetchMock } = await setup();
+    fetchMock.mockResolvedValueOnce(ok([]));
+    await expect(runEvents("/events", new AbortController().signal, "", vi.fn())).rejects.toThrow(
+      "temporarily unavailable",
+    );
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+    await expect(runEvents("/events", new AbortController().signal, "", vi.fn())).rejects.toThrow(
+      "temporarily unavailable",
+    );
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ error: { code: "DENIED", message: "Denied" } }, { status: 403 }),
+    );
+    await expect(runEvents("/events", new AbortController().signal, "", vi.fn())).rejects.toThrow(
+      "Denied",
+    );
+  });
   it.each(["login", "register"] as const)(
     "accepts a %s session and sends credentials only to the relative API",
     async (path) => {

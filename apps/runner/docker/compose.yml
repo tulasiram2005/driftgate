@@ -1,0 +1,107 @@
+name: driftgate-local-runner
+services:
+  namespace:
+    image: alpine:3.22
+    command: ["sleep", "infinity"]
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  database:
+    image: postgres:17-bookworm
+    network_mode: service:namespace
+    environment:
+      POSTGRES_USER: threadline
+      POSTGRES_PASSWORD: isolated-demo-only
+      POSTGRES_DB: threadline
+    command: ["postgres", "-c", "listen_addresses=127.0.0.1"]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -h 127.0.0.1 -U threadline -d threadline"]
+      interval: 2s
+      retries: 30
+    depends_on:
+      namespace:
+        condition: service_started
+    security_opt: [no-new-privileges:true]
+  threadline:
+    build:
+      context: ../../..
+      dockerfile: apps/runner/docker/Dockerfile
+      target: threadline
+    network_mode: service:namespace
+    environment:
+      DATABASE_URL: postgresql://threadline:isolated-demo-only@127.0.0.1:5432/threadline
+      THREADLINE_BUG_FLAGS: none
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:3201/api/staging/products').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 60
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  runner:
+    build:
+      context: ../../..
+      dockerfile: apps/runner/docker/Dockerfile
+      target: runner
+    network_mode: service:namespace
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=1g,mode=1777
+      - /home/pwuser:size=64m,uid=1001,gid=1001
+    shm_size: 1gb
+    mem_limit: 3g
+    cpus: 2
+    pids_limit: 512
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      RUNNER_JOB_BASE64: ${RUNNER_JOB_BASE64:?Supply a base64 v1 job}
+      RUNNER_MODE: local-isolated
+      RUNNER_LOCAL_ISOLATED: "1"
+      RUNNER_TARGET_ORIGIN: http://127.0.0.1:3201
+      RUNNER_EVIDENCE_DIR: /evidence
+      RUNNER_SPOOL_DIR: /spool
+    volumes:
+      - ${RUNNER_LOCAL_OUTPUT:?Supply output directory}/evidence:/evidence
+      - ${RUNNER_LOCAL_OUTPUT:?Supply output directory}/spool:/spool
+    depends_on:
+      threadline:
+        condition: service_healthy
+  relay:
+    profiles: [control]
+    build:
+      context: ../../..
+      dockerfile: apps/runner/docker/Dockerfile
+      target: relay
+    networks: [control]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      RUNNER_EVIDENCE_DIR: /evidence
+      RUNNER_SPOOL_DIR: /spool
+      RUNNER_CALLBACK_URL: ${RUNNER_CALLBACK_URL:-}
+      RUNNER_CALLBACK_SECRET: ${RUNNER_CALLBACK_SECRET:-}
+      RUNNER_CALLBACK_LOCAL: ${RUNNER_CALLBACK_LOCAL:-0}
+      RUNNER_S3_ENDPOINT: ${RUNNER_S3_ENDPOINT:-}
+      RUNNER_S3_BUCKET: ${RUNNER_S3_BUCKET:-}
+      RUNNER_S3_REGION: ${RUNNER_S3_REGION:-auto}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+    volumes:
+      - ${RUNNER_LOCAL_OUTPUT}/evidence:/evidence:ro
+      - ${RUNNER_LOCAL_OUTPUT}/spool:/spool:ro
+    extra_hosts:
+      - host.docker.internal:host-gateway
+networks:
+  control: {}

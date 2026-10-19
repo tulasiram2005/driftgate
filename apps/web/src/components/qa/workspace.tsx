@@ -50,6 +50,7 @@ import {
 import { RequirementsView, MembersForm } from "./requirements";
 import { CasesView } from "./cases";
 import { RunsView, SuitesView } from "./execution";
+import { AutomatedRuns } from "./automated";
 import "./workspace.css";
 
 const sessionKey = ["session"] as const;
@@ -250,12 +251,13 @@ function AuthScreen() {
   );
 }
 
-type View = "projects" | "requirements" | "cases" | "suites" | "runs";
+type View = "projects" | "requirements" | "cases" | "suites" | "runs" | "automated";
 const navigation = [
   { id: "requirements", title: "Requirements", icon: BookOpen },
   { id: "cases", title: "Test cases", icon: ClipboardList },
   { id: "suites", title: "Suites", icon: Layers3 },
   { id: "runs", title: "Manual runs", icon: Play },
+  { id: "automated", title: "Automated runs", icon: CheckCheck },
 ] as const;
 
 function SignedIn({ user }: { user: User }) {
@@ -446,6 +448,8 @@ function SignedIn({ user }: { user: User }) {
                   <CasesView projectId={projectId} canWrite={canWrite} />
                 ) : view === "suites" ? (
                   <SuitesView projectId={projectId} canWrite={canWrite} />
+                ) : view === "automated" ? (
+                  <AutomatedRuns projectId={projectId} canWrite={canWrite} />
                 ) : (
                   <RunsView projectId={projectId} canWrite={canWrite} />
                 )}

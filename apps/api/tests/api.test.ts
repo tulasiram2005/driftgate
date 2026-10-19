@@ -159,6 +159,43 @@ describe("phase 2 end-to-end API", () => {
       status: "FAIL",
     });
   });
+  it("stores ordered steps and suite membership with relational constraints", async () => {
+    const steps = [
+      { action: "Open the cart", expected: "Cart is visible" },
+      { action: "Review stock", expected: "Stock is accurate" },
+    ];
+    const updated = await request(app)
+      .put(path(`/cases/${caseId}`))
+      .set(auth())
+      .send({ ...body, title: "Updated title", requirementId: requirement, steps });
+    expect(updated.status).toBe(200);
+    expect(updated.body.data.steps).toEqual(steps);
+    expect(
+      await db.testStep.findMany({
+        where: { caseId },
+        orderBy: { position: "asc" },
+        select: { action: true, expected: true },
+      }),
+    ).toEqual(steps);
+    expect(await db.suiteCase.findMany({ where: { suiteId: suite } })).toMatchObject([
+      { caseId, position: 0 },
+    ]);
+    const suites = await request(app).get(path("/suites")).set(auth());
+    expect(suites.body.data[0].caseIds).toEqual([caseId]);
+    expect(suites.body.data[0]).not.toHaveProperty("members");
+    const original = await db.result.findUniqueOrThrow({ where: { id: result } });
+    expect(original.steps).toEqual(body.steps);
+    await expect(
+      db.testStep.create({
+        data: {
+          caseId: "missing",
+          position: 0,
+          action: "Orphan",
+          expected: "Rejected",
+        },
+      }),
+    ).rejects.toMatchObject({ code: "P2003" });
+  });
   it("exposes requirement traceability and paginates/filter cases", async () => {
     const coverage = await request(app).get(path("/coverage")).set(auth());
     expect(coverage.body.data[0].cases[0].id).toBe(caseId);

@@ -1,0 +1,3 @@
+ALTER TABLE "SuiteCase" DROP CONSTRAINT "SuiteCase_caseId_fkey";
+ALTER TABLE "SuiteCase" ADD CONSTRAINT "SuiteCase_caseId_fkey"
+FOREIGN KEY ("caseId") REFERENCES "TestCase"("id") ON DELETE CASCADE ON UPDATE CASCADE;

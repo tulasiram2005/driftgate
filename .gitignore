@@ -19,3 +19,4 @@ blob-report/
 apps/api/generated/
 tmp/
 output/
+apps/runner/integration-dist/

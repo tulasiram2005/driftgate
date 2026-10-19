@@ -52,6 +52,8 @@ jobs:
       DATABASE_URL: postgresql://threadline:ci-demo-only@localhost:5432/threadline
       TEST_DATABASE_URL: postgresql://threadline:ci-test-only@localhost:5433/threadline_test
       TEST_API_DATABASE_URL: postgresql://driftgate:ci-test-only@localhost:5434/driftgate_test
+      RUNNER_CALLBACK_SECRET: ci-test-only-runner-callback-secret-123456789
+      REDIS_URL: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@v5
         with:
