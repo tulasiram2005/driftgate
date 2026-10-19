@@ -4,19 +4,20 @@
 
 Node 22.19.0, pnpm 10.18.3. The existing Phase 1 changes were preserved and reverified before adding the Phase 2 API/workspace. Bulk UI implementation used a GPT-6.1 Sol subagent; API integration and verification were performed in the parent session. No Astra delegation was used.
 
-| Gate                                  | Observed result                                                                                                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Frozen install                        | PASS after synchronizing newly added workspace dependencies into the lockfile                                       |
-| Typecheck                             | PASS, four workspace tasks (some cached)                                                                            |
-| Lint/format                           | PASS, four workspace tasks plus root tooling/formatting                                                             |
-| Unit/integration                      | PASS, 102 tests: 21 runtime, 33 web (8 contrast + 25 client), 34 storefront, 14 API integration                     |
-| API coverage                          | 88.31% statements, 68.64% branches, 81.81% functions, 90.65% lines for app/config/contracts; bootstrap not measured |
-| Web helper coverage                   | 100% for contrast/client helpers; not whole-UI coverage                                                             |
-| Production build                      | PASS, all four workspace tasks                                                                                      |
-| Dependency audit                      | PASS, no known vulnerabilities found                                                                                |
-| Store browser regression              | PASS, 18 tests across Chromium/Firefox/WebKit in 38.6s; no retries                                                  |
-| QA workspace/browser regression       | PASS, 21 tests across Chromium/Firefox/WebKit; no retries                                                           |
-| Hosted CI / deployment / real devices | NOT VERIFIED / not deployed / NOT VERIFIED                                                                          |
+| Gate                            | Observed result                                                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Frozen install                  | PASS after synchronizing newly added workspace dependencies into the lockfile                                       |
+| Typecheck                       | PASS, four workspace tasks (some cached)                                                                            |
+| Lint/format                     | PASS, four workspace tasks plus root tooling/formatting                                                             |
+| Unit/integration                | PASS, 102 tests: 21 runtime, 33 web (8 contrast + 25 client), 34 storefront, 14 API integration                     |
+| API coverage                    | 88.31% statements, 68.64% branches, 81.81% functions, 90.65% lines for app/config/contracts; bootstrap not measured |
+| Web helper coverage             | 100% for contrast/client helpers; not whole-UI coverage                                                             |
+| Production build                | PASS, all four workspace tasks                                                                                      |
+| Dependency audit                | PASS, no known vulnerabilities found                                                                                |
+| Store browser regression        | PASS, 18 tests across Chromium/Firefox/WebKit in 38.6s; no retries                                                  |
+| QA workspace/browser regression | PASS, 21 tests across Chromium/Firefox/WebKit; no retries                                                           |
+| Hosted CI / CodeQL              | PASS for implementation revision 186142e                                                                            |
+| Deployment / real devices       | Not deployed / NOT VERIFIED                                                                                         |
 
 Tests use separate `driftgate_test` (55435) and `threadline_test` (55433) databases. API tests refuse absent, remote or incorrectly named database URLs and delete only the records they created. Browser checks create uniquely named test accounts/projects in the test database. They never reset the demo database. The authorization matrix covers every protected nested endpoint against both unauthenticated requests and a nonmember; role tests cover ADMIN, QA, DEVELOPER and APPROVER. Additional assertions cover expired JWTs, refresh rotation/replay/logout, validation, rate limiting, CSV atomicity, immutable version history, and preserved run snapshots after edits/archives.
 
@@ -45,6 +46,8 @@ The first checks found a detached query observer after registration, ambiguous d
 Hosted run [39238134886](https://github.com/tulasiram2005/driftgate/actions/runs/39238134886) passed install, migrations, typecheck, lint, unit tests and build, but failed one of 21 workspace browser tests on WebKit theme repaint. The audit saw light backgrounds with previous dark-theme inherited foregrounds immediately after toggling. The workspace harness now waits for fonts and two animation frames and polls the complete accessibility result for up to five seconds, matching the established design-preview harness. No rules or violations are excluded. CodeQL passed for the same source revision. The pre-commit hook was also corrected to select app-specific ESLint configurations, then passed without disabling hooks.
 
 Targeted local rerun after that correction: the full WebKit account/project/case/CSV/manual-execution flow passed in 20.1 seconds, including all accessibility assertions. Web typecheck and whole-workspace lint passed again. CI database health probes now name their actual database to avoid misleading connection errors in the service logs.
+
+Final hosted verification for revision `186142e`: [Quality Gates run 39239313076](https://github.com/tulasiram2005/driftgate/actions/runs/39239313076) and [CodeQL run 39239312769](https://github.com/tulasiram2005/driftgate/actions/runs/39239312769) both passed. Downloaded job logs confirm 102 unit/integration tests, 18 storefront browser checks in 1.1 minutes, and 21 workspace browser checks in 2.2 minutes; dependency audit reported no known vulnerabilities. The preceding failed run remains recorded above for traceability.
 
 ## Phase 1 local verification (2026-10-19)
 
