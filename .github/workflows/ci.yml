@@ -23,6 +23,26 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    services:
+      store-db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: threadline
+          POSTGRES_PASSWORD: ci-demo-only
+          POSTGRES_DB: threadline
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U threadline" --health-interval 5s --health-timeout 5s --health-retries 10
+      test-db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: threadline
+          POSTGRES_PASSWORD: ci-test-only
+          POSTGRES_DB: threadline_test
+        ports: ["5433:5432"]
+        options: --health-cmd "pg_isready -U threadline" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://threadline:ci-demo-only@localhost:5432/threadline
+      TEST_DATABASE_URL: postgresql://threadline:ci-test-only@localhost:5433/threadline_test
     steps:
       - uses: actions/checkout@v5
         with:
@@ -39,6 +59,11 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck
         run: pnpm typecheck
+      - name: Prepare storefront databases
+        run: |
+          pnpm --filter @driftgate/demo-store db:migrate
+          DATABASE_URL="$TEST_DATABASE_URL" pnpm --filter @driftgate/demo-store db:migrate
+          pnpm --filter @driftgate/demo-store db:seed
       - name: Lint and formatting
         run: pnpm lint
       - name: Unit tests and coverage
@@ -61,5 +86,8 @@ jobs:
             apps/web/coverage/
             apps/web/playwright-report/
             apps/web/test-results/
+            apps/demo-store/coverage/
+            apps/demo-store/playwright-report/
+            apps/demo-store/test-results/
           if-no-files-found: warn
           retention-days: 14

@@ -19,7 +19,7 @@
     "format:check": "prettier --check .",
     "test": "pnpm test:tooling && turbo run test",
     "test:tooling": "vitest run --coverage",
-    "test:e2e": "pnpm --filter ./apps/web test:e2e",
+    "test:e2e": "pnpm -r --if-present test:e2e",
     "build": "turbo run build"
   },
   "devDependencies": {

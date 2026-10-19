@@ -4,6 +4,10 @@ A release sign-off and QA platform for fictional fashion storefronts. Planned wo
 
 **Current delivery: Phase 0 foundation.** The runnable web surface is the Ink and Signal design preview. It does not execute tests against stores, authenticate users, connect Jira or approve real releases yet. See [phase status](docs/STATUS.md).
 
+Public source repository: https://github.com/tulasiram2005/driftgate
+
+Phase 1 Threadline storefront code is included as a work-in-progress snapshot. It contains a PostgreSQL schema, migrations, seed data, catalogue, cart, simulated checkout and a 15-flag defect bank. Its final integration checks and deployment are pending. Phases 2-7 are not implemented. See [Threadline setup](docs/THREADLINE.md). Do not treat this repository as a finished assessment submission yet.
+
 ## Local preview
 
 Requires Node 22.19 or newer within Node 22. No cloud accounts, environment variables or database are needed for Phase 0. Run from this repository:
@@ -65,4 +69,4 @@ Public scanning is restricted to explicitly allowlisted hosts with DNS/IP and re
 - [Five-minute demo outline](docs/DEMO_SCRIPT.md)
 - [Original project brief](docs/PROJECT_BRIEF.txt)
 
-Public GitHub publishing, cloud provisioning and hosted CI have not yet been verified for DriftGate. No changes are made to the separate Orbit project.
+Cloud provisioning and hosted CI have not yet been verified for DriftGate. No changes are made to the separate Orbit project.

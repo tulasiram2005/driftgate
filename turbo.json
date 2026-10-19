@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": ["NEXT_PUBLIC_*", "NEXT_TELEMETRY_DISABLED"]
+      "env": ["NEXT_PUBLIC_*", "NEXT_TELEMETRY_DISABLED", "DATABASE_URL", "THREADLINE_BUG_FLAGS"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
@@ -15,7 +15,9 @@
       "outputs": []
     },
     "test": {
-      "outputs": []
+      "outputs": [],
+      "env": ["TEST_DATABASE_URL", "DATABASE_URL", "THREADLINE_BUG_FLAGS"],
+      "cache": false
     },
     "test:e2e": {
       "dependsOn": ["build"],

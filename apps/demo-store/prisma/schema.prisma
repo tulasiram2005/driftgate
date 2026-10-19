@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  environment    String
+  id             String
+  slug           String
+  name           String
+  description    String
+  category       String
+  priceCents     Int
+  compareAtCents Int?
+  image          String
+  imageAlt       String
+  featured       Boolean @default(false)
+  sizes          ProductSize[]
+
+  @@id([environment, id])
+  @@unique([environment, slug])
+}
+
+model ProductSize {
+  environment String
+  productId   String
+  label       String
+  stock       Int
+  product     Product @relation(fields: [environment, productId], references: [environment, id])
+
+  @@id([environment, productId, label])
+}
+
+model SandboxOrder {
+  id             String @id @default(cuid())
+  environment    String
+  idempotencyKey String
+  requestHash    String
+  subtotalCents  Int
+  discountCents  Int
+  taxCents       Int
+  totalCents     Int
+  status         String @default("SIMULATED")
+  items          Json
+  createdAt      DateTime @default(now())
+
+  @@unique([environment, idempotencyKey])
+  @@index([environment, createdAt])
+}
