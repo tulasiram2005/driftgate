@@ -2,28 +2,34 @@
 
 A release sign-off and QA platform for fictional fashion storefronts. Planned workflows connect requirements, test execution, environment drift, Jira defects and named release approval.
 
-**Current delivery: Phase 0 foundation.** The runnable web surface is the Ink and Signal design preview. It does not execute tests against stores, authenticate users, connect Jira or approve real releases yet. See [phase status](docs/STATUS.md).
+**Current delivery: Threadline storefront plus Phase 2 QA workspace and API.** DriftGate now supports account sessions, project roles, requirements, versioned test cases, CSV transfer, suites and manual execution with notes. The design preview is at `/design`. Automated store execution, Jira and release approval remain later phases. See [phase status](docs/STATUS.md).
 
 Public source repository: https://github.com/tulasiram2005/driftgate
 
-Phase 1 Threadline storefront code is included as a work-in-progress snapshot. It contains a PostgreSQL schema, migrations, seed data, catalogue, cart, simulated checkout and a 15-flag defect bank. Its final integration checks and deployment are pending. Phases 2-7 are not implemented. See [Threadline setup](docs/THREADLINE.md). Do not treat this repository as a finished assessment submission yet.
+Phase 1 includes a PostgreSQL schema, migrations, seed data, catalogue, cart, simulated checkout and a 15-flag defect bank. See [measured evidence](docs/METRICS.md), [QA workspace setup](docs/PHASE2.md) and [Threadline setup](docs/THREADLINE.md). Deployment and later phases remain pending. This is not a finished assessment submission yet.
 
-## Local preview
+![Threadline demo catalogue](docs/screenshots/threadline-1280.png)
 
-Requires Node 22.19 or newer within Node 22. No cloud accounts, environment variables or database are needed for Phase 0. Run from this repository:
+[Mobile storefront](docs/screenshots/threadline-360.png) | [Simulated receipt](docs/screenshots/threadline-receipt.png)
+
+## Local development
+
+Follow [Phase 2 setup](docs/PHASE2.md) for the app and API. It documents the separate application and test databases, migrations, JWT secret and the two terminals needed for the API and web app. API tests deliberately refuse to run without TEST_API_DATABASE_URL pointing at the isolated local driftgate_test database. For the standalone design preview, use `/design` after starting the web app.
+
+Requires Node 22.19 or newer within Node 22. For the standalone design preview only, no database is needed:
 
 ```sh
 npm exec --yes --package=pnpm@10.18.3 -- pnpm install --frozen-lockfile
-npm exec --yes --package=pnpm@10.18.3 -- pnpm typecheck
-npm exec --yes --package=pnpm@10.18.3 -- pnpm lint
-npm exec --yes --package=pnpm@10.18.3 -- pnpm test
-npm exec --yes --package=pnpm@10.18.3 -- pnpm build
-npm exec --yes --package=pnpm@10.18.3 -- pnpm --filter @driftgate/web exec playwright install chromium firefox webkit
-npm exec --yes --package=pnpm@10.18.3 -- pnpm test:e2e
-npm exec --yes --package=pnpm@10.18.3 -- pnpm dev
+npm exec --yes --package=pnpm@10.18.3 -- pnpm --filter @driftgate/web exec next dev --port 3100
 ```
 
-Open the local address printed by Next.js. On this workstation, if npm cache ownership causes an error, add `--cache /tmp/driftgate-npm-cache` immediately after `npm exec`. Once a working pnpm 10.18.3 is on PATH, the shorter `pnpm` commands in AGENTS.md are equivalent. Linux CI installs browsers with `--with-deps`.
+Open http://localhost:3100/design. Full app tests and the main QA workspace require the API/database setup linked above. On this workstation, if npm cache ownership causes an error, add `--cache /tmp/driftgate-npm-cache` immediately after `npm exec`. Once pnpm 10.18.3 is on PATH, the shorter commands in PHASE2.md are equivalent. Linux CI installs browsers with `--with-deps`.
+
+## QA workspace screenshots
+
+![Test case manager at 1280 pixels](docs/screenshots/qa-cases-1280.png)
+
+[Mobile test cases](docs/screenshots/qa-cases-360.png) | [Manual run execution](docs/screenshots/qa-run-1280.png)
 
 ## Phase 0 screenshots
 
@@ -46,7 +52,7 @@ flowchart TD
   API --> Jira[Jira Cloud]
 ```
 
-The exact requested stack is preserved. Phase 0 uses pnpm/Turborepo, strict TypeScript, Next.js, token-based Tailwind styles, Motion, Lucide, Vitest and Playwright. Express API and runner workspaces are scaffolds for subsequent phases. Remaining stack components are introduced with their owning features, not represented as already integrated.
+The requested stack is preserved. The implemented apps use pnpm/Turborepo, strict TypeScript, Next.js, token styles, Motion, Lucide, TanStack Query/Table, React Hook Form, Express, Zod, Prisma/PostgreSQL, Argon2 and JWT. OpenAPI is generated from Zod with Swagger UI. The automated runner workspace remains a scaffold. Remaining integrations arrive in their owning phases.
 
 ## Delivery boundaries
 

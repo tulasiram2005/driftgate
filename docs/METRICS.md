@@ -1,5 +1,89 @@
 # Measured evidence
 
+## Phase 2 local verification (2026-10-19)
+
+Node 22.19.0, pnpm 10.18.3. The existing Phase 1 changes were preserved and reverified before adding the Phase 2 API/workspace. Bulk UI implementation used a GPT-6.1 Sol subagent; API integration and verification were performed in the parent session. No Astra delegation was used.
+
+| Gate                                  | Observed result                                                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Frozen install                        | PASS after synchronizing newly added workspace dependencies into the lockfile                                       |
+| Typecheck                             | PASS, four workspace tasks (some cached)                                                                            |
+| Lint/format                           | PASS, four workspace tasks plus root tooling/formatting                                                             |
+| Unit/integration                      | PASS, 102 tests: 21 runtime, 33 web (8 contrast + 25 client), 34 storefront, 14 API integration                     |
+| API coverage                          | 88.31% statements, 68.64% branches, 81.81% functions, 90.65% lines for app/config/contracts; bootstrap not measured |
+| Web helper coverage                   | 100% for contrast/client helpers; not whole-UI coverage                                                             |
+| Production build                      | PASS, all four workspace tasks                                                                                      |
+| Dependency audit                      | PASS, no known vulnerabilities found                                                                                |
+| Store browser regression              | PASS, 18 tests across Chromium/Firefox/WebKit in 38.6s; no retries                                                  |
+| QA workspace/browser regression       | PASS, 21 tests across Chromium/Firefox/WebKit; no retries                                                           |
+| Hosted CI / deployment / real devices | NOT VERIFIED / not deployed / NOT VERIFIED                                                                          |
+
+Tests use separate `driftgate_test` (55435) and `threadline_test` (55433) databases. API tests refuse absent, remote or incorrectly named database URLs and delete only the records they created. Browser checks create uniquely named test accounts/projects in the test database. They never reset the demo database. The authorization matrix covers every protected nested endpoint against both unauthenticated requests and a nonmember; role tests cover ADMIN, QA, DEVELOPER and APPROVER. Additional assertions cover expired JWTs, refresh rotation/replay/logout, validation, rate limiting, CSV atomicity, immutable version history, and preserved run snapshots after edits/archives.
+
+Commands, run from the repo root with the pinned npm wrapper (`npm exec --cache /tmp/driftgate-npm-cache --yes --package=pnpm@10.18.3 -- pnpm`):
+
+```sh
+docker compose -f compose.driftgate.yml up -d --wait
+docker compose -f compose.threadline.yml up -d --wait
+DATABASE_URL=postgresql://driftgate:local-test-only@127.0.0.1:55435/driftgate_test pnpm --filter @driftgate/api db:migrate
+DATABASE_URL=postgresql://threadline:local-test-only@127.0.0.1:55433/threadline_test pnpm --filter @driftgate/demo-store db:migrate
+DATABASE_URL=postgresql://threadline:local-test-only@127.0.0.1:55433/threadline_test pnpm --filter @driftgate/demo-store db:seed
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm lint
+TEST_API_DATABASE_URL=postgresql://driftgate:local-test-only@127.0.0.1:55435/driftgate_test TEST_DATABASE_URL=postgresql://threadline:local-test-only@127.0.0.1:55433/threadline_test pnpm test
+pnpm build
+pnpm audit --audit-level=high
+PW_TEST_CONNECT_WS_ENDPOINT=ws://127.0.0.1:9333/ THREADLINE_BASE_URL=http://host.docker.internal:3201 pnpm --filter @driftgate/demo-store test:e2e
+PW_TEST_CONNECT_WS_ENDPOINT=ws://127.0.0.1:9333/ PLAYWRIGHT_BASE_URL=http://host.docker.internal:3100 pnpm --filter @driftgate/web test:e2e
+```
+
+Browser engines ran in the official Playwright 1.64.1 Docker server; API and built web/store servers ran locally. API origin allowlist included the fixed Docker demo hostname. The workspace browser suite exercises registration/login, project/requirement creation, multi-step cases, version history, search/filters, CSV export/import, suite creation, every manual result status with notes, delete confirmation cancellation, refresh restoration, role-specific controls and empty states. Axe assertions and horizontal-overflow checks cover 360/768/1280/1920px; screenshots of cases and manual execution were visually reviewed. These checks are not physical-device certification or a full human accessibility audit.
+
+The first checks found a detached query observer after registration, ambiguous dropdown labels and remote-download handling in the harness. Session cache updates now preserve their observer, fields have explicit label/control/error associations, and the remote test uses saveAs. Screenshot review caught wrapping navigation/table labels; widths were adjusted. A lockfile mismatch and new uncovered client helper were corrected without lowering the existing web coverage threshold. No automated runner, Jira, drift detection, real sign-off, or cloud availability is claimed by these results.
+
+## Phase 1 local verification (2026-10-19)
+
+Node 22.19.0, pinned pnpm 10.18.3; commands use the same npm wrapper as Phase 0 below.
+
+| Gate                                  | Result                                                                                                    |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Frozen install                        | PASS, lockfile up to date                                                                                 |
+| Typecheck                             | PASS, 4 workspace tasks                                                                                   |
+| Lint                                  | PASS after fixing effect handling and scoped demo-alt annotation                                          |
+| Build                                 | PASS, 4 workspace tasks; storefront rebuilt after HTTP checkout fix                                       |
+| Unit/integration                      | PASS, 63 tests: 21 runtime, 8 contrast, 34 store including 4 PostgreSQL tests                             |
+| Store helper coverage                 | 100% statements/lines/functions, 98.41% branches for cart, flags, products, errors; not full-app coverage |
+| Store browsers                        | PASS, 18 tests in Chromium, Firefox and WebKit (30.6 seconds, no test retries)                            |
+| Audit                                 | PASS, no known vulnerabilities found                                                                      |
+| Hosted CI                             | Pending verification after push                                                                           |
+| Deployment / DriftGate detection rate | NOT VERIFIED / not implemented                                                                            |
+
+Store checks used a separate `threadline_test` database on port 55433, never the demo database. Integration fixtures clean up their own records; browser checkout leaves simulated test orders. Seeding does not erase data or replenish stock. Tests exercise concurrent idempotent checkout, changed-payload rejection, environment isolation, stock exhaustion, rollback, HTTP validation and seed preservation.
+
+```sh
+docker compose -f compose.threadline.yml up -d --wait
+TEST_DATABASE_URL=postgresql://threadline:local-test-only@127.0.0.1:55433/threadline_test pnpm test
+TEST_DATABASE_URL=postgresql://threadline:local-test-only@127.0.0.1:55433/threadline_test pnpm --filter @driftgate/demo-store exec vitest run --coverage
+pnpm typecheck
+pnpm lint
+pnpm build
+pnpm audit --audit-level=high
+```
+
+For remote-browser verification, the existing official Playwright 1.64.1 Docker server ran at `ws://127.0.0.1:9333/`. The built store ran with the test database on port 3201:
+
+```sh
+DATABASE_URL=postgresql://threadline:local-test-only@127.0.0.1:55433/threadline_test pnpm --filter @driftgate/demo-store exec next start --hostname 0.0.0.0 --port 3201
+PW_TEST_CONNECT_WS_ENDPOINT=ws://127.0.0.1:9333/ THREADLINE_BASE_URL=http://host.docker.internal:3201 pnpm --filter @driftgate/demo-store test:e2e
+```
+
+All four catalogue widths (360, 768, 1280, 1920) and the receipt were visually reviewed. Tests cover dark/light axe checks, overflow, decoded images, search, environment APIs, product selection, cart, coupon and real simulated checkout response. They do not prove every possible UI state or physical-device behavior.
+
+The first browser run found HTTP checkout failing because `crypto.randomUUID` was unavailable, plus premature WebKit image checks and a navigation load timeout. Checkout now uses `getRandomValues` with a regression test. Image assertions wait for actual loaded images after scrolling, and catalogue navigation waits for DOM content plus explicit visible/loaded assertions. The second run passed all 18 tests. No accessibility rules or deliberate faults were disabled.
+
+Prisma was updated to 6.19.3 and its transitive `deepmerge-ts` overridden to 8.0.2 to clear dependency audit findings. Generation, build and database transactions passed with that override.
+
 Do not treat design specimens as test results. No defect detection rate, runtime or coverage metric has been measured for the future platform.
 
 ## Phase 0

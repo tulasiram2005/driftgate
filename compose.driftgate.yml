@@ -1,0 +1,33 @@
+services:
+  driftgate-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: driftgate
+      POSTGRES_PASSWORD: local-demo-only
+      POSTGRES_DB: driftgate
+    ports:
+      - "127.0.0.1:55434:5432"
+    volumes:
+      - driftgate-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U driftgate -d driftgate"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+  driftgate-test-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: driftgate
+      POSTGRES_PASSWORD: local-test-only
+      POSTGRES_DB: driftgate_test
+    ports:
+      - "127.0.0.1:55435:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U driftgate -d driftgate_test"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+volumes:
+  driftgate-data:

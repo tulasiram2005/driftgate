@@ -3,7 +3,12 @@ import { Hanken_Grotesk, Instrument_Serif, JetBrains_Mono } from "next/font/goog
 import "./globals.css";
 
 const ui = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-hanken", display: "swap" });
-const display = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-instrument", display: "swap" });
+const display = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-instrument",
+  display: "swap",
+});
 const data = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
 
 export const metadata: Metadata = {
@@ -13,5 +18,13 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" data-theme="dark" className={`${ui.variable} ${display.variable} ${data.variable}`}><body>{children}</body></html>;
+  return (
+    <html
+      lang="en"
+      data-theme="dark"
+      className={`${ui.variable} ${display.variable} ${data.variable}`}
+    >
+      <body>{children}</body>
+    </html>
+  );
 }

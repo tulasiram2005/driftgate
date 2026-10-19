@@ -40,9 +40,18 @@ jobs:
           POSTGRES_DB: threadline_test
         ports: ["5433:5432"]
         options: --health-cmd "pg_isready -U threadline" --health-interval 5s --health-timeout 5s --health-retries 10
+      api-test-db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: driftgate
+          POSTGRES_PASSWORD: ci-test-only
+          POSTGRES_DB: driftgate_test
+        ports: ["5434:5432"]
+        options: --health-cmd "pg_isready -U driftgate" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://threadline:ci-demo-only@localhost:5432/threadline
       TEST_DATABASE_URL: postgresql://threadline:ci-test-only@localhost:5433/threadline_test
+      TEST_API_DATABASE_URL: postgresql://driftgate:ci-test-only@localhost:5434/driftgate_test
     steps:
       - uses: actions/checkout@v5
         with:
@@ -66,6 +75,8 @@ jobs:
           pnpm --filter @driftgate/demo-store db:seed
       - name: Lint and formatting
         run: pnpm lint
+      - name: Prepare API test database
+        run: DATABASE_URL="$TEST_API_DATABASE_URL" pnpm --filter @driftgate/api db:migrate
       - name: Unit tests and coverage
         run: pnpm test
       - name: Production build
@@ -73,7 +84,12 @@ jobs:
       - name: Install browser engines
         run: pnpm --filter ./apps/web exec playwright install --with-deps chromium firefox webkit
       - name: Browser and accessibility checks
-        run: pnpm test:e2e
+        run: |
+          DATABASE_URL="$TEST_API_DATABASE_URL" JWT_SECRET="ci-only-testing-secret-with-no-production-access-123456789" API_CORS_ORIGINS="http://localhost:3100,http://127.0.0.1:3100" pnpm --filter @driftgate/api start > /tmp/driftgate-api.log 2>&1 &
+          trap 'kill $(jobs -p) 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do curl --fail --silent http://127.0.0.1:4100/ready && break; sleep 1; done
+          curl --fail --silent http://127.0.0.1:4100/ready
+          pnpm test:e2e
       - name: Dependency audit
         run: pnpm audit --audit-level=high
       - name: Preserve test evidence

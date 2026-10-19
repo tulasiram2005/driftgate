@@ -16,3 +16,6 @@ blob-report/
 .DS_Store
 *.log
 .vercel/
+apps/api/generated/
+tmp/
+output/

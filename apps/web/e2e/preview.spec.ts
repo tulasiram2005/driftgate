@@ -5,7 +5,7 @@ for (const width of [360, 768, 1280, 1920]) {
   test(`responsive themes and accessibility at ${width}px`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await page.goto("/design");
     await page.evaluate(() => document.fonts.ready);
     await expect(page.locator("html")).toHaveCSS("scroll-behavior", "auto");
     await expect(page.locator(".ring-segment").first()).toHaveCSS("opacity", "1");
@@ -47,7 +47,7 @@ for (const width of [360, 768, 1280, 1920]) {
 test("keyboard navigation, filtering and evidence comparison", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
+  await page.goto("/design");
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
   await page.keyboard.press("Enter");

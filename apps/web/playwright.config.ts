@@ -7,7 +7,12 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
-  use: { baseURL: external ?? "http://127.0.0.1:3100", trace: "retain-on-failure" },
+  use: {
+    baseURL: external ?? "http://127.0.0.1:3100",
+    trace: "retain-on-failure",
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
+  },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },

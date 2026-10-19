@@ -1,5 +1,5 @@
-import { TokenPreview } from "../components/token-preview";
+import { Workspace } from "../components/qa/workspace";
 
 export default function Page() {
-  return <TokenPreview />;
+  return <Workspace />;
 }

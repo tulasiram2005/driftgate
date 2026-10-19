@@ -6,10 +6,11 @@ export default defineConfig({
     testTimeout: 20000,
     hookTimeout: 30000,
     coverage: {
+      enabled: true,
       provider: "v8",
       include: ["src/lib/cart.ts", "src/lib/flags.ts", "src/lib/products.ts", "src/lib/errors.ts"],
       reporter: ["text", "json-summary"],
-      reportsDirectory: "/tmp/threadline-backend-coverage",
+      reportsDirectory: "coverage",
       thresholds: { lines: 90, statements: 90, functions: 90, branches: 90 },
     },
   },

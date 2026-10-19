@@ -14,6 +14,8 @@ export default [
       ...react.configs["jsx-runtime"].rules,
       ...hooks.configs.recommended.rules,
       ...a11y.configs.recommended.rules,
+      // Named overflow regions need keyboard focus for horizontal table scrolling.
+      "jsx-a11y/no-noninteractive-tabindex": ["error", { roles: ["tabpanel", "region"] }],
       "react/prop-types": "off",
     },
   },

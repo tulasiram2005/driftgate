@@ -1,6 +1,6 @@
 # Architecture
 
-Status: target architecture. Phase 0 is the foundation and token preview, not a functioning release platform.
+Status: Phase 1 storefront and Phase 2 QA workspace/API are implemented locally. Queue, automated execution, evidence storage, drift, Jira and release approval in the diagram remain later-phase targets.
 
 ```mermaid
 flowchart LR
@@ -19,7 +19,11 @@ flowchart LR
 
 ## Boundaries
 
-The DriftGate and Threadline databases never share application credentials. Every project-scoped API request requires both role and membership/ownership checks. Run results reference the immutable test-case version used at execution time.
+The DriftGate and Threadline databases never share application credentials. Every project-scoped API request requires membership plus the relevant role. ADMIN manages membership; ADMIN and QA create cases, suites and manual runs; DEVELOPER and APPROVER have read access in Phase 2. Roles are project-scoped, not supplied by registration. A user outside a project receives 404 for its nested resources.
+
+Access tokens live in client memory and expire after 15 minutes. Refresh credentials are opaque, hashed in the database, delivered in an HttpOnly SameSite=Strict cookie, rotated on refresh, and revoked on logout. Production cookies use Secure and the __Host- prefix. Origin checks protect cookie operations. A Next.js rewrite proxies /api/v1 to API_URL so the browser uses a same-origin API. Deployment must preserve that proxy.
+
+Run results snapshot the title, ordered steps and version used at execution time. Case edits append an immutable CaseVersion, while deletion archives the current case; earlier runs remain readable. Notes provide manual execution evidence in Phase 2. Screenshot upload/storage is Phase 3. Suites contain validated project-scoped case identifiers; database-level suite joins and standalone step normalization remain explicit follow-up data-model work before automated runner integration.
 
 Browser automation runs in GitHub Actions or an isolated local runner, not in a Vercel request or a sleeping Render process. Phase 3 must implement a recoverable dispatch/outbox design and measure Redis polling costs. Server-Sent Events require reconnect and resumable event IDs; deployment sleep is not treated as completion.
 
@@ -27,7 +31,7 @@ Evidence is private by default and exposed using short-lived authorized URLs. In
 
 ## Scanning constraints
 
-Public scanning must validate every DNS result, redirects, protocol and target against the project allowlist. Browser subresources also need egress control; validating only the initial URL is insufficient. This protection is planned, not implemented by the Phase 0 scaffold.
+Public scanning must validate every DNS result, redirects, protocol and target against the project allowlist. Browser subresources also need egress control; validating only the initial URL is insufficient. This protection is planned; Phase 2 does not accept scan URLs or perform external scans.
 
 Local development cannot silently bypass production SSRF restrictions. Phase 1/3 will use a fixed-target isolated demo harness with no user-selected private network destination. A malicious URL must never be able to reach local services or cloud metadata.
 

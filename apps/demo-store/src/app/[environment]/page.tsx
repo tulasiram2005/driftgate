@@ -1,3 +1,5 @@
 import { Catalogue } from "../../components/catalogue";
 
-export default function CataloguePage() { return <Catalogue />; }
+export default function CataloguePage() {
+  return <Catalogue />;
+}

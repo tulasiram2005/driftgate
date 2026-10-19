@@ -22,13 +22,13 @@ On this workstation use the pnpm wrapper from README.md if the global launcher i
 
 ## Configuration
 
-| Variable | Purpose |
-| --- | --- |
-| DATABASE_URL | Dedicated Threadline PostgreSQL connection. Never point it at Orbit or DriftGate's future operational database. |
-| TEST_DATABASE_URL | Separate test connection with database name ending `_test`. Used by integration tests. |
-| THREADLINE_BUG_FLAGS | Omit or leave blank for environment defaults; `none` disables all seeded defects; comma-separated known names enables only those defects. Server-side setting, not a public mutation endpoint. |
-| THREADLINE_BASE_URL | Optional existing server for browser tests; omit to let Playwright start the built app. |
-| PW_TEST_CONNECT_WS_ENDPOINT | Optional remote Playwright browser server for sandboxed environments. |
+| Variable                    | Purpose                                                                                                                                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DATABASE_URL                | Dedicated Threadline PostgreSQL connection. Never point it at Orbit or DriftGate's future operational database.                                                                                |
+| TEST_DATABASE_URL           | Separate test connection with database name ending `_test`. Used by integration tests.                                                                                                         |
+| THREADLINE_BUG_FLAGS        | Omit or leave blank for environment defaults; `none` disables all seeded defects; comma-separated known names enables only those defects. Server-side setting, not a public mutation endpoint. |
+| THREADLINE_BASE_URL         | Optional existing server for browser tests; omit to let Playwright start the built app.                                                                                                        |
+| PW_TEST_CONNECT_WS_ENDPOINT | Optional remote Playwright browser server for sandboxed environments.                                                                                                                          |
 
 See BUG_BANK.md for individual flags, affected environments and reproduction steps. Never use a defective environment as the reference for clean accessibility or totals assertions. Seeded bug checks verify the fixture behavior; they do not measure the future DriftGate runner's detection rate.
 

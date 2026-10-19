@@ -3,12 +3,16 @@ packages:
   - packages/*
 
 overrides:
-  '@prisma/config>deepmerge-ts': 8.0.2
+  "@prisma/config>deepmerge-ts": 8.0.2
 
 onlyBuiltDependencies:
-  - '@prisma/client'
-  - '@prisma/engines'
+  - argon2
+  - "@prisma/client"
+  - "@prisma/engines"
   - prisma
   - esbuild
   - sharp
   - unrs-resolver
+
+ignoredBuiltDependencies:
+  - "@scarf/scarf"

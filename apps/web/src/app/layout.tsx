@@ -12,8 +12,8 @@ const display = Instrument_Serif({
 const data = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Ink and Signal | DriftGate",
-  description: "DriftGate Phase 0 design system. All release specimens are demonstration data.",
+  title: "DriftGate | QA Workspace",
+  description: "Project requirements, versioned test cases and manual test execution.",
   robots: { index: false, follow: false },
 };
 
