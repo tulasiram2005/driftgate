@@ -4,8 +4,8 @@ import { readConfig } from "./config.js";
 
 const config = readConfig();
 const db = new PrismaClient();
-const server = createApp(db, config).listen(config.PORT, "127.0.0.1", () => {
-  console.info(`DriftGate API listening on http://127.0.0.1:${config.PORT}`);
+const server = createApp(db, config).listen(config.PORT, config.API_BIND_HOST, () => {
+  console.info(`DriftGate API listening on http://${config.API_BIND_HOST}:${config.PORT}`);
 });
 for (const signal of ["SIGTERM", "SIGINT"]) {
   process.on(signal, () => {

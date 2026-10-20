@@ -9,6 +9,25 @@ automated accessibility checks. See [PHASE3.md](PHASE3.md) for separate fixture,
 actual runner evidence and explicit remaining integration gates. Hosted storage,
 GitHub runner execution and deployment are not claimed by these local results.
 
+Local queue-to-storage integration passed on 2026-10-20. A run created through the
+authenticated API moved through the durable outbox and BullMQ into the isolated
+Threadline Chromium runner. The relay uploaded three artifacts and delivered signed
+callbacks; the API persisted PASS with one result and one attempt. The authenticated
+download endpoint returned a 300-second signed URL and 629,484 bytes, exactly matching
+the stored metadata. LocalStack was used, so this does not verify a cloud provider's
+private-bucket policy. API regression after the local transport changes: 30/30 tests.
+Runner regression: 8/8 tests. API and runner typecheck and lint passed.
+
+Final local regression after the integration fix: frozen install, workspace
+typecheck, lint, 131 unit/integration tests and all four production builds passed.
+Browser coverage passed 42/42 checks across Chromium, Firefox and WebKit: 18
+Threadline storefront checks, 21 DriftGate workspace/design checks and 3 automated
+matrix callback checks. Dependency audit reported no known vulnerabilities. The
+first browser harness attempts used the wrong API port, omitted the fixed Docker
+browser origin and used the Docker hostname from a host-side callback client. Those
+environment errors were corrected and the affected suites rerun; no product rule or
+assertion was disabled.
+
 Corrected isolated actual-Threadline matrix: 18/18 checks passed across all three
 engines and two viewport modes, with 54 nonempty evidence files whose byte lengths
 matched the callback spool. This is browser emulation, not physical-device testing.

@@ -37,6 +37,7 @@ Open http://localhost:3100 and register an account. Create a project, add a requ
 | API         | API_CORS_ORIGINS      | Comma-separated exact origins without trailing slash; no wildcard          |
 | API         | NODE_ENV              | development, test, or production; production enables Secure refresh cookie |
 | API         | PORT                  | API listener port; default 4100                                            |
+| API         | API_BIND_HOST         | Listener host; loopback by default, use 0.0.0.0 in a hosted container      |
 | Web         | API_URL               | Rewrite target, default http://127.0.0.1:4100; set before build            |
 | API tests   | TEST_API_DATABASE_URL | Local database named driftgate_test; other targets are refused             |
 | Store tests | TEST_DATABASE_URL     | Separate Threadline database ending in _test                               |

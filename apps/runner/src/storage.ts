@@ -23,15 +23,19 @@ export async function createStore(env: NodeJS.ProcessEnv, local: boolean): Promi
       },
     };
   }
-  if (
-    !env.RUNNER_S3_BUCKET ||
-    !env.RUNNER_S3_ENDPOINT ||
-    new URL(env.RUNNER_S3_ENDPOINT).protocol !== "https:"
-  )
+  if (!env.RUNNER_S3_BUCKET || !env.RUNNER_S3_ENDPOINT)
     throw new Error("S3 configuration required");
+  const endpoint = new URL(env.RUNNER_S3_ENDPOINT);
+  const localHttp =
+    env.RUNNER_S3_LOCAL_TEST === "1" &&
+    endpoint.protocol === "http:" &&
+    endpoint.hostname === "host.docker.internal" &&
+    !endpoint.username &&
+    !endpoint.password;
+  if (endpoint.protocol !== "https:" && !localHttp) throw new Error("S3 configuration required");
   const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
   const client = new S3Client({
-    endpoint: env.RUNNER_S3_ENDPOINT,
+    endpoint: endpoint.href,
     forcePathStyle: true,
     region: env.RUNNER_S3_REGION ?? "auto",
     maxAttempts: 3,

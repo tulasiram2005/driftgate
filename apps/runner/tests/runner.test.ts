@@ -157,3 +157,37 @@ test("local evidence adapter writes bytes and rejects traversal keys", async () 
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("remote evidence transport requires HTTPS except for the exact Docker test host", async () => {
+  await assert.rejects(
+    createStore({ RUNNER_S3_BUCKET: "evidence", RUNNER_S3_ENDPOINT: "http://storage.test" }, false),
+    /S3 configuration required/,
+  );
+  await assert.rejects(
+    createStore(
+      {
+        RUNNER_S3_BUCKET: "evidence",
+        RUNNER_S3_ENDPOINT: "http://127.0.0.1:59000",
+        RUNNER_S3_LOCAL_TEST: "1",
+      },
+      false,
+    ),
+    /S3 configuration required/,
+  );
+  assert.ok(
+    await createStore(
+      {
+        RUNNER_S3_BUCKET: "evidence",
+        RUNNER_S3_ENDPOINT: "http://host.docker.internal:59000",
+        RUNNER_S3_LOCAL_TEST: "1",
+      },
+      false,
+    ),
+  );
+  assert.ok(
+    await createStore(
+      { RUNNER_S3_BUCKET: "evidence", RUNNER_S3_ENDPOINT: "https://storage.test" },
+      false,
+    ),
+  );
+});

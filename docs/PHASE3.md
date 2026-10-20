@@ -18,12 +18,13 @@ Measured locally on 2026-10-19 and 2026-10-20 (Asia/Kolkata).
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Frozen lockfile install                      | PASS                                                                                                                        |
 | Workspace typecheck and lint                 | PASS                                                                                                                        |
-| Workspace unit/integration tests             | PASS: tooling 21, API 26, web 38, runner 7, storefront 34                                                                   |
+| Workspace unit/integration tests             | PASS: tooling 21, API 30, web 38, runner 8, storefront 34                                                                   |
 | Workspace production build                   | PASS (storefront reused a previously successful build cache)                                                                |
 | Full browser regression                      | PASS: DriftGate 24, Threadline 18, Chromium/Firefox/WebKit                                                                  |
 | New result UI at 360/768/1280/1920px         | PASS: overflow/accessibility checks and screenshot inspection                                                               |
 | Runner deterministic fixture                 | PASS: 12 real-browser results, flaky retry, evidence byte signatures, signed HTTP callbacks and rejected foreign subrequest |
 | Actual isolated Threadline, Chromium desktop | PASS: catalogue/product/cart plus 9 nonempty evidence files with matching sizes                                             |
+| Queue to private evidence round-trip         | PASS: API, outbox, BullMQ, isolated Chromium, relay, signed callbacks and authenticated 629,484-byte download               |
 
 The UI test uses explicitly synthetic signed result callbacks to verify persistence and live updates, not a queue worker. The runner fixture is distinct from the actual Threadline run. API coverage currently includes app/config/contracts, not the new execution/storage/worker modules; do not generalize that percentage to Phase 3.
 
@@ -36,11 +37,20 @@ across Chromium, Firefox and WebKit, desktop and mobile emulation. All 54 eviden
 files were nonempty and matched their recorded sizes. The completion event reported
 passed with resultCount 18. Temporary Docker services were removed successfully.
 
+The local queue-to-storage integration passed on 2026-10-20 against the isolated
+test database, a disposable Redis 7 queue and LocalStack 4.0.3. The API created a
+LOCAL run, the durable outbox delivered it to BullMQ, the worker launched the fixed
+Threadline sandbox, and the relay uploaded three evidence files before sending
+timestamped HMAC callbacks. The persisted run reached PASS with one result and one
+attempt. An authorized evidence request returned a 300-second signed URL, and the
+downloaded artifact exactly matched its recorded 629,484-byte size. This verifies
+the application path, not real-provider private-bucket enforcement.
+
 ## Remaining gates
 
-- Verify BullMQ dispatch, relay upload and authenticated evidence download together against configured private storage.
 - Verify GitHub workflow dispatch against a publicly reachable API. Workflow configuration alone is not execution evidence.
 - Hosted bucket/API are not configured; user requested local verification first on 2026-10-20.
+- Real-provider private-bucket enforcement remains NOT VERIFIED because LocalStack accepts unsigned and tampered requests.
 - External production scanning remains disabled until its separate network isolation policy is implemented and validated. GitHub's bundled demo execution does not imply deployed-environment scanning works.
 - Recheck hosted CI after publishing this checkpoint. No cloud deployment or physical-device verification is claimed.
 

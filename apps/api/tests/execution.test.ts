@@ -365,4 +365,16 @@ describe("automated execution", () => {
       ),
     ).toBe(false);
   });
+  it("rewrites loopback object storage only for the isolated local relay", () => {
+    const local = readConfig({
+      DATABASE_URL: config.DATABASE_URL,
+      JWT_SECRET: config.JWT_SECRET,
+      S3_ENDPOINT: "http://127.0.0.1:59000",
+      RUNNER_CALLBACK_SECRET: config.RUNNER_CALLBACK_SECRET,
+      RUNNER_CALLBACK_URL: config.RUNNER_CALLBACK_URL,
+    });
+    const env = runnerEnvironment(local, "e30=");
+    expect(env.RUNNER_S3_ENDPOINT).toBe("http://host.docker.internal:59000/");
+    expect(env.RUNNER_S3_LOCAL_TEST).toBe("1");
+  });
 });

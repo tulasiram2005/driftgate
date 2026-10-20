@@ -8,19 +8,33 @@ import { randomUUID } from "node:crypto";
 import type { Config } from "./config.js";
 
 const execute = promisify(execFile);
+function relayStorageEndpoint(endpoint: string | undefined): {
+  endpoint?: string;
+  localTest: boolean;
+} {
+  if (!endpoint) return { localTest: false };
+  const url = new URL(endpoint);
+  if (url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname)) {
+    url.hostname = "host.docker.internal";
+    return { endpoint: url.href, localTest: true };
+  }
+  return { endpoint, localTest: false };
+}
 export function runnerEnvironment(config: Config, encoded: string): Record<string, string> {
   if (!config.RUNNER_CALLBACK_SECRET || !config.RUNNER_CALLBACK_URL)
     throw new Error("Runner callback configuration required");
   const callback = new URL(config.RUNNER_CALLBACK_URL);
   if (!["http:", "https:"].includes(callback.protocol) || callback.username || callback.password)
     throw new Error("Invalid callback URL");
+  const storage = relayStorageEndpoint(config.S3_ENDPOINT);
   return {
     PATH: process.env.PATH ?? "/usr/bin:/bin",
     RUNNER_JOB_BASE64: encoded,
     RUNNER_CALLBACK_URL: callback.href,
     RUNNER_CALLBACK_SECRET: config.RUNNER_CALLBACK_SECRET,
     RUNNER_CALLBACK_LOCAL: callback.protocol === "http:" ? "1" : "0",
-    ...(config.S3_ENDPOINT ? { RUNNER_S3_ENDPOINT: config.S3_ENDPOINT } : {}),
+    ...(storage.endpoint ? { RUNNER_S3_ENDPOINT: storage.endpoint } : {}),
+    ...(storage.localTest ? { RUNNER_S3_LOCAL_TEST: "1" } : {}),
     ...(config.S3_BUCKET ? { RUNNER_S3_BUCKET: config.S3_BUCKET } : {}),
     RUNNER_S3_REGION: config.S3_REGION,
     ...(config.S3_ACCESS_KEY_ID ? { AWS_ACCESS_KEY_ID: config.S3_ACCESS_KEY_ID } : {}),
