@@ -17,6 +17,16 @@ const job = {
   matrix: [{ browser: "chromium", device: "desktop" }],
   retries: 1,
 };
+test("relay reads owner-only spool as the unprivileged runner identity", async () => {
+  const dockerfile = await readFile(new URL("../docker/Dockerfile", import.meta.url), "utf8");
+  const relay = dockerfile.split("AS relay\n")[1];
+  assert.ok(relay);
+  assert.match(relay, /^USER 1001:1001$/m);
+  const compose = await readFile(new URL("../docker/compose.yml", import.meta.url), "utf8");
+  const relayService = compose.split("  relay:\n")[1];
+  assert.match(relayService, /cap_drop: \[ALL\]/);
+  assert.match(relayService, /spool:\/spool:ro/);
+});
 test("strict declarative job rejects executable fields, duplicates, unsupported cells and bounds", () => {
   assert.equal(parseJob(job).runId, "run_1");
   for (const patch of [

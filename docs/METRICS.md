@@ -1,5 +1,16 @@
 # Measured evidence
 
+## Hosted runner permission correction (2026-10-21)
+
+Hosted run 39516931241 successfully installed, built and tested the runner, but
+failed in the evidence relay with EACCES reading /spool/001.json. The browser
+writes owner-only files as UID 1001; the relay previously ran as root with all
+capabilities dropped and could not override Linux ownership permissions.
+The relay now uses UID/GID 1001 while retaining read-only mounts and dropped
+capabilities. Runner tests pass 9/9; runner typecheck and lint pass. A Docker
+check verified UID 1001 can read a mode-0600 file with all capabilities dropped.
+End-to-end hosted retest is pending; these checks do not establish cloud success.
+
 ## Phase 3 local checkpoint (2026-10-20)
 
 Frozen install, typecheck, lint, unit/integration tests and production build passed.

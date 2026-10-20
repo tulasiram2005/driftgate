@@ -24,4 +24,6 @@ CMD ["node", "apps/runner/dist/index.js"]
 FROM node:22-bookworm AS relay
 WORKDIR /repo
 COPY --from=build /repo /repo
+# Match pwuser's numeric identity to read its owner-only spool on Linux.
+USER 1001:1001
 CMD ["node", "apps/runner/dist/relay.js"]
