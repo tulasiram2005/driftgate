@@ -165,6 +165,8 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 
 # Local storage follow-up: 2026-10-20
 
+- GitHub run 39357398112: browser/accessibility checks passed (24 web + 18 storefront). Audit failed on transitive fast-xml-parser 5.2.5. Targeted SDK dependency override to 5.7.0: `pnpm audit` now reports "No known vulnerabilities found"; local storage round-trip passes again. Hosted CI for this dependency revision is pending.
+
 - Follow-up CI diagnosis: run 39356944276 exposed the reserved `GITHUB_WORKFLOW` variable collision. Renamed the application setting to `RUNNER_GITHUB_WORKFLOW`. Regression suite: 28 API tests passed; API build passed; compiled startup with `GITHUB_WORKFLOW=Quality Gates` and GET `/ready` passed. Full workspace tests on the preceding upload fix passed (21 tooling, 27 API, 38 web, 7 runner, 34 storefront). Frozen install, lint and build passed (build reused two cached frontend tasks).
 
 - `pnpm --filter @driftgate/api test`: 27 tests passed, including the new presigned-upload regression.

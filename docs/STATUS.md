@@ -1,5 +1,7 @@
 # Phase status
 
+Latest checkpoint: GitHub run 39357398112 passed all 42 browser checks (24 web, 18 storefront), then failed the dependency audit on the storage SDK's XML parser. A targeted override to fast-xml-parser 5.7.0 removes the reported advisories: local `pnpm audit` reports no known vulnerabilities, and the storage round-trip passes. CI for the dependency fix remains pending; Phase 3 queue-to-storage and hosted checks remain unfinished.
+
 CI startup diagnosis (2026-10-20): GitHub Actions supplies `GITHUB_WORKFLOW=Quality Gates`, conflicting with the runner filename validation. The application now uses `RUNNER_GITHUB_WORKFLOW` (default `runner.yml`). A regression test and compiled API startup with that CI environment pass; `/ready` returns `{"data":{"status":"ready"}}`. The updated API suite passes 28 tests. A fresh hosted CI run is still required.
 
 | Phase | Scope                                                       | State                                                             |

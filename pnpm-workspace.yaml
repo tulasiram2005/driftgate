@@ -4,6 +4,7 @@ packages:
 
 overrides:
   "@prisma/config>deepmerge-ts": 8.0.2
+  "@aws-sdk/xml-builder>fast-xml-parser": 5.7.0
 
 onlyBuiltDependencies:
   - argon2
