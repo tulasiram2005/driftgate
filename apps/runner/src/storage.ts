@@ -32,6 +32,7 @@ export async function createStore(env: NodeJS.ProcessEnv, local: boolean): Promi
   const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
   const client = new S3Client({
     endpoint: env.RUNNER_S3_ENDPOINT,
+    forcePathStyle: true,
     region: env.RUNNER_S3_REGION ?? "auto",
     maxAttempts: 3,
   });

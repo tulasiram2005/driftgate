@@ -15,8 +15,11 @@ export interface EvidenceStorage {
 export function storage(config: Config): EvidenceStorage | undefined {
   if (!config.S3_BUCKET || !config.S3_ACCESS_KEY_ID || !config.S3_SECRET_ACCESS_KEY) return;
   const client = new S3Client({
+    // Upload bodies arrive later from the browser, so no checksum can be computed here.
+    requestChecksumCalculation: "WHEN_REQUIRED",
     region: config.S3_REGION,
     ...(config.S3_ENDPOINT ? { endpoint: config.S3_ENDPOINT } : {}),
+    forcePathStyle: Boolean(config.S3_ENDPOINT),
     credentials: {
       accessKeyId: config.S3_ACCESS_KEY_ID,
       secretAccessKey: config.S3_SECRET_ACCESS_KEY,
@@ -35,8 +38,18 @@ export function storage(config: Config): EvidenceStorage | undefined {
         { expiresIn: 300 },
       ),
     async verify(Key, contentType, size) {
-      const head = await client.send(new HeadObjectCommand({ Bucket, Key }));
-      return head.ContentLength === size && head.ContentType === contentType;
+      try {
+        const head = await client.send(new HeadObjectCommand({ Bucket, Key }));
+        return head.ContentLength === size && head.ContentType === contentType;
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          "$metadata" in error &&
+          (error.$metadata as { httpStatusCode?: number }).httpStatusCode === 404
+        )
+          return false;
+        throw error;
+      }
     },
   };
 }
