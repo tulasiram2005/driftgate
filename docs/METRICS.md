@@ -9,7 +9,16 @@ capabilities dropped and could not override Linux ownership permissions.
 The relay now uses UID/GID 1001 while retaining read-only mounts and dropped
 capabilities. Runner tests pass 9/9; runner typecheck and lint pass. A Docker
 check verified UID 1001 can read a mode-0600 file with all capabilities dropped.
-End-to-end hosted retest is pending; these checks do not establish cloud success.
+Hosted retest succeeded on revision `9f6ca5c`:
+https://github.com/tulasiram2005/driftgate/actions/runs/39517721256
+Run `624af60c-d3a6-473e-824b-304da5c4f997` was created through the authenticated
+Render API, dispatched by the temporary local worker through Upstash, and
+executed on GitHub. The API persisted PASS with one passing Chromium desktop
+catalogue result and three artifacts. Authorized downloads returned HTTP 200:
+screenshot 629,484 bytes, trace 865,149 bytes, video 232,367 bytes. All three
+matched stored sizes, used 300-second signed links and rejected unsigned GET
+with HTTP 403. Elapsed-time expiry was not tested. This verifies one hosted
+happy-path configuration, not every matrix combination or failure mode.
 
 ## Phase 3 local checkpoint (2026-10-20)
 
