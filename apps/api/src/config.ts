@@ -24,7 +24,7 @@ const schema = z.object({
     .string()
     .regex(/^[\w.-]+\/[\w.-]+$/)
     .optional(),
-  GITHUB_WORKFLOW: z
+  RUNNER_GITHUB_WORKFLOW: z
     .string()
     .regex(/^[\w.-]+\.ya?ml$/)
     .default("runner.yml"),

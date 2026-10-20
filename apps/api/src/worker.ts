@@ -32,7 +32,7 @@ const worker = new Worker(
       if (!config.GITHUB_REPOSITORY || !config.GITHUB_TOKEN)
         throw new Error("GitHub dispatch is not configured");
       const response = await fetch(
-        `https://api.github.com/repos/${config.GITHUB_REPOSITORY}/actions/workflows/${config.GITHUB_WORKFLOW}/dispatches`,
+        `https://api.github.com/repos/${config.GITHUB_REPOSITORY}/actions/workflows/${config.RUNNER_GITHUB_WORKFLOW}/dispatches`,
         {
           method: "POST",
           redirect: "error",

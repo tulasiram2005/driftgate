@@ -1,5 +1,7 @@
 # Phase status
 
+CI startup diagnosis (2026-10-20): GitHub Actions supplies `GITHUB_WORKFLOW=Quality Gates`, conflicting with the runner filename validation. The application now uses `RUNNER_GITHUB_WORKFLOW` (default `runner.yml`). A regression test and compiled API startup with that CI environment pass; `/ready` returns `{"data":{"status":"ready"}}`. The updated API suite passes 28 tests. A fresh hosted CI run is still required.
+
 | Phase | Scope                                                       | State                                                             |
 | ----- | ----------------------------------------------------------- | ----------------------------------------------------------------- |
 | 0     | Tooling, CI skeleton, tokens and preview                    | Locally and CI verified                                           |

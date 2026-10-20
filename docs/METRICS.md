@@ -165,6 +165,8 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 
 # Local storage follow-up: 2026-10-20
 
+- Follow-up CI diagnosis: run 39356944276 exposed the reserved `GITHUB_WORKFLOW` variable collision. Renamed the application setting to `RUNNER_GITHUB_WORKFLOW`. Regression suite: 28 API tests passed; API build passed; compiled startup with `GITHUB_WORKFLOW=Quality Gates` and GET `/ready` passed. Full workspace tests on the preceding upload fix passed (21 tooling, 27 API, 38 web, 7 runner, 34 storefront). Frozen install, lint and build passed (build reused two cached frontend tasks).
+
 - `pnpm --filter @driftgate/api test`: 27 tests passed, including the new presigned-upload regression.
 - `pnpm typecheck`: 4 tasks successful (3 cache hits).
 - `TEST_S3_EMULATOR=1 TEST_S3_ENDPOINT=http://127.0.0.1:59000 TEST_S3_ACCESS_KEY_ID=test TEST_S3_SECRET_ACCESS_KEY=test pnpm --filter @driftgate/api test:storage`: signed PUT/GET, 300-second expiry, exact bytes and missing/mismatched metadata passed against local LocalStack 4.0.3. Test creates and removes a unique bucket. Provider authorization NOT VERIFIED: emulator returned 200 for both unsigned and tampered requests.
