@@ -288,6 +288,8 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 
 # Comparison UI checkpoint: 2026-10-21
 
+- Hosted follow-up for a53318d: Quality Gates 39580843879 and CodeQL 39580843562 succeeded. Browser/accessibility tests, runner fixtures, restricted SQL integration, dependency audit and all build/lint/unit gates passed. New comparison flow executed in Chromium, Firefox and WebKit at four viewport widths. Visual review of screenshots remains pending.
+
 - Web unit tests: 40 passed, including cursor-page success and failure handling.
 - Web lint and production build: passed.
 - Local Chromium end-to-end launch: blocked by macOS bootstrap_check_in permission denial before test execution. No browser pass claimed.

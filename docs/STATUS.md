@@ -1,5 +1,12 @@
 # Phase status
 
+Hosted comparison UI verification (2026-10-21): revision a53318d passed Quality
+Gates 39580843879 and CodeQL 39580843562. This includes the new manual snapshot
+import/compare/findings flow in Chromium, Firefox and WebKit, accessibility and
+horizontal-overflow assertions at 360, 768, 1280 and 1920 pixels. Screenshot
+visual review remains pending. Cloud schema deployment and remaining Phase 4
+features are not implied by this CI result.
+
 Comparison UI checkpoint (2026-10-21): snapshot import, distinct-environment
 selectors, paginated history and findings dialog are implemented with role-aware
 controls and manual-import provenance. Web unit tests pass 40/40; lint and

@@ -4,11 +4,18 @@ This phase is in progress, not complete.
 
 ## Implemented
 
+- Comparison workspace: manual JSON imports, distinct-environment selectors,
+  paginated snapshots/history, role-aware controls and findings dialog. Revision
+  a53318d passed Quality Gates 39580843879 and CodeQL 39580843562. The new flow
+  passed in all three Playwright browsers, including accessibility and document
+  overflow assertions at four viewport widths. Visual screenshot review remains
+  pending. This supersedes earlier comparison-UI pending notes below.
+
 - Saved comparisons: ADMIN/QA can compare two project-owned snapshots through
   the API. Findings are computed server-side using the shared runner engine,
   stored immutably and retrieved through scoped detail/metadata-list routes.
   Invalid stored prices fail without saving partial results. Manual provenance
-  is retained. Comparison UI and expected-difference management remain pending.
+  is retained. Expected-difference management remains pending.
 
 - Immutable manual snapshot storage with authenticated create/list/detail API,
   project membership and write-role checks, strict bounded payloads and explicit
@@ -67,7 +74,7 @@ No screenshots or user-interface completion are claimed in this checkpoint.
 
 - Collect and persist actual rendered/API snapshots, broken-link observations,
   findings and expected-difference rules with project authorization.
-- Comparison and review screens with responsive/accessibility verification.
+- Expected-difference review/management and visual-baseline review screens.
 - Pixel comparisons, ignore regions, scoped baselines and approval/rejection.
 - Persist SQL outcomes and connect them to authorized run results/UI; configure
   a dedicated deployed-store read-only role when cloud verification is needed.
