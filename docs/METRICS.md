@@ -2,6 +2,17 @@
 
 ## Phase 4 snapshot collector checkpoint (2026-10-21)
 
+Verified revision `d18f677`: [Quality Gates 39546993585](https://github.com/tulasiram2005/driftgate/actions/runs/39546993585)
+and [CodeQL 39546993724](https://github.com/tulasiram2005/driftgate/actions/runs/39546993724)
+passed. The expanded Chromium fixture verifies rendered-price and missing-metadata
+drift, broken-image observations, rejection of malformed/duplicate metadata and
+failed navigation, response-listener cleanup and successful reuse after failure.
+The first run on `d913338` failed because tsx injected __name into a nested
+browser-evaluated function; removing that nested helper fixed the failure.
+All workflow steps passed, including SQL integration, browser/accessibility
+regression and dependency audit. These are fixture results, not a real-store
+coverage or complete Phase 4 claim.
+
 - Runner unit tests: 28/28 passed (five new snapshot parser tests).
 - Runner typecheck, lint and production build: passed.
 - Browser integration: NOT VERIFIED locally; Chromium bootstrap_check_in denied

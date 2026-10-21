@@ -11,7 +11,8 @@ This phase is in progress, not complete.
   It requires the existing restricted runner page; it is not exposed via HTTP
   or wired into dispatch yet. Unknown image status remains null, not assumed 200.
   Production external scanning remains disabled. Browser fixture verification
-  is pending CI; unit tests pass. Persistence and comparison screens remain pending.
+  passed in CI on `d18f677`, including failure cleanup and recovery; runner unit
+  tests pass 28/28. Persistence and comparison screens remain pending.
 
 - Fixed Threadline SQL assertions and operator CLI: negative stock, order/line
   arithmetic and missing product-size references. Only a dedicated SELECT-only

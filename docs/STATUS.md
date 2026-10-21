@@ -1,5 +1,13 @@
 # Phase status
 
+Latest verified code: `d18f677`. Quality Gates 39546993585 and CodeQL 39546993724
+passed. Snapshot browser fixtures now verify rendered-price/metadata drift,
+broken-image observations, missing metadata, malformed/duplicate metadata
+rejection, failed navigation, listener cleanup and subsequent recovery. The
+first snapshot CI failed on a transpiler helper inside page.evaluate; the fix
+removes that nested helper. This supersedes the pending snapshot checks below.
+Snapshot persistence, dispatch integration and comparison UI remain pending.
+
 Snapshot collector checkpoint (2026-10-21): internal collection and five parser
 tests added. Runner tests pass 28/28; typecheck, lint and build pass. Local
 Chromium launch is blocked by macOS sandbox; CI fixture is pending verification.
