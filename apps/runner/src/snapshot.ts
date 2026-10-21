@@ -96,12 +96,11 @@ export async function collectThreadlineSnapshot(
       const observed = await page.evaluate(() => {
         const image = document.querySelector<HTMLImageElement>(".detail-photo img");
         const scripts = document.querySelectorAll('script[type="application/ld+json"]');
-        const text = (selector: string) =>
-          document.querySelector(selector)?.textContent?.trim() ?? null;
+        // Keep browser-evaluated code free of transpiler-generated nested helpers.
         return {
-          price: text(".detail-price > span"),
-          compareAt: text(".detail-price del"),
-          badge: text(".sale-text"),
+          price: document.querySelector(".detail-price > span")?.textContent?.trim() ?? null,
+          compareAt: document.querySelector(".detail-price del")?.textContent?.trim() ?? null,
+          badge: document.querySelector(".sale-text")?.textContent?.trim() ?? null,
           title: document.title,
           canonical: document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href ?? null,
           metadata: scripts.length === 1 ? (scripts[0]?.textContent ?? null) : null,
