@@ -17,6 +17,7 @@ import swaggerUi from "swagger-ui-express";
 import { Prisma } from "../generated/client/index.js";
 import type { PrismaClient } from "../generated/client/index.js";
 import type { Config } from "./config.js";
+import { mountSnapshots, snapshotBody } from "./snapshots.js";
 import { mountCallback, mountExecution, publicRun } from "./execution.js";
 import { automatedRunBody, callbackBody, screenshotBody } from "./execution-contracts.js";
 import type { EvidenceStorage } from "./storage.js";
@@ -375,6 +376,10 @@ export function createApp(db: PrismaClient, config: Config, evidenceStorage?: Ev
   });
   document("post", "/api/v1/projects", projectBody);
   const base = "/api/v1/projects/:projectId";
+  mountSnapshots(app, db, guard, fail);
+  document("post", `${base}/snapshots`, snapshotBody);
+  document("get", `${base}/snapshots`);
+  document("get", `${base}/snapshots/:snapshotId`);
   mountExecution(app, db, config, guard, fail, evidenceStorage);
   document("post", `${base}/automated-runs`, automatedRunBody);
   document("get", `${base}/automated-runs`);

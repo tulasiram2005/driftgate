@@ -45,6 +45,20 @@ model Project {
   cases        TestCase[]
   suites       Suite[]
   runs         Run[]
+  snapshots    EnvironmentSnapshot[]
+}
+
+model EnvironmentSnapshot {
+  id String @id @default(cuid())
+  projectId String
+  label String
+  environment String
+  source String @default("MANUAL_IMPORT")
+  createdBy String
+  snapshot Json
+  createdAt DateTime @default(now())
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@index([projectId, id])
 }
 
 model Member {

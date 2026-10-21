@@ -1,5 +1,13 @@
 # Phase status
 
+Snapshot storage checkpoint (2026-10-21): immutable manual-import persistence
+and authenticated project-scoped create/list/detail API added. ADMIN/QA writes,
+member reads, bounded pagination, strict input validation, server-owned provenance
+and import rate limiting are implemented. Local test migration applied only to
+driftgate_test. API tests pass 58/58, typecheck/build/lint pass. Cloud migration,
+automated snapshot ingestion, saved comparisons and comparison UI remain pending.
+See SNAPSHOTS.md. No new cloud services or paid resources were created.
+
 Latest verified code: `d18f677`. Quality Gates 39546993585 and CodeQL 39546993724
 passed. Snapshot browser fixtures now verify rendered-price/metadata drift,
 broken-image observations, missing metadata, malformed/duplicate metadata

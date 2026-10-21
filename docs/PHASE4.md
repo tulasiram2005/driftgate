@@ -4,6 +4,12 @@ This phase is in progress, not complete.
 
 ## Implemented
 
+- Immutable manual snapshot storage with authenticated create/list/detail API,
+  project membership and write-role checks, strict bounded payloads and explicit
+  MANUAL_IMPORT provenance. Local test migration and 24 storage API tests passed.
+  Automatic collector ingestion, saved comparisons and UI remain pending.
+  Cloud migration must precede using these new endpoints. See SNAPSHOTS.md.
+
 - Internal fixed-origin Threadline snapshot collector combines rendered prices,
   badges, image response status/dimensions, title, canonical and validated
   Product JSON-LD with catalogue stock data. Limits: 20 products, 1 MiB parsed

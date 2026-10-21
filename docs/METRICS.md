@@ -1,5 +1,16 @@
 # Measured evidence
 
+## Phase 4 snapshot storage checkpoint (2026-10-21)
+
+- Isolated local driftgate_test migration: passed, adding EnvironmentSnapshot.
+- API tests: 58/58 passed, including 24 snapshot tests for roundtrip, provenance,
+  metadata-only lists, pagination, permission checks, cross-project isolation,
+  bounds, malformed inputs, rate limiting and immutable routes.
+- API typecheck, production build and lint passed.
+- New hosted CI and cloud migration are not yet verified. No UI was changed.
+- GPT-6.1 Sol wrote the initial snapshot tests; parent reviewed and adjusted
+  rate-limit isolation and added cursor/rate-limit regression coverage.
+
 ## Phase 4 snapshot collector checkpoint (2026-10-21)
 
 Verified revision `d18f677`: [Quality Gates 39546993585](https://github.com/tulasiram2005/driftgate/actions/runs/39546993585)
