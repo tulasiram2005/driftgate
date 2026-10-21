@@ -7,7 +7,7 @@
   "scripts": {
     "typecheck": "prisma generate && tsc --noEmit",
     "lint": "eslint src",
-    "build": "prisma generate && tsc",
+    "build": "pnpm --filter @driftgate/drift build && prisma generate && tsc",
     "start": "node --env-file-if-exists=.env dist/index.js",
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "worker": "tsx --env-file-if-exists=.env src/worker.ts",
@@ -17,6 +17,7 @@
     "db:migrate": "prisma migrate deploy"
   },
   "dependencies": {
+    "@driftgate/drift": "workspace:*",
     "@aws-sdk/client-s3": "^3.0.0",
     "@aws-sdk/s3-request-presigner": "^3.0.0",
     "bullmq": "^5.0.0",

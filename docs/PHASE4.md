@@ -4,6 +4,12 @@ This phase is in progress, not complete.
 
 ## Implemented
 
+- Saved comparisons: ADMIN/QA can compare two project-owned snapshots through
+  the API. Findings are computed server-side using the shared runner engine,
+  stored immutably and retrieved through scoped detail/metadata-list routes.
+  Invalid stored prices fail without saving partial results. Manual provenance
+  is retained. Comparison UI and expected-difference management remain pending.
+
 - Immutable manual snapshot storage with authenticated create/list/detail API,
   project membership and write-role checks, strict bounded payloads and explicit
   MANUAL_IMPORT provenance. Local test migration and 24 storage API tests passed.

@@ -7,13 +7,14 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
-    "build": "tsc",
+    "build": "pnpm --filter @driftgate/drift build && tsc",
     "start": "node dist/index.js",
     "test": "node --import tsx --test tests/*.test.ts",
     "test:integration": "node --import tsx integration/browser.ts",
     "local:compose": "sh docker/run-local.sh"
   },
   "dependencies": {
+    "@driftgate/drift": "workspace:*",
     "@aws-sdk/client-s3": "3.922.0",
     "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.64.1",

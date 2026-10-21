@@ -3,7 +3,7 @@ FROM node:22-bookworm AS build
 WORKDIR /repo
 RUN corepack enable
 COPY . .
-RUN pnpm install --filter driftgate --filter @driftgate/runner --filter @driftgate/demo-store --frozen-lockfile --ignore-scripts
+RUN pnpm install --filter driftgate --filter @driftgate/runner... --filter @driftgate/demo-store --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @driftgate/runner build
 RUN pnpm --filter @driftgate/demo-store build
 

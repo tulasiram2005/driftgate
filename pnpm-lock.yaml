@@ -63,6 +63,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.0.0
         version: 3.1152.0
+      '@driftgate/drift':
+        specifier: workspace:*
+        version: link:../../packages/drift
       '@prisma/client':
         specifier: 6.19.3
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
@@ -197,6 +200,9 @@ importers:
       '@axe-core/playwright':
         specifier: 4.14.0
         version: 4.14.0(playwright-core@1.64.1)
+      '@driftgate/drift':
+        specifier: workspace:*
+        version: link:../../packages/drift
       '@playwright/test':
         specifier: 1.64.1
         version: 1.64.1
@@ -280,6 +286,8 @@ importers:
       vitest:
         specifier: 5.0.5
         version: 5.0.5(@types/node@22.20.5)(@vitest/coverage-v8@5.0.5)(vite@7.3.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.20.6)(yaml@2.9.1))
+
+  packages/drift: {}
 
 packages:
 

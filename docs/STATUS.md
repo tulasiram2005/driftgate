@@ -1,5 +1,12 @@
 # Phase status
 
+Saved comparison checkpoint (2026-10-21): server-computed immutable comparisons
+between project-owned snapshots now have create/list/detail endpoints. Distinct
+environments are required; source is MANUAL_IMPORT, never automated evidence.
+The runner and API share the existing comparison engine through @driftgate/drift.
+Local tests: 73 API and 28 runner passed; API/runner builds and API/shared lint
+passed. Cloud migrations, automated ingestion and comparison UI remain pending.
+
 Snapshot storage checkpoint (2026-10-21): immutable manual-import persistence
 and authenticated project-scoped create/list/detail API added. ADMIN/QA writes,
 member reads, bounded pagination, strict input validation, server-owned provenance

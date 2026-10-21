@@ -1,5 +1,15 @@
 # Measured evidence
 
+## Saved comparisons (2026-10-21)
+
+- API: 73/73 tests passed against isolated local driftgate_test, including 15
+  comparison tests for computed findings, roles, ownership, invalid inputs,
+  immutable results, metadata-only pagination and foreign cursor rejection.
+- Runner: 28/28 tests passed after sharing the unchanged comparison engine.
+- API and runner production builds, API and shared-package lint: passed.
+- Local comparison migration: passed. Cloud migrations and new hosted CI are
+  not yet verified. GPT-6.1 Sol authored comparison tests; parent reviewed/run them.
+
 ## Phase 4 snapshot storage checkpoint (2026-10-21)
 
 - Isolated local driftgate_test migration: passed, adding EnvironmentSnapshot.

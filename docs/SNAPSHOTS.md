@@ -1,7 +1,7 @@
 # Environment snapshot storage
 
-This Phase 4 checkpoint stores immutable manual imports. It does not yet
-automatically attach collector output to a run, calculate saved comparisons or
+This Phase 4 checkpoint stores immutable manual imports and server-computed
+comparisons. It does not yet automatically attach collector output to a run or
 provide a comparison screen. An imported snapshot is not verified runner evidence.
 
 ## API
@@ -43,6 +43,25 @@ pending; existing tables and data are not rewritten by this migration.
 
 ## Remaining work
 
-Authenticated automated snapshot ingestion, saved comparison computation,
+Authenticated automated snapshot ingestion,
 expected-difference management, comparison screens and visual baseline review
 remain pending. Manual imports must remain distinguishable from automated runs.
+
+## Saved comparisons
+
+`POST /api/v1/projects/:projectId/comparisons` accepts only `beforeId` and
+`afterId`. Both must reference snapshots within that project with distinct
+environments. ADMIN or QA membership is required. The server computes findings
+with the same `@driftgate/drift` workspace package used by the runner. Invalid
+stored values return 400 without saving a partial comparison. Imports and
+comparisons are labelled MANUAL_IMPORT; no automated-verification claim is made.
+
+`GET /api/v1/projects/:projectId/comparisons` lists metadata with bounded cursor
+pagination (default 30, maximum 100). `GET` of `/:comparisonId` includes the
+immutable findings, source snapshot IDs and creating user. All reads require
+membership and are project scoped. No edit/delete routes or expected-difference
+overrides are exposed in this checkpoint. Creating comparisons is limited to
+20 requests per minute per IP. Findings contain severity and before/after values.
+
+Apply migration `20261021070000_environment_comparisons` after the snapshot
+migration before using these endpoints. Cloud migrations remain pending.
