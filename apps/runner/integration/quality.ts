@@ -44,7 +44,8 @@ const origin = `http://127.0.0.1:${address.port}`;
 let browser;
 try {
   browser = await chromium.launch();
-  const page = await browser.newPage();
+  const context = await browser.newContext();
+  const page = await context.newPage();
   await runCheck(page, "api-contract", origin, "staging");
   await runCheck(page, "accessibility", origin, "staging");
   invalid = true;
