@@ -35,7 +35,14 @@ type AutomatedRun = {
 };
 const browsers = ["chromium", "firefox", "webkit"] as const;
 const devices = ["desktop", "mobile"] as const;
-const checks = ["catalogue", "product", "cart"] as const;
+const checks = [
+  "catalogue",
+  "product",
+  "cart",
+  "api-contract",
+  "accessibility",
+  "snapshot",
+] as const;
 const active = (status: string) => ["QUEUED", "RUNNING"].includes(status);
 
 function RunStatus({ value }: { value: string }) {
@@ -136,7 +143,7 @@ function AutomatedForm({
   const [retries, setRetries] = useState(1);
   const [selectedBrowsers, setBrowsers] = useState<string[]>(["chromium"]);
   const [selectedDevices, setDevices] = useState<string[]>(["desktop"]);
-  const [selectedChecks, setChecks] = useState<string[]>([...checks]);
+  const [selectedChecks, setChecks] = useState<string[]>(["catalogue", "product", "cart"]);
   const request = useRef<{ fingerprint: string; key: string } | null>(null);
   const client = useQueryClient();
   const mutation = useMutation({

@@ -295,3 +295,10 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 - Local Chromium end-to-end launch: blocked by macOS bootstrap_check_in permission denial before test execution. No browser pass claimed.
 - Backend revision ab6729d: Quality Gates 39576130846 and CodeQL 39576130903 both succeeded.
 - New comparison browser tests and screenshot review: pending hosted execution.
+
+# Automated snapshot ingestion: 2026-10-21
+
+- API: 74 tests passed against isolated local driftgate_test. API build, typecheck and lint passed. New migrations applied locally only.
+- Runner: 28 unit tests passed; build and lint passed. New snapshot execution fixture verifies successful payload/evidence and failure omission; hosted browser result pending.
+- Web: 40 unit tests passed; typecheck, lint and production build passed. Existing default checks retained; optional snapshot, API-contract and accessibility choices added.
+- Cloud migration and hosted snapshot collection remain NOT VERIFIED. Temporary cloud worker was not restarted.

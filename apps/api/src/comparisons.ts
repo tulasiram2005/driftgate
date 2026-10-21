@@ -58,7 +58,8 @@ export function mountComparisons(
         data: {
           projectId,
           ...body,
-          source: "MANUAL_IMPORT",
+          source:
+            before.source === "RUNNER" && after.source === "RUNNER" ? "RUNNER" : "MANUAL_IMPORT",
           createdBy: res.locals.userId as string,
           findingCount: findings.length,
           findings: JSON.parse(JSON.stringify(findings)),

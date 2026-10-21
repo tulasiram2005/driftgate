@@ -29,6 +29,7 @@ test("relay reads owner-only spool as the unprivileged runner identity", async (
 });
 test("strict declarative job rejects executable fields, duplicates, unsupported cells and bounds", () => {
   assert.equal(parseJob(job).runId, "run_1");
+  assert.deepEqual(parseJob({ ...job, checks: ["snapshot"] }).checks, ["snapshot"]);
   for (const patch of [
     { script: "alert(1)" },
     { targetId: "other" },

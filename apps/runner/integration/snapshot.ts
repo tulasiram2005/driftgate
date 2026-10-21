@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { chromium } from "@playwright/test";
 import { collectThreadlineSnapshot } from "../src/snapshot.js";
 import { compareEnvironments } from "../src/drift.js";
+import { runCheck } from "../src/catalog.js";
 
 // Fully intercepted demo fixture: no external or local server traffic is allowed.
 const browser = await chromium.launch();
@@ -97,7 +98,10 @@ try {
     assert.equal(page.listenerCount("response"), 0);
   }
   scenario = "normal";
-  assert.equal((await collectThreadlineSnapshot(page, "staging")).products.length, 1);
+  const dispatched = await runCheck(page, "snapshot", "http://127.0.0.1:3201", "staging");
+  assert.equal(dispatched?.products.length, 1);
+  assert.equal(dispatched?.environment, "staging");
+  await assert.rejects(runCheck(page, "snapshot", "https://example.com", "staging"), /isolated/);
   console.log(
     "PASS: demo snapshot collection detects price/metadata drift, rejects malformed or failed pages, cleans listeners and recovers",
   );

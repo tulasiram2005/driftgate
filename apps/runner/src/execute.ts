@@ -8,6 +8,7 @@ import { runCheck } from "./catalog.js";
 import { QualityCheckError } from "./quality.js";
 import { resultStatus, type Attempt, type Job } from "./schema.js";
 import type { EvidenceStore } from "./storage.js";
+import type { EnvironmentSnapshot } from "./drift.js";
 
 export async function execute(
   job: Job,
@@ -24,6 +25,7 @@ export async function execute(
     try {
       for (const check of job.checks) {
         const attempts: Attempt[] = [];
+        let snapshot: EnvironmentSnapshot | undefined;
         for (let n = 1; n <= job.retries + 1; n++) {
           const directory = await mkdtemp(join(tmpdir(), "driftgate-runner-"));
           const context = await browser.newContext({
@@ -77,9 +79,14 @@ export async function execute(
               robotsApproved = true;
             }
             try {
-              await runCheck(page, check, network.origin, job.environment);
+              const collected = await runCheck(page, check, network.origin, job.environment);
               if (violation) throw new Error("Network policy violation");
+              // Reserve space for attempts/evidence within the API's 1 MiB callback limit.
+              if (collected && Buffer.byteLength(JSON.stringify(collected)) > 900 * 1024)
+                throw new Error("Snapshot callback exceeds limit");
+              snapshot = collected;
             } catch (error) {
+              snapshot = undefined;
               attempt.status = "failed";
               attempt.error =
                 error instanceof QualityCheckError
@@ -119,7 +126,7 @@ export async function execute(
           eventId: randomUUID(),
           runId: job.runId,
           type: "result",
-          result: { checkId: check, ...cell, status, attempts },
+          result: { checkId: check, ...cell, status, attempts, ...(snapshot ? { snapshot } : {}) },
         });
       }
     } finally {

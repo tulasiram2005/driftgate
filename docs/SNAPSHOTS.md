@@ -1,8 +1,25 @@
 # Environment snapshot storage
 
 This Phase 4 checkpoint stores immutable manual imports and server-computed
-comparisons. It does not yet automatically attach collector output to a run or
-provide a comparison screen. An imported snapshot is not verified runner evidence.
+comparisons, with a comparison workspace. The optional `snapshot` runner check
+collects fixed isolated Threadline data and attaches it to a signed result.
+An imported snapshot is not verified runner evidence.
+
+## Runner collection
+
+Select `snapshot` when creating an automated run. Successful or flaky results
+must contain a validated snapshot; failed results and other check types must not.
+The API binds the environment to the run and derives project, creator, run,
+browser/device and RUNNER provenance server-side. Result and snapshot persistence
+are transactional. Replayed events do not create additional snapshots.
+Runner snapshots cannot be updated. Comparisons are marked RUNNER only when
+both inputs were runner-collected; any manual input retains MANUAL_IMPORT.
+
+The collector retains the fixed origin, network restrictions and request limit.
+Snapshot callback data is limited to 900 KiB, reserving space within the API's
+1 MiB body limit for attempts and evidence. Collection failure emits a failed
+result without partial snapshot data. No new external-target scanning is enabled.
+Cloud migrations and hosted execution of this new check remain unverified.
 
 ## API
 

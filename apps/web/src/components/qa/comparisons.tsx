@@ -43,7 +43,11 @@ type Finding = {
 type Detail = Comparison & { findings: Finding[] };
 
 function provenance(source: string) {
-  return source === "MANUAL_IMPORT" ? "Manual import" : source;
+  return source === "MANUAL_IMPORT"
+    ? "Manual import"
+    : source === "RUNNER"
+      ? "Runner collected"
+      : source;
 }
 
 function valueText(value: unknown): string {

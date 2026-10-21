@@ -94,6 +94,9 @@ const metadata = {
   environment: true,
   source: true,
   createdBy: true,
+  runId: true,
+  browser: true,
+  device: true,
   createdAt: true,
 } as const;
 

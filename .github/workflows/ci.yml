@@ -98,6 +98,8 @@ jobs:
         run: pnpm --filter @driftgate/runner exec tsx integration/quality.ts
       - name: Runner snapshot collection fixtures
         run: pnpm --filter @driftgate/runner exec tsx integration/snapshot.ts
+      - name: Runner snapshot execution fixtures
+        run: pnpm --filter @driftgate/runner exec tsx integration/snapshot-execution.ts
       - name: Dependency audit
         run: pnpm audit --audit-level=high
       - name: Preserve test evidence

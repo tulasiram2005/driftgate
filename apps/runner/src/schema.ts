@@ -1,4 +1,11 @@
-export const checks = ["catalogue", "product", "cart", "api-contract", "accessibility"] as const;
+export const checks = [
+  "catalogue",
+  "product",
+  "cart",
+  "api-contract",
+  "accessibility",
+  "snapshot",
+] as const;
 export type CheckId = (typeof checks)[number];
 export type BrowserId = "chromium" | "firefox" | "webkit";
 export type DeviceId = "desktop" | "mobile";

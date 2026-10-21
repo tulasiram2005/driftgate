@@ -4,6 +4,13 @@ This phase is in progress, not complete.
 
 ## Implemented
 
+- Automated snapshot result ingestion: an optional restricted runner check
+  carries validated snapshot data in the signed callback. API persistence binds
+  run, project, creator, environment and browser/device with replay protection.
+  Manual imports cannot claim RUNNER provenance. The selector is available in
+  automated runs, with existing default checks unchanged. Cloud migrations and
+  hosted use of this path remain pending; browser fixture CI is required.
+
 - Comparison workspace: manual JSON imports, distinct-environment selectors,
   paginated snapshots/history, role-aware controls and findings dialog. Revision
   a53318d passed Quality Gates 39580843879 and CodeQL 39580843562. The new flow

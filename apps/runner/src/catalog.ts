@@ -1,12 +1,19 @@
 import { expect, type Page } from "@playwright/test";
 import type { CheckId, Job } from "./schema.js";
 import { checkAccessibility, QualityCheckError, validateCatalogue } from "./quality.js";
+import { collectThreadlineSnapshot } from "./snapshot.js";
+import type { EnvironmentSnapshot } from "./drift.js";
 export async function runCheck(
   page: Page,
   check: CheckId,
   origin: string,
   environment: Job["environment"],
-): Promise<void> {
+): Promise<EnvironmentSnapshot | undefined> {
+  if (check === "snapshot") {
+    if (origin !== "http://127.0.0.1:3201")
+      throw new Error("Snapshot target is not isolated Threadline");
+    return collectThreadlineSnapshot(page, environment);
+  }
   if (check === "api-contract") {
     // Page navigation keeps this read behind the existing network policy.
     const response = await page.goto(`${origin}/api/${environment}/products`, { timeout: 20000 });

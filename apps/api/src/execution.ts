@@ -112,6 +112,24 @@ export function mountCallback(app: Express, db: PrismaClient, config: Config, fa
           )
         )
           fail(400, "INVALID_ATTEMPTS", "Attempt history does not match result");
+        if (r.snapshot) {
+          if (r.snapshot.environment !== run.environment.toLowerCase())
+            fail(400, "INVALID_SNAPSHOT", "Snapshot environment must match the run");
+          if (!run.createdBy) fail(409, "INVALID_SNAPSHOT", "Run has no creator association");
+          await tx.environmentSnapshot.create({
+            data: {
+              projectId: run.projectId,
+              runId: run.id,
+              browser: r.browser,
+              device: r.device,
+              label: `Runner ${run.environment} ${r.browser}/${r.device} ${run.id}`,
+              environment: r.snapshot.environment,
+              source: "RUNNER",
+              createdBy: run.createdBy,
+              snapshot: JSON.parse(JSON.stringify(r.snapshot)),
+            },
+          });
+        }
         for (const a of r.attempts)
           for (const e of a.evidence) {
             const contentType = {
@@ -248,6 +266,7 @@ export function mountExecution(
           data: {
             id: runId,
             projectId,
+            createdBy: res.locals.userId as string,
             suiteId: body.suiteId ?? null,
             environment: body.environment,
             browser: "matrix",

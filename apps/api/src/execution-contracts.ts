@@ -1,6 +1,14 @@
 import { z } from "zod";
+import { snapshotBody } from "./snapshots.js";
 
-export const checks = ["catalogue", "product", "cart", "api-contract", "accessibility"] as const;
+export const checks = [
+  "catalogue",
+  "product",
+  "cart",
+  "api-contract",
+  "accessibility",
+  "snapshot",
+] as const;
 export const cell = z
   .object({
     browser: z.enum(["chromium", "firefox", "webkit"]),
@@ -53,6 +61,7 @@ export const callbackBody = z.discriminatedUnion("type", [
           checkId: z.enum(checks),
           ...cell.shape,
           status: z.enum(["passed", "failed", "flaky"]),
+          snapshot: snapshotBody.shape.snapshot.optional(),
           attempts: z
             .array(
               z
@@ -68,7 +77,16 @@ export const callbackBody = z.discriminatedUnion("type", [
             .min(1)
             .max(3),
         })
-        .strict(),
+        .strict()
+        .superRefine((r, ctx) => {
+          const required = r.checkId === "snapshot" && r.status !== "failed";
+          if (required !== (r.snapshot !== undefined))
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["snapshot"],
+              message: "Snapshot is required only for successful snapshot results",
+            });
+        }),
     })
     .strict(),
   z
@@ -78,7 +96,11 @@ export const callbackBody = z.discriminatedUnion("type", [
       runId: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/),
       type: z.literal("completed"),
       status: z.enum(["passed", "failed", "flaky"]),
-      resultCount: z.number().int().min(1).max(45),
+      resultCount: z
+        .number()
+        .int()
+        .min(1)
+        .max(checks.length * 9),
     })
     .strict(),
 ]);

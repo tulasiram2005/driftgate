@@ -70,10 +70,15 @@ model EnvironmentSnapshot {
   environment String
   source String @default("MANUAL_IMPORT")
   createdBy String
+  runId String?
+  browser String?
+  device String?
+  run Run? @relation(fields: [runId], references: [id], onDelete: Cascade)
   snapshot Json
   createdAt DateTime @default(now())
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   @@index([projectId, id])
+  @@unique([runId, browser, device])
 }
 
 model Member {
@@ -159,6 +164,8 @@ model Suite {
 model Run {
   id          String @id @default(cuid())
   projectId   String
+  createdBy   String?
+  snapshots   EnvironmentSnapshot[]
   suiteId     String?
   environment String
   browser     String

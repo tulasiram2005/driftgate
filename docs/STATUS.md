@@ -1,5 +1,14 @@
 # Phase status
 
+Automated snapshot ingestion checkpoint (2026-10-21): optional snapshot checks
+now collect through the restricted runner, emit data with signed results and
+persist run-bound RUNNER snapshots transactionally. Failed collection omits the
+snapshot. The automated-run form exposes snapshot/contract/accessibility options
+without changing defaults. New schema migrations are local-only; cloud schema
+and hosted execution of this check remain NOT VERIFIED. Phase 4 remains in
+progress, including visual baselines, expected-difference management and SQL
+result persistence. See SNAPSHOTS.md for provenance and bounds.
+
 Hosted comparison UI verification (2026-10-21): revision a53318d passed Quality
 Gates 39580843879 and CodeQL 39580843562. This includes the new manual snapshot
 import/compare/findings flow in Chromium, Firefox and WebKit, accessibility and

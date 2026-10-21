@@ -128,6 +128,127 @@ afterAll(async () => {
 });
 
 describe("automated execution", () => {
+  it("persists runner snapshots atomically with immutable provenance and replay protection", async () => {
+    const snapshot = {
+      environment: "staging",
+      origin: "http://127.0.0.1:3201",
+      locale: "en-IN",
+      productCount: 0,
+      products: [],
+    };
+    const created = await request(app)
+      .post(`${base()}/automated-runs`)
+      .set(auth())
+      .set("Idempotency-Key", randomUUID())
+      .send({ ...body, checks: ["snapshot"] });
+    expect(created.status).toBe(200);
+    const id = created.body.data.id as string;
+    const event = resultEvent(id, { checkId: "snapshot", snapshot });
+    for (const result of [
+      { ...event.result, snapshot: undefined },
+      { ...event.result, snapshot: { ...snapshot, environment: "uat" } },
+      { ...event.result, snapshot: { ...snapshot, source: "RUNNER" } },
+      {
+        ...event.result,
+        status: "failed",
+        attempts: [{ attempt: 1, status: "failed", durationMs: 1, evidence: [] }],
+      },
+      {
+        ...event.result,
+        attempts: [
+          {
+            attempt: 1,
+            status: "passed",
+            durationMs: 1,
+            evidence: [{ kind: "screenshot", key: "foreign", contentType: "image/png", size: 1 }],
+          },
+        ],
+      },
+    ])
+      expect((await callback({ ...event, result })).status).toBe(400);
+    expect(await db.environmentSnapshot.count({ where: { runId: id } })).toBe(0);
+    expect(await db.resultAttempt.count({ where: { result: { runId: id } } })).toBe(0);
+    const responses = await Promise.all([callback(event), callback(event)]);
+    expect(responses.map((r) => r.status)).toEqual([200, 200]);
+    expect((await callback({ ...event, eventId: randomUUID() })).status).toBe(409);
+    expect(
+      (
+        await callback({
+          ...event,
+          result: { ...event.result, snapshot: { ...snapshot, environment: "prod" } },
+        })
+      ).status,
+    ).toBe(409);
+    const rows = await db.environmentSnapshot.findMany({ where: { runId: id } });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      source: "RUNNER",
+      createdBy: users[0],
+      browser: "chromium",
+      device: "desktop",
+      environment: "staging",
+      snapshot,
+    });
+    await expect(
+      db.environmentSnapshot.update({
+        where: { id: rows[0]!.id },
+        data: { source: "MANUAL_IMPORT", runId: null, browser: null, device: null },
+      }),
+    ).rejects.toThrow();
+    await expect(
+      db.environmentSnapshot.create({ data: { ...rows[0]!, id: randomUUID() } }),
+    ).rejects.toThrow();
+    const manual = await request(app)
+      .post(`${base()}/snapshots`)
+      .set(auth())
+      .send({ label: "Demo comparison", snapshot: { ...snapshot, environment: "uat" } });
+    expect(manual.status).toBe(200);
+    const mixed = await request(app)
+      .post(`${base()}/comparisons`)
+      .set(auth())
+      .send({ beforeId: rows[0]!.id, afterId: manual.body.data.id });
+    expect(mixed.status).toBe(200);
+    expect(mixed.body.data.source).toBe("MANUAL_IMPORT");
+    const nextRun = await request(app)
+      .post(`${base()}/automated-runs`)
+      .set(auth())
+      .set("Idempotency-Key", randomUUID())
+      .send({ ...body, environment: "UAT", checks: ["snapshot"] });
+    expect(nextRun.status).toBe(200);
+    expect(
+      (
+        await callback(
+          resultEvent(nextRun.body.data.id, {
+            checkId: "snapshot",
+            snapshot: { ...snapshot, environment: "uat" },
+            status: "flaky",
+            attempts: [
+              { attempt: 1, status: "failed", durationMs: 1, evidence: [] },
+              { attempt: 2, status: "passed", durationMs: 1, evidence: [] },
+            ],
+          }),
+        )
+      ).status,
+    ).toBe(200);
+    const second = await db.environmentSnapshot.findFirstOrThrow({
+      where: { runId: nextRun.body.data.id },
+    });
+    const comparison = await request(app)
+      .post(`${base()}/comparisons`)
+      .set(auth())
+      .send({ beforeId: rows[0]!.id, afterId: second.id });
+    expect(comparison.status).toBe(200);
+    expect(comparison.body.data.source).toBe("RUNNER");
+    expect(
+      (
+        await request(app)
+          .post(`${base()}/snapshots`)
+          .set(auth())
+          .send({ label: "Spoof", snapshot, source: "RUNNER", runId: id })
+      ).status,
+    ).toBe(400);
+    expect((await callback(resultEvent(id, { snapshot }))).status).toBe(400);
+  });
   it("creates matrix and outbox atomically, persists one run for concurrent idempotent requests", async () => {
     const key = randomUUID();
     const responses = await Promise.all(
