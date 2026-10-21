@@ -156,6 +156,15 @@ export async function api<T>(
   return readData<T>(response);
 }
 
+export async function page<T>(path: string, cursor?: string | null) {
+  const separator = path.includes("?") ? "&" : "?";
+  return readEnvelope<T[]>(
+    await authorizedFetch(
+      `${path}${separator}limit=30${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+    ),
+  );
+}
+
 export async function list<T>(path: string): Promise<T[]> {
   const rows: T[] = [];
   let cursor: string | null | undefined;

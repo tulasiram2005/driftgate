@@ -330,6 +330,30 @@ describe("authorized requests and refresh races", () => {
 });
 
 describe("cursor pagination", () => {
+  it("keeps single-page errors available to retry controls", async () => {
+    const { page, fetchMock } = await setup();
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ error: { code: "UNAVAILABLE", message: "Try again" } }, { status: 503 }),
+    );
+    await expect(page("/projects/p/snapshots")).rejects.toMatchObject({
+      status: 503,
+      message: "Try again",
+    });
+  });
+  it("loads one bounded page and preserves its continuation cursor", async () => {
+    const { page, acceptSession, fetchMock } = await setup();
+    acceptSession(session);
+    fetchMock.mockResolvedValueOnce(Response.json({ data: [{ id: "1" }], nextCursor: "next" }));
+    expect(await page("/projects/p/comparisons", "cursor/+ value")).toEqual({
+      data: [{ id: "1" }],
+      nextCursor: "next",
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/projects/p/comparisons?limit=30&cursor=cursor%2F%2B%20value",
+      expect.objectContaining({ headers: { Authorization: "Bearer access-original" } }),
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
   it("collects all pages and URL-encodes opaque cursor values", async () => {
     const { list, fetchMock } = await setup();
     fetchMock

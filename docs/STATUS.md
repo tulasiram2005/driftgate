@@ -1,5 +1,15 @@
 # Phase status
 
+Comparison UI checkpoint (2026-10-21): snapshot import, distinct-environment
+selectors, paginated history and findings dialog are implemented with role-aware
+controls and manual-import provenance. Web unit tests pass 40/40; lint and
+production build pass. New three-browser end-to-end coverage includes four
+viewport widths and accessibility assertions. Local browser launch is blocked
+by macOS permissions; hosted execution and screenshot review remain pending.
+Backend revision ab6729d passed Quality Gates 39576130846 and CodeQL 39576130903.
+Phase 4 remains incomplete; automated ingestion, visual baselines, persisted SQL
+results and cloud migrations are still pending.
+
 Saved comparison checkpoint (2026-10-21): server-computed immutable comparisons
 between project-owned snapshots now have create/list/detail endpoints. Distinct
 environments are required; source is MANUAL_IMPORT, never automated evidence.

@@ -285,3 +285,11 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 - `TEST_S3_EMULATOR=1 TEST_S3_ENDPOINT=http://127.0.0.1:59000 TEST_S3_ACCESS_KEY_ID=test TEST_S3_SECRET_ACCESS_KEY=test pnpm --filter @driftgate/api test:storage`: signed PUT/GET, 300-second expiry, exact bytes and missing/mismatched metadata passed against local LocalStack 4.0.3. Test creates and removes a unique bucket. Provider authorization NOT VERIFIED: emulator returned 200 for both unsigned and tampered requests.
 - Without `TEST_S3_EMULATOR=1`, the same test requires both unauthorized requests to return 403; that strict check failed on this emulator. Do not interpret the functional pass as storage security verification.
 - GitHub Quality Gates run 39315968594: failed API readiness (curl exit 7), browser tests not reached. CodeQL run 39315968696 succeeded. This supersedes any assumption that the Phase 3 checkpoint has green CI.
+
+# Comparison UI checkpoint: 2026-10-21
+
+- Web unit tests: 40 passed, including cursor-page success and failure handling.
+- Web lint and production build: passed.
+- Local Chromium end-to-end launch: blocked by macOS bootstrap_check_in permission denial before test execution. No browser pass claimed.
+- Backend revision ab6729d: Quality Gates 39576130846 and CodeQL 39576130903 both succeeded.
+- New comparison browser tests and screenshot review: pending hosted execution.

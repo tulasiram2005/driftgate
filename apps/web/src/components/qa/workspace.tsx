@@ -16,6 +16,7 @@ import {
   CheckCheck,
   ClipboardList,
   Folder,
+  GitCompareArrows,
   Layers3,
   LogOut,
   Palette,
@@ -51,6 +52,7 @@ import { RequirementsView, MembersForm } from "./requirements";
 import { CasesView } from "./cases";
 import { RunsView, SuitesView } from "./execution";
 import { AutomatedRuns } from "./automated";
+import { ComparisonsView } from "./comparisons";
 import "./workspace.css";
 
 const sessionKey = ["session"] as const;
@@ -251,13 +253,14 @@ function AuthScreen() {
   );
 }
 
-type View = "projects" | "requirements" | "cases" | "suites" | "runs" | "automated";
+type View = "projects" | "requirements" | "cases" | "suites" | "runs" | "automated" | "comparisons";
 const navigation = [
   { id: "requirements", title: "Requirements", icon: BookOpen },
   { id: "cases", title: "Test cases", icon: ClipboardList },
   { id: "suites", title: "Suites", icon: Layers3 },
   { id: "runs", title: "Manual runs", icon: Play },
   { id: "automated", title: "Automated runs", icon: CheckCheck },
+  { id: "comparisons", title: "Comparisons", icon: GitCompareArrows },
 ] as const;
 
 function SignedIn({ user }: { user: User }) {
@@ -450,6 +453,8 @@ function SignedIn({ user }: { user: User }) {
                   <SuitesView projectId={projectId} canWrite={canWrite} />
                 ) : view === "automated" ? (
                   <AutomatedRuns projectId={projectId} canWrite={canWrite} />
+                ) : view === "comparisons" ? (
+                  <ComparisonsView key={projectId} projectId={projectId} canWrite={canWrite} />
                 ) : (
                   <RunsView projectId={projectId} canWrite={canWrite} />
                 )}

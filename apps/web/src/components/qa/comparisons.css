@@ -1,0 +1,44 @@
+.qa-comparison-section {
+  padding-block: 24px;
+  border-top: 1px solid var(--border);
+  min-width: 0;
+}
+.qa-comparison-section > h2 {
+  font-size: var(--type-lg);
+  margin-bottom: 20px;
+}
+.qa-comparison-snapshots {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+.qa-comparison-snapshots li {
+  display: grid;
+  gap: 4px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.qa-comparison-snapshots span,
+.qa-comparison-snapshots time {
+  color: var(--text-dim);
+  font-size: var(--type-sm);
+}
+.qa-comparison-section > .qa-button {
+  margin-top: 16px;
+}
+.qa-comparison-table {
+  min-width: 960px;
+  table-layout: fixed;
+  font-size: var(--type-sm);
+}
+.qa-comparison-table th,
+.qa-comparison-table td {
+  padding: 12px;
+  vertical-align: top;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.qa-comparison-table thead {
+  background: var(--surface-1);
+}
