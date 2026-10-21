@@ -2,6 +2,12 @@
 
 ## Phase 4 initial checkpoint (2026-10-21)
 
+CI follow-up: `0a7a315` passed Quality Gates run 39543108410 and CodeQL run 39543108381. The runner quality fixture's four clean/seeded-failure assertions
+passed in Chromium. The initial run failed because the fixture used the implicit
+browser.newPage context; it now uses browser.newContext followed by context.newPage.
+The production runner already used explicit contexts. All quality workflow
+steps passed, including browser/accessibility checks and dependency audit.
+
 - `pnpm --filter @driftgate/runner test`: 23/23 pass.
 - `TEST_API_DATABASE_URL=<isolated local driftgate_test URL> pnpm --filter @driftgate/api test`: 32/32 pass.
 - API and runner `build` and `lint`: pass. Runner `typecheck`: pass.

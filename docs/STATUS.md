@@ -1,5 +1,10 @@
 # Phase status
 
+Current CI checkpoint (2026-10-21): revision `0a7a315` passes Quality Gates
+39543108410 and CodeQL 39543108381. The Phase 4 quality browser fixture is now
+verified on GitHub after correcting its browser context setup. Remaining Phase 4
+features below are still pending; this is not a phase-completion claim.
+
 Phase 4 started (2026-10-21): pure environment comparison logic plus fixed
 `api-contract` and `accessibility` runner checks are implemented. The API accepts
 these explicitly selected checks while preserving the original three-check default.

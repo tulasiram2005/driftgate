@@ -25,6 +25,12 @@ API and runner production builds and lint passed.
 Browser fixture test at `apps/runner/integration/quality.ts` checks both clean
 and seeded-failure responses. Local Chromium launch was blocked by the app
 sandbox; GitHub CI includes this test. Its result must be recorded separately.
+Hosted follow-up: revision `0a7a315` fixed the fixture to create an explicit
+browser context, as required by axe. [Quality Gates run 39543108410](https://github.com/tulasiram2005/driftgate/actions/runs/39543108410)
+passed, including the runner quality fixtures, full browser/accessibility suite,
+typecheck, lint, tests, build and dependency audit. [CodeQL run 39543108381](https://github.com/tulasiram2005/driftgate/actions/runs/39543108381)
+also passed. This verifies the clean and seeded-failure fixtures in CI, not
+real-store bug-bank detection for the new checks.
 No screenshots or user-interface completion are claimed in this checkpoint.
 
 ## Remaining
