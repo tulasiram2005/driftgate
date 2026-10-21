@@ -1,4 +1,4 @@
-export const checks = ["catalogue", "product", "cart"] as const;
+export const checks = ["catalogue", "product", "cart", "api-contract", "accessibility"] as const;
 export type CheckId = (typeof checks)[number];
 export type BrowserId = "chromium" | "firefox" | "webkit";
 export type DeviceId = "desktop" | "mobile";
@@ -39,7 +39,7 @@ export function parseJob(value: unknown): Job {
   if (
     !Array.isArray(j.checks) ||
     !j.checks.length ||
-    j.checks.length > 3 ||
+    j.checks.length > checks.length ||
     new Set(j.checks).size !== j.checks.length ||
     j.checks.some((c) => !checks.includes(c))
   )

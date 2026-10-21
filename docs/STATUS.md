@@ -1,5 +1,14 @@
 # Phase status
 
+Phase 4 started (2026-10-21): pure environment comparison logic plus fixed
+`api-contract` and `accessibility` runner checks are implemented. The API accepts
+these explicitly selected checks while preserving the original three-check default.
+No new UI is exposed yet. Drift snapshot collection/persistence, comparison UI,
+visual baselines/review, and least-privilege SQL assertions remain pending.
+Performance budgets remain deferred for MVP. Phase 4 is NOT complete.
+The user confirmed the temporary cloud worker stopped with SIGTERM and an empty
+process lookup. No cloud worker was restarted for this development checkpoint.
+
 Latest hosted verification (2026-10-21), superseding pending statements in the
 historical checkpoints below: GitHub run 39517721256 passed on `9f6ca5c` after
 fixing relay file ownership. The live API persisted PASS and three private
@@ -62,20 +71,20 @@ Latest checkpoint: GitHub Quality Gates run 39358112421 and CodeQL run 393581124
 
 CI startup diagnosis (2026-10-20): GitHub Actions supplies `GITHUB_WORKFLOW=Quality Gates`, conflicting with the runner filename validation. The application now uses `RUNNER_GITHUB_WORKFLOW` (default `runner.yml`). A regression test and compiled API startup with that CI environment pass; `/ready` returns `{"data":{"status":"ready"}}`. The updated API suite passes 28 tests. A fresh hosted CI run is still required.
 
-| Phase | Scope                                                       | State                                                              |
-| ----- | ----------------------------------------------------------- | ------------------------------------------------------------------ |
-| 0     | Tooling, CI skeleton, tokens and preview                    | Locally and CI verified                                            |
-| 1     | Threadline and bug bank                                     | Locally and CI verified                                            |
-| 2     | API, database, RBAC, test cases, manual execution           | Core implemented; local and CI gates pass                          |
-| 3     | Runner, storage, live results, Actions execution            | Local queue and evidence flow verified; hosted integration pending |
-| 4     | Drift, visual regression, contract/SQL/accessibility checks | Not started                                                        |
-| 5     | Defects, Jira, gates, sign-off, PDF                         | Not started                                                        |
-| 6     | Dashboard and motion polish                                 | Outside MVP                                                        |
-| 7     | Deployment and measured demo                                | Separate follow-up after MVP                                       |
+| Phase | Scope                                                       | State                                                          |
+| ----- | ----------------------------------------------------------- | -------------------------------------------------------------- |
+| 0     | Tooling, CI skeleton, tokens and preview                    | Locally and CI verified                                        |
+| 1     | Threadline and bug bank                                     | Locally and CI verified                                        |
+| 2     | API, database, RBAC, test cases, manual execution           | Core implemented; local and CI gates pass                      |
+| 3     | Runner, storage, live results, Actions execution            | Local flow and hosted happy path verified                      |
+| 4     | Drift, visual regression, contract/SQL/accessibility checks | In progress; comparison core and two runner checks implemented |
+| 5     | Defects, Jira, gates, sign-off, PDF                         | Not started                                                    |
+| 6     | Dashboard and motion polish                                 | Outside MVP                                                    |
+| 7     | Deployment and measured demo                                | Separate follow-up after MVP                                   |
 
 Optional AI, notifications and performance budgets are deferred for MVP. Public repository: https://github.com/tulasiram2005/driftgate. Cloud deployment is pending. Account-specific no-card storage availability needs confirmation.
 
-The user requests a stop after each completed phase. Phase 3 is authorized and in progress; do not begin Phase 4 yet.
+The user requests a stop after each completed phase. Phase 4 was authorized by the latest continue request. Do not begin Phase 5 until Phase 4 is verified.
 
 2026-10-20 local storage follow-up: corrected presigned browser uploads that incorrectly included an empty-body checksum. LocalStack round-trip, exact bytes, URL expiry and metadata checks pass. LocalStack accepts unsigned and tampered requests, so private-provider enforcement remains NOT VERIFIED. The strict storage check retains rejection assertions unless explicitly run with `TEST_S3_EMULATOR=1`. The local queue-to-storage integration then passed through API creation, durable outbox, BullMQ, isolated Chromium, relay upload, signed callbacks, persisted PASS state and an authorized 629,484-byte evidence download. Hosted GitHub execution remains pending.
 

@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { allowedRequest, robotsAllows, type NetworkConfig } from "./network.js";
 import { runCheck } from "./catalog.js";
+import { QualityCheckError } from "./quality.js";
 import { resultStatus, type Attempt, type Job } from "./schema.js";
 import type { EvidenceStore } from "./storage.js";
 
@@ -78,9 +79,12 @@ export async function execute(
             try {
               await runCheck(page, check, network.origin, job.environment);
               if (violation) throw new Error("Network policy violation");
-            } catch {
+            } catch (error) {
               attempt.status = "failed";
-              attempt.error = "Fixed check failed or network policy denied";
+              attempt.error =
+                error instanceof QualityCheckError
+                  ? error.message.slice(0, 2000)
+                  : "Fixed check failed or network policy denied";
             }
             await page.screenshot({ path: join(directory, "screenshot.png"), timeout: 10000 });
             await context.tracing.stop({ path: join(directory, "trace.zip") });

@@ -1,5 +1,15 @@
 # Measured evidence
 
+## Phase 4 initial checkpoint (2026-10-21)
+
+- `pnpm --filter @driftgate/runner test`: 23/23 pass.
+- `TEST_API_DATABASE_URL=<isolated local driftgate_test URL> pnpm --filter @driftgate/api test`: 32/32 pass.
+- API and runner `build` and `lint`: pass. Runner `typecheck`: pass.
+- `PLAYWRIGHT_BROWSERS_PATH=/tmp/driftgate-browsers node --import tsx integration/quality.ts`
+  from apps/runner: NOT VERIFIED locally; Chromium launch denied by macOS sandbox.
+  A CI step runs the same clean/seeded-failure fixture test. No detection rate
+  against the real bug bank is claimed. See PHASE4.md for remaining scope.
+
 ## Hosted runner permission correction (2026-10-21)
 
 Hosted run 39516931241 successfully installed, built and tested the runner, but

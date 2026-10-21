@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const checks = ["catalogue", "product", "cart"] as const;
+export const checks = ["catalogue", "product", "cart", "api-contract", "accessibility"] as const;
 export const cell = z
   .object({
     browser: z.enum(["chromium", "firefox", "webkit"]),
@@ -13,9 +13,9 @@ export const automatedRunBody = z
     checks: z
       .array(z.enum(checks))
       .min(1)
-      .max(3)
+      .max(checks.length)
       .refine((a) => new Set(a).size === a.length, "Duplicate checks")
-      .default([...checks]),
+      .default(["catalogue", "product", "cart"]),
     environment: z.enum(["STAGING", "UAT", "PREPROD", "PROD"]),
     matrix: z
       .array(cell)
@@ -78,7 +78,7 @@ export const callbackBody = z.discriminatedUnion("type", [
       runId: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/),
       type: z.literal("completed"),
       status: z.enum(["passed", "failed", "flaky"]),
-      resultCount: z.number().int().min(1).max(27),
+      resultCount: z.number().int().min(1).max(45),
     })
     .strict(),
 ]);
