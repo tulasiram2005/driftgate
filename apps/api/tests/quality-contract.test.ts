@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { automatedRunBody, callbackBody } from "../src/execution-contracts.js";
+import { automatedRunBody, callbackBody, checks } from "../src/execution-contracts.js";
 
 test("quality checks can be requested without changing the existing default suite", () => {
   const base = { environment: "STAGING", matrix: [{ browser: "chromium", device: "desktop" }] };
@@ -19,8 +19,10 @@ test("completion schema bounds the expanded matrix", () => {
     runId: "quality",
     type: "completed",
     status: "passed",
-    resultCount: 30,
+    resultCount: checks.length * 9,
   };
   expect(callbackBody.safeParse(completed).success).toBe(true);
-  expect(callbackBody.safeParse({ ...completed, resultCount: 46 }).success).toBe(false);
+  expect(callbackBody.safeParse({ ...completed, resultCount: checks.length * 9 + 1 }).success).toBe(
+    false,
+  );
 });

@@ -298,6 +298,8 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 
 # Automated snapshot ingestion: 2026-10-21
 
+- CI follow-up: Quality Gates 39585169986 failed on an outdated completion-count assertion (46 was rejected before the sixth check was added). CodeQL 39585169942 passed. The corrected test checks the actual catalog-derived maximum and maximum plus one; all 74 API tests passed locally after this correction. Browser fixtures were skipped in that failed CI run and remain unverified for this change.
+
 - API: 74 tests passed against isolated local driftgate_test. API build, typecheck and lint passed. New migrations applied locally only.
 - Runner: 28 unit tests passed; build and lint passed. New snapshot execution fixture verifies successful payload/evidence and failure omission; hosted browser result pending.
 - Web: 40 unit tests passed; typecheck, lint and production build passed. Existing default checks retained; optional snapshot, API-contract and accessibility choices added.
