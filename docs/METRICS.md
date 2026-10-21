@@ -2,6 +2,11 @@
 
 ## Phase 4 SQL checkpoint (2026-10-21)
 
+Revision `82390a0` passed hosted [Quality Gates 39543943816](https://github.com/tulasiram2005/driftgate/actions/runs/39543943816)
+and [CodeQL 39543943740](https://github.com/tulasiram2005/driftgate/actions/runs/39543943740).
+Quality Gates included the restricted SQL integration, browser/accessibility
+regression, quality detection fixtures, build, tests, lint and dependency audit.
+
 - `TEST_DATABASE_URL=<local threadline_test URL> node --import tsx integration/sql-checks.ts`
   from apps/api: PASS. Verified SELECT-only role execution, actual write denial,
   privileged/writable-role rejection, invalid environment rejection, and seeded

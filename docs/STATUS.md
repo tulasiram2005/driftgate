@@ -1,5 +1,9 @@
 # Phase status
 
+Latest verified code: `82390a0`, Quality Gates 39543943816 and CodeQL 39543943740
+both passed, including the new restricted-role SQL integration. Phase 4 remains
+in progress; this checkpoint is not complete-project verification.
+
 Phase 4 SQL checkpoint (2026-10-21): fixed read-only assertions and an operator
 CLI now exist, with real local restricted-role integration passing. API tests
 pass 34/34, plus build/typecheck/lint. Cloud SQL setup, persistent outcomes and
