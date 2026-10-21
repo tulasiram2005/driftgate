@@ -81,6 +81,8 @@ jobs:
         run: DATABASE_URL="$TEST_API_DATABASE_URL" pnpm --filter @driftgate/api db:migrate
       - name: Unit tests and coverage
         run: pnpm test
+      - name: Restricted SQL assertion integration
+        run: pnpm --filter @driftgate/api exec tsx integration/sql-checks.ts
       - name: Production build
         run: pnpm build
       - name: Install browser engines

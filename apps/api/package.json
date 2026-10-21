@@ -13,6 +13,7 @@
     "worker": "tsx --env-file-if-exists=.env src/worker.ts",
     "test": "prisma generate && vitest run",
     "test:storage": "tsx integration/storage.ts",
+    "check:sql": "tsx src/sql-check-cli.ts",
     "db:migrate": "prisma migrate deploy"
   },
   "dependencies": {

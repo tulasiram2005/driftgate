@@ -1,5 +1,15 @@
 # Measured evidence
 
+## Phase 4 SQL checkpoint (2026-10-21)
+
+- `TEST_DATABASE_URL=<local threadline_test URL> node --import tsx integration/sql-checks.ts`
+  from apps/api: PASS. Verified SELECT-only role execution, actual write denial,
+  privileged/writable-role rejection, invalid environment rejection, and seeded
+  order-total/orphan violation deltas. Temporary fixture/role cleanup completed.
+- API regression: 34/34 tests passed against isolated `driftgate_test`.
+- API typecheck, lint and production build passed.
+- No cloud SQL check, dashboard result persistence or complete Phase 4 claim.
+
 ## Phase 4 initial checkpoint (2026-10-21)
 
 CI follow-up: `0a7a315` passed Quality Gates run 39543108410 and CodeQL run 39543108381. The runner quality fixture's four clean/seeded-failure assertions

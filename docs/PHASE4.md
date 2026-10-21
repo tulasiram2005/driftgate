@@ -4,6 +4,14 @@ This phase is in progress, not complete.
 
 ## Implemented
 
+- Fixed Threadline SQL assertions and operator CLI: negative stock, order/line
+  arithmetic and missing product-size references. Only a dedicated SELECT-only
+  account with no role membership, schema-create access or public-table write
+  privileges is accepted. Each check runs in a read-only repeatable-read
+  transaction with statement/lock/transaction timeouts. Orders are bounded to
+  10,000; exceeding this limit reports an error, not a partial pass. No arbitrary
+  SQL or credentials are accepted from HTTP clients. See SQL_CHECKS.md.
+
 - Pure bounded environment snapshot comparison: monetary normalization without
   currency conversion, product counts, presence, sizes/stock, discounts, badge,
   image observations, title, canonical and Product JSON-LD. Findings retain
@@ -39,7 +47,8 @@ No screenshots or user-interface completion are claimed in this checkpoint.
   findings and expected-difference rules with project authorization.
 - Comparison and review screens with responsive/accessibility verification.
 - Pixel comparisons, ignore regions, scoped baselines and approval/rejection.
-- Read-only SQL assertions with a dedicated least-privilege database role.
+- Persist SQL outcomes and connect them to authorized run results/UI; configure
+  a dedicated deployed-store read-only role when cloud verification is needed.
 - End-to-end real-store and bug-bank detection measurements.
 - Performance budgets deferred under the agreed MVP cut.
 

@@ -1,5 +1,11 @@
 # Phase status
 
+Phase 4 SQL checkpoint (2026-10-21): fixed read-only assertions and an operator
+CLI now exist, with real local restricted-role integration passing. API tests
+pass 34/34, plus build/typecheck/lint. Cloud SQL setup, persistent outcomes and
+UI integration are pending. See SQL_CHECKS.md. No cloud credentials or services
+were changed; the temporary cloud worker remains stopped.
+
 Current CI checkpoint (2026-10-21): revision `0a7a315` passes Quality Gates
 39543108410 and CodeQL 39543108381. The Phase 4 quality browser fixture is now
 verified on GitHub after correcting its browser context setup. Remaining Phase 4
