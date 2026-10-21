@@ -1,5 +1,11 @@
 # Phase status
 
+Snapshot collector checkpoint (2026-10-21): internal collection and five parser
+tests added. Runner tests pass 28/28; typecheck, lint and build pass. Local
+Chromium launch is blocked by macOS sandbox; CI fixture is pending verification.
+Collector dispatch integration, persistence and UI are NOT complete. No cloud
+settings changed and no worker restarted.
+
 Latest verified code: `82390a0`, Quality Gates 39543943816 and CodeQL 39543943740
 both passed, including the new restricted-role SQL integration. Phase 4 remains
 in progress; this checkpoint is not complete-project verification.

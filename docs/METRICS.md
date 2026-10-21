@@ -1,5 +1,14 @@
 # Measured evidence
 
+## Phase 4 snapshot collector checkpoint (2026-10-21)
+
+- Runner unit tests: 28/28 passed (five new snapshot parser tests).
+- Runner typecheck, lint and production build: passed.
+- Browser integration: NOT VERIFIED locally; Chromium bootstrap_check_in denied
+  by macOS sandbox. CI includes a fully intercepted demo fixture for collection,
+  broken-image observations, metadata and rendered-price comparison.
+- No real storefront detection rate, persistent snapshot or end-to-end UI claim.
+
 ## Phase 4 SQL checkpoint (2026-10-21)
 
 Revision `82390a0` passed hosted [Quality Gates 39543943816](https://github.com/tulasiram2005/driftgate/actions/runs/39543943816)

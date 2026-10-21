@@ -96,6 +96,8 @@ jobs:
           pnpm test:e2e
       - name: Runner quality detection fixtures
         run: pnpm --filter @driftgate/runner exec tsx integration/quality.ts
+      - name: Runner snapshot collection fixtures
+        run: pnpm --filter @driftgate/runner exec tsx integration/snapshot.ts
       - name: Dependency audit
         run: pnpm audit --audit-level=high
       - name: Preserve test evidence

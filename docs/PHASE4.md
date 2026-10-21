@@ -4,6 +4,15 @@ This phase is in progress, not complete.
 
 ## Implemented
 
+- Internal fixed-origin Threadline snapshot collector combines rendered prices,
+  badges, image response status/dimensions, title, canonical and validated
+  Product JSON-LD with catalogue stock data. Limits: 20 products, 1 MiB parsed
+  catalogue, 32 KiB metadata, 10-second individual navigation/readiness waits.
+  It requires the existing restricted runner page; it is not exposed via HTTP
+  or wired into dispatch yet. Unknown image status remains null, not assumed 200.
+  Production external scanning remains disabled. Browser fixture verification
+  is pending CI; unit tests pass. Persistence and comparison screens remain pending.
+
 - Fixed Threadline SQL assertions and operator CLI: negative stock, order/line
   arithmetic and missing product-size references. Only a dedicated SELECT-only
   account with no role membership, schema-create access or public-table write
