@@ -298,6 +298,8 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 
 # Automated snapshot ingestion: 2026-10-21
 
+- Verified follow-up: b7b1b28 passed Quality Gates 39616600346 and CodeQL 39616600351, including runner snapshot execution success/failure fixtures and browser/accessibility tests. Cloud migrations and actual hosted snapshot dispatch remain NOT VERIFIED.
+
 - CI follow-up: Quality Gates 39585169986 failed on an outdated completion-count assertion (46 was rejected before the sixth check was added). CodeQL 39585169942 passed. The corrected test checks the actual catalog-derived maximum and maximum plus one; all 74 API tests passed locally after this correction. Browser fixtures were skipped in that failed CI run and remain unverified for this change.
 
 - API: 74 tests passed against isolated local driftgate_test. API build, typecheck and lint passed. New migrations applied locally only.

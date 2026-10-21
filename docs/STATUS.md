@@ -1,5 +1,12 @@
 # Phase status
 
+Verified automated snapshot checkpoint: revision b7b1b28 passed Quality Gates
+39616600346 and CodeQL 39616600351. Browser/accessibility checks, snapshot
+collection and execution fixtures, restricted SQL integration, unit tests,
+build, lint and dependency audit all passed. This supersedes the failed and
+cancelled runs recorded below. Cloud schema migration and hosted snapshot runs
+remain unverified; Phase 4 is not complete.
+
 Automated snapshot ingestion checkpoint (2026-10-21): optional snapshot checks
 now collect through the restricted runner, emit data with signed results and
 persist run-bound RUNNER snapshots transactionally. Failed collection omits the
