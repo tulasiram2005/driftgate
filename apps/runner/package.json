@@ -19,9 +19,11 @@
     "@driftgate/drift": "workspace:*",
     "@playwright/test": "1.64.1",
     "pixelmatch": "7.1.0",
+    "pngjs": "7.0.0",
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@types/pngjs": "6.0.5",
     "tsx": "4.20.6"
   }
 }

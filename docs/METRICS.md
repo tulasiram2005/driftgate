@@ -1,5 +1,15 @@
 # Measured evidence
 
+## PNG comparison adapter (2026-10-22)
+
+- Runner tests: 38/38 pass. Added PNG roundtrip/diff, ignore mask, corrupt CRC,
+  truncation, byte/pixel limits, duplicate header and trailing-data tests.
+- Runner build passed after correcting PNG writer typing; lint passed.
+- Decoder accepts ordinary 8-bit non-interlaced RGB/RGBA screenshots only,
+  capped at 16 MiB compressed and eight million pixels. Duplicate headers and
+  animated PNG control chunks are rejected before decoding.
+- No baseline persistence, reviewer workflow or hosted visual execution claim.
+
 ## Visual comparison engine (2026-10-22)
 
 - Added pixelmatch 7.1.0 for decoded RGBA screenshot comparisons, with fixed

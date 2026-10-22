@@ -2,6 +2,9 @@
 
 ## Current summary (2026-10-22)
 
+- PNG comparison adapter now decodes bounded browser screenshots and emits a
+  PNG difference image. Runner tests pass 38/38 and build passes. Baseline
+  persistence, reviewer workflow and browser integration remain unfinished.
 - Visual comparison engine added with five regression tests; runner tests 33/33,
   build and lint pass. Baseline persistence, PNG integration and review UI remain.
 - Phases 0-3: implementation and recorded local/hosted checks are available below.
