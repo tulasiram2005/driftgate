@@ -2,6 +2,13 @@
 
 ## Current summary (2026-10-22)
 
+- Baseline review UI: proposal from automated screenshot evidence, paginated
+  candidate list and role-aware approval/rejection form implemented. API lists
+  expose evidence navigation metadata but never storage keys. Web typecheck,
+  lint and 40 unit tests passed; API 79 tests and build passed. Local Next build
+  is blocked by sandbox port binding. New browser fixture and screenshot review
+  are NOT VERIFIED. API revision a426795 passed Quality Gates 39827414205 and
+  CodeQL 39827414218. Active baseline selection/diff persistence remain pending.
 - Baseline candidate persistence and one-way ADMIN/APPROVER review API added.
   Scope derives from automated evidence; tests cover roles and competing reviews.
   Local API suite: 79/79 pass; build/lint pass. Local test migration only.

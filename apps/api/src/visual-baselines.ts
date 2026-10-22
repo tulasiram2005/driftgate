@@ -64,6 +64,18 @@ export function mountVisualBaselines(
       return fail(404, "NOT_FOUND", "Baseline cursor not found");
     const rows = await db.visualBaseline.findMany({
       where: { projectId },
+      include: {
+        evidence: {
+          select: {
+            id: true,
+            kind: true,
+            ready: true,
+            sizeBytes: true,
+            resultId: true,
+            result: { select: { runId: true } },
+          },
+        },
+      },
       orderBy: { id: "asc" },
       take: query.limit + 1,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),

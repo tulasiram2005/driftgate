@@ -151,6 +151,9 @@ it("stores server-derived scope and permits exactly one reviewer decision", asyn
   const list = await request(app).get(path()).set(auth("DEVELOPER"));
   expect(list.status).toBe(200);
   expect(list.body.data).toHaveLength(1);
+  expect(list.body.data[0].evidence.resultId).toBeTruthy();
+  expect(list.body.data[0].evidence.result.runId).toBeTruthy();
+  expect(list.body.data[0].evidence.key).toBeUndefined();
   expect((await request(app).get(path()).set(auth("OUTSIDER"))).status).toBe(404);
   expect((await request(app).get(`${path()}?cursor=missing`).set(auth())).status).toBe(404);
 });

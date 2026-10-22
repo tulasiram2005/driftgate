@@ -1,4 +1,5 @@
 "use client";
+import { ProposeBaseline } from "./baselines";
 
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -68,7 +69,12 @@ export function AutomatedRuns({ projectId, canWrite }: { projectId: string; canW
   });
   if (selected)
     return (
-      <AutomatedDetail projectId={projectId} runId={selected} onBack={() => setSelected("")} />
+      <AutomatedDetail
+        projectId={projectId}
+        runId={selected}
+        canWrite={canWrite}
+        onBack={() => setSelected("")}
+      />
     );
   return (
     <>
@@ -278,10 +284,12 @@ function AutomatedForm({
 function AutomatedDetail({
   projectId,
   runId,
+  canWrite,
   onBack,
 }: {
   projectId: string;
   runId: string;
+  canWrite: boolean;
   onBack: () => void;
 }) {
   const client = useQueryClient();
@@ -395,13 +403,17 @@ function AutomatedDetail({
               ) : (
                 <div className="qa-evidence-list">
                   {result.evidence.map((item) => (
-                    <EvidenceLink
-                      key={item.id}
-                      projectId={projectId}
-                      runId={runId}
-                      resultId={result.id}
-                      evidence={item}
-                    />
+                    <div key={item.id}>
+                      <EvidenceLink
+                        projectId={projectId}
+                        runId={runId}
+                        resultId={result.id}
+                        evidence={item}
+                      />
+                      {canWrite && item.ready && item.kind === "screenshot" && (
+                        <ProposeBaseline projectId={projectId} evidenceId={item.id} />
+                      )}
+                    </div>
                   ))}
                 </div>
               )}

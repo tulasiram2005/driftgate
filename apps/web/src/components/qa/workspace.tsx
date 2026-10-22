@@ -53,6 +53,7 @@ import { CasesView } from "./cases";
 import { RunsView, SuitesView } from "./execution";
 import { AutomatedRuns } from "./automated";
 import { ComparisonsView } from "./comparisons";
+import { BaselinesView } from "./baselines";
 import "./workspace.css";
 
 const sessionKey = ["session"] as const;
@@ -253,7 +254,15 @@ function AuthScreen() {
   );
 }
 
-type View = "projects" | "requirements" | "cases" | "suites" | "runs" | "automated" | "comparisons";
+type View =
+  | "projects"
+  | "requirements"
+  | "cases"
+  | "suites"
+  | "runs"
+  | "automated"
+  | "comparisons"
+  | "baselines";
 const navigation = [
   { id: "requirements", title: "Requirements", icon: BookOpen },
   { id: "cases", title: "Test cases", icon: ClipboardList },
@@ -261,6 +270,7 @@ const navigation = [
   { id: "runs", title: "Manual runs", icon: Play },
   { id: "automated", title: "Automated runs", icon: CheckCheck },
   { id: "comparisons", title: "Comparisons", icon: GitCompareArrows },
+  { id: "baselines", title: "Visual baselines", icon: Layers3 },
 ] as const;
 
 function SignedIn({ user }: { user: User }) {
@@ -367,7 +377,7 @@ function SignedIn({ user }: { user: User }) {
               <span className="qa-role">
                 <ShieldCheck size={14} aria-hidden="true" />
                 {selected.role}
-                {!canWrite && " · Read only"}
+                {selected.role === "DEVELOPER" && " · Read only"}
               </span>
             )}
             <a href="/design" className="qa-nav-button">
@@ -453,6 +463,12 @@ function SignedIn({ user }: { user: User }) {
                   <SuitesView projectId={projectId} canWrite={canWrite} />
                 ) : view === "automated" ? (
                   <AutomatedRuns projectId={projectId} canWrite={canWrite} />
+                ) : view === "baselines" ? (
+                  <BaselinesView
+                    key={projectId}
+                    projectId={projectId}
+                    canReview={selected.role === "ADMIN" || selected.role === "APPROVER"}
+                  />
                 ) : view === "comparisons" ? (
                   <ComparisonsView key={projectId} projectId={projectId} canWrite={canWrite} />
                 ) : (

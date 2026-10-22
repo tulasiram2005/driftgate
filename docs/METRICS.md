@@ -1,5 +1,17 @@
 # Measured evidence
 
+## Baseline review UI checkpoint (2026-10-23)
+
+- Web typecheck, lint and unit tests (40/40) passed. API tests (79/79) and
+  production build passed, including a check that list responses omit storage keys.
+- Added three-browser fixture coverage for candidate inspection, rejection,
+  accessibility, screenshots and horizontal overflow at four viewport widths.
+  Candidate responses are mocked; this is UI fixture coverage, not hosted
+  storage or full-stack baseline verification. Execution remains pending.
+- Local Next build fails because Turbopack cannot bind a port in the sandbox.
+- Previous baseline API revision a426795 passed hosted Quality Gates 39827414205
+  and CodeQL 39827414218. This does not verify the new UI changes.
+
 ## Visual baseline candidate API
 
 - Isolated local driftgate_test migration applied successfully.
