@@ -4,12 +4,25 @@ This phase is in progress, not complete.
 
 ## Implemented
 
+- Bounded pixel-diff engine using pixelmatch: decoded RGBA images, validated
+  ignore regions, overlap-safe counts and a difference mask. Original buffers
+  remain unchanged; full-image masks and mismatched dimensions are rejected.
+  Runner tests pass 33/33, build and lint pass. Baseline storage and review remain
+  unimplemented; this is not yet an exposed end-to-end visual workflow.
+
 - Automated snapshot result ingestion: an optional restricted runner check
   carries validated snapshot data in the signed callback. API persistence binds
   run, project, creator, environment and browser/device with replay protection.
   Manual imports cannot claim RUNNER provenance. The selector is available in
   automated runs, with existing default checks unchanged. Cloud migrations and
-  hosted use of this path remain pending; browser fixture CI is required.
+  hosted use of this path remain pending. Snapshot collection and execution
+  fixtures passed Quality Gates 39616600346 on revision b7b1b28.
+
+- Per-comparison expected-difference rules: bounded field/product rules with
+  required reasons are stored with each immutable comparison. Environment
+  scope comes from the selected snapshots; matched findings retain severity
+  and remain visible. The editor supports adding/removing rules and clears
+  drafts when either snapshot changes. Reusable project-wide rules are pending.
 
 - Comparison workspace: manual JSON imports, distinct-environment selectors,
   paginated snapshots/history, role-aware controls and findings dialog. Revision
@@ -22,23 +35,23 @@ This phase is in progress, not complete.
   the API. Findings are computed server-side using the shared runner engine,
   stored immutably and retrieved through scoped detail/metadata-list routes.
   Invalid stored prices fail without saving partial results. Manual provenance
-  is retained. Expected-difference management remains pending.
+  is retained. Per-comparison expected rules are implemented as described above.
 
 - Immutable manual snapshot storage with authenticated create/list/detail API,
   project membership and write-role checks, strict bounded payloads and explicit
   MANUAL_IMPORT provenance. Local test migration and 24 storage API tests passed.
-  Automatic collector ingestion, saved comparisons and UI remain pending.
   Cloud migration must precede using these new endpoints. See SNAPSHOTS.md.
 
 - Internal fixed-origin Threadline snapshot collector combines rendered prices,
   badges, image response status/dimensions, title, canonical and validated
   Product JSON-LD with catalogue stock data. Limits: 20 products, 1 MiB parsed
   catalogue, 32 KiB metadata, 10-second individual navigation/readiness waits.
-  It requires the existing restricted runner page; it is not exposed via HTTP
-  or wired into dispatch yet. Unknown image status remains null, not assumed 200.
+  It requires the existing restricted runner page and is available as an optional
+  automated check, not an arbitrary HTTP scanning endpoint. Unknown image status
+  remains null, not assumed 200.
   Production external scanning remains disabled. Browser fixture verification
   passed in CI on `d18f677`, including failure cleanup and recovery; runner unit
-  tests pass 28/28. Persistence and comparison screens remain pending.
+  tests pass 28/28. Persistence and comparison screens are implemented.
 
 - Fixed Threadline SQL assertions and operator CLI: negative stock, order/line
   arithmetic and missing product-size references. Only a dedicated SELECT-only
@@ -61,7 +74,7 @@ This phase is in progress, not complete.
   default checks remain unchanged. They can be explicitly requested via
   `POST /api/v1/projects/:projectId/automated-runs` in its `checks` array.
 
-## Verification
+## Initial verification (historical)
 
 Runner tests: 23 passed, including 12 drift comparisons and malformed inputs.
 API tests: 32 passed against isolated local `driftgate_test` only.
@@ -79,9 +92,10 @@ No screenshots or user-interface completion are claimed in this checkpoint.
 
 ## Remaining
 
-- Collect and persist actual rendered/API snapshots, broken-link observations,
-  findings and expected-difference rules with project authorization.
-- Expected-difference review/management and visual-baseline review screens.
+- Broken-link observations and reusable project-wide expected-difference rules.
+- Finish current rule-editor browser verification and screenshot visual review.
+- Apply Phase 4 cloud migrations and verify the new hosted snapshot/comparison
+  flows; existing local and CI fixture results do not establish cloud readiness.
 - Pixel comparisons, ignore regions, scoped baselines and approval/rejection.
 - Persist SQL outcomes and connect them to authorized run results/UI; configure
   a dedicated deployed-store read-only role when cloud verification is needed.

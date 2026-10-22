@@ -1,5 +1,17 @@
 # Measured evidence
 
+## Visual comparison engine (2026-10-22)
+
+- Added pixelmatch 7.1.0 for decoded RGBA screenshot comparisons, with fixed
+  perceptual threshold 0.1 and anti-alias differences included.
+- Runner tests: 33/33 passed, including five visual comparison tests covering
+  identical/changed pixels, nonmutation, overlapping ignore regions, correct
+  denominator, malformed images, dimension mismatch and full-image mask rejection.
+- Runner build and lint passed. Images are bounded to eight million pixels;
+  at most 100 in-bounds integer ignore rectangles are accepted.
+- PNG decoding, baseline storage/scope, reviewer approval/rejection and UI are
+  not yet integrated. These unit results do not establish visual workflow readiness.
+
 ## Saved comparisons (2026-10-21)
 
 - API: 73/73 tests passed against isolated local driftgate_test, including 15

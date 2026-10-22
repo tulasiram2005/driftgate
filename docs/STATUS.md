@@ -1,5 +1,30 @@
 # Phase status
 
+## Current summary (2026-10-22)
+
+- Visual comparison engine added with five regression tests; runner tests 33/33,
+  build and lint pass. Baseline persistence, PNG integration and review UI remain.
+- Phases 0-3: implementation and recorded local/hosted checks are available below.
+  The hosted runner happy path and private evidence downloads were verified;
+  the temporary cloud-connected worker remains stopped.
+- Phase 4: in progress. Snapshot collection/persistence, saved comparisons,
+  per-comparison expected-difference rules, contract/accessibility checks and
+  restricted SQL assertions are implemented. This is not phase completion.
+- Current revision `db6655e`: hosted typecheck, lint, unit tests, restricted SQL
+  integration and production build passed. CodeQL run `39823620132` passed.
+  Quality Gates run `39823619939` is still running; browser checks and screenshot
+  visual review are not yet verified for this revision.
+- Remaining Phase 4 work includes reusable project rules, visual baselines and
+  review, persisted SQL outcomes/UI, broken-link observations and measured demo
+  coverage. New Phase 4 cloud migrations and hosted flows remain unverified.
+- Phase 5 (Jira, defects, release gates, sign-off and PDF) has not started.
+  Final deployment/demo verification is separate. Free-only constraints remain.
+
+## Historical checkpoints
+
+The entries below record the state at each checkpoint. Pending statements in an
+older entry may be superseded by a newer entry or the current summary above.
+
 Expected-difference UI checkpoint: comparison screen now includes bounded rule
 entry/removal and displays saved reasons. Changing either snapshot clears draft
 rules. Browser coverage includes saving expectations, preserving severity,
