@@ -8,6 +8,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { Config } from "./config.js";
 
 export interface EvidenceStorage {
+  writeScreenshot?(key: string, body: Buffer): Promise<void>;
   readScreenshot?(key: string, expectedSize: number): Promise<Buffer>;
   upload(key: string, contentType: string, size: number): Promise<string>;
   download(key: string): Promise<string>;
@@ -28,6 +29,22 @@ export function storage(config: Config): EvidenceStorage | undefined {
   });
   const Bucket = config.S3_BUCKET;
   return {
+    async writeScreenshot(Key, Body) {
+      if (!Body.length || Body.length > MAX_SCREENSHOT_BYTES)
+        throw new Error("Invalid screenshot size");
+      await client.send(
+        new PutObjectCommand({
+          Bucket,
+          Key,
+          Body,
+          ContentType: "image/png",
+          ContentLength: Body.length,
+        }),
+        {
+          abortSignal: AbortSignal.timeout(15000),
+        },
+      );
+    },
     async readScreenshot(Key, expectedSize) {
       if (
         !Number.isSafeInteger(expectedSize) ||

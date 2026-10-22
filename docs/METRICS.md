@@ -1,5 +1,18 @@
 # Measured evidence
 
+## Persisted visual comparisons (2026-10-23)
+
+- API regression: 88/88 passed, including actual PNG comparison and PostgreSQL
+  persistence with injected in-memory evidence storage.
+- Runner: 38/38 passed after sharing the comparison engine with the API.
+- Web unit tests: 40/40 passed; web typecheck passed.
+- API build and scoped API/runner/shared/web lint passed.
+- Web production build: next build --webpack passed.
+- Local migration 20261023030000_visual_comparisons applied to driftgate_test.
+- Browser checks: NOT VERIFIED. Initial run lacked engines; after installation,
+  Chromium failed before test execution with macOS MachPort permission denied.
+- Cloud migration, hosted storage round trip and screenshot review NOT VERIFIED.
+
 ## Private screenshot reading (2026-10-23)
 
 - API regression: 85/85 tests passed. Added exact/chunked read, truncation,

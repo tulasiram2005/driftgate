@@ -30,6 +30,38 @@ for (const decision of ["APPROVED", "REJECTED"] as const) {
     await page.route("**/api/v1/projects/*/visual-baselines?*", (route) =>
       route.fulfill({ json: { data: [row], nextCursor: null } }),
     );
+    await page.route("**/api/v1/projects/*/visual-comparisons?*", (route) =>
+      route.fulfill({
+        json: {
+          data: [
+            {
+              id: "demo-comparison",
+              changedPixels: 42,
+              comparedPixels: 1000,
+              createdAt: "2026-10-23T00:00:00Z",
+              baseline: {
+                label: "Demo previous comparison",
+                environment: "STAGING",
+                browser: "chromium",
+              },
+            },
+          ],
+          nextCursor: null,
+        },
+      }),
+    );
+    await page.route("**/api/v1/projects/*/visual-comparisons/demo-comparison/url", (route) =>
+      route.fulfill({ json: { data: { url: "https://evidence.example.test/diff.png" } } }),
+    );
+    await page.route("https://evidence.example.test/diff.png", (route) =>
+      route.fulfill({
+        contentType: "image/png",
+        body: Buffer.from(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4AWP4DwQACfsD/c8LaHIAAAAASUVORK5CYII=",
+          "base64",
+        ),
+      }),
+    );
     await page.route(
       "**/api/v1/projects/*/visual-baselines/demo-baseline/review",
       async (route) => {
@@ -59,6 +91,27 @@ for (const decision of ["APPROVED", "REJECTED"] as const) {
     await page.getByLabel("Project name").fill("Demo baseline review");
     await page.getByRole("button", { name: "Create project", exact: true }).click();
     await page.getByRole("button", { name: "Visual baselines", exact: true }).click();
+    await expect(page.getByText("42 changed pixels (4.20%)", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Get difference image", exact: true }).click();
+    await expect(page.getByRole("link", { name: "Download difference PNG" })).toBeVisible();
+    const difference = page.getByAltText(
+      "Changed pixels highlighted against a transparent background",
+    );
+    await expect(difference).toBeVisible();
+    await expect
+      .poll(() => difference.evaluate((image: HTMLImageElement) => image.naturalWidth))
+      .toBe(1);
+    for (const width of [360, 768, 1280, 1920]) {
+      await page.setViewportSize({ width, height: 1000 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+      expect(
+        (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+          .violations,
+      ).toEqual([]);
+      await page.screenshot({ path: info.outputPath(`comparisons-${width}.png`), fullPage: true });
+    }
     await page.getByRole("button", { name: "Inspect baseline", exact: true }).click();
     for (const width of [360, 768, 1280, 1920]) {
       await page.setViewportSize({ width, height: 1000 });

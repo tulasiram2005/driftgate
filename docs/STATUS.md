@@ -1,5 +1,22 @@
 # Phase status
 
+## Latest checkpoint (2026-10-23): persisted visual comparisons
+
+- Implemented approved active baseline selection, bounded PNG comparison,
+  private difference upload, saved comparison metrics, protected downloads,
+  automated-evidence comparison action and paginated results with image preview.
+- API integration uses real PNGs and the isolated PostgreSQL database with
+  in-memory private storage: 88 API tests pass. Runner 38 tests and web 40 tests
+  pass. API build, web production build (webpack), web typecheck and scoped lint
+  pass. Local migration 20261023030000 applied successfully.
+- Browser fixture expanded for results, downloads, image rendering, accessibility
+  and four widths. NOT VERIFIED: macOS denies Chromium MachPort startup.
+  Cloud migration and real cloud comparison round trip remain NOT VERIFIED.
+- Item 1 is implemented, not fully externally verified. Items 2-5 remain pending:
+  persisted ignore regions, persisted SQL outcomes/UI, reusable project rules,
+  and broken-link detection. Final verification remains pending; Phase 5 has not
+  started. Historical checkpoints below describe earlier states.
+
 Private screenshot reader checkpoint: bounded server-side evidence reads added
 for the upcoming comparison endpoint. API regression 85/85, build and lint pass.
 This is a storage prerequisite, not completed visual comparison execution.

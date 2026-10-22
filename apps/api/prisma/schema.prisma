@@ -48,9 +48,28 @@ model Project {
   snapshots    EnvironmentSnapshot[]
   comparisons  EnvironmentComparison[]
   visualBaselines VisualBaseline[]
+  visualComparisons VisualComparison[]
+}
+
+model VisualComparison {
+  id String @id @default(cuid())
+  projectId String
+  baselineId String
+  evidenceId String
+  createdBy String
+  createdAt DateTime @default(now())
+  width Int
+  height Int
+  changedPixels Int
+  comparedPixels Int
+  diffKey String @unique
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  baseline VisualBaseline @relation(fields: [baselineId], references: [id], onDelete: Restrict)
+  @@index([projectId, id])
 }
 
 model VisualBaseline {
+  comparisons VisualComparison[]
   active Boolean @default(false)
   activatedBy String?
   activatedAt DateTime?

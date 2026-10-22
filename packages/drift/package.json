@@ -3,7 +3,22 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "pixelmatch": "7.1.0",
+    "pngjs": "7.0.0"
+  },
+  "devDependencies": {
+    "@types/pngjs": "6.0.5"
+  },
   "exports": {
+    "./visual": {
+      "types": "./dist/visual.d.ts",
+      "default": "./dist/visual.js"
+    },
+    "./visual-png": {
+      "types": "./dist/visual-png.d.ts",
+      "default": "./dist/visual-png.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"

@@ -5,6 +5,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { page, projectPath } from "../../lib/qa-api";
 import { Empty, ErrorNotice, Field, Loading, Modal, SectionHeading, Submit, useWrite } from "./ui";
 import { EvidenceLink } from "./automated";
+import { CompareScreenshot, VisualComparisons } from "./visual-comparisons";
 
 type Baseline = {
   id: string;
@@ -92,6 +93,7 @@ export function BaselinesView({ projectId, canReview }: { projectId: string; can
           onClose={() => setSelected(null)}
         />
       )}
+      <VisualComparisons projectId={projectId} />
     </>
   );
 }
@@ -202,6 +204,7 @@ export function ProposeBaseline({
   const write = useWrite(projectId, () => setOpen(false));
   return (
     <>
+      <CompareScreenshot projectId={projectId} evidenceId={evidenceId} />
       <button
         type="button"
         className="qa-button"
