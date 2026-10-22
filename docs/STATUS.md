@@ -1,5 +1,12 @@
 # Phase status
 
+Expected-difference API checkpoint (2026-10-22): comparisons accept bounded,
+reasoned field/product rules scoped to their selected environment pair. Rules
+are saved with each comparison; expected findings retain severity and remain
+visible/countable. API tests pass 76/76 and build passes. Migration applied only
+to isolated local driftgate_test. Rule-entry UI, reusable project rules and
+cloud migration are still pending. Phase 4 remains in progress.
+
 Verified automated snapshot checkpoint: revision b7b1b28 passed Quality Gates
 39616600346 and CodeQL 39616600351. Browser/accessibility checks, snapshot
 collection and execution fixtures, restricted SQL integration, unit tests,

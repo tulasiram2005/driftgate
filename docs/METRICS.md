@@ -306,3 +306,10 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 - Runner: 28 unit tests passed; build and lint passed. New snapshot execution fixture verifies successful payload/evidence and failure omission; hosted browser result pending.
 - Web: 40 unit tests passed; typecheck, lint and production build passed. Existing default checks retained; optional snapshot, API-contract and accessibility choices added.
 - Cloud migration and hosted snapshot collection remain NOT VERIFIED. Temporary cloud worker was not restarted.
+
+# Expected-difference API: 2026-10-22
+
+- Isolated local database migration passed; no cloud database changed.
+- 76 API tests passed; API production build passed.
+- Regression tests cover expected flags without dropping findings, saved reasons, unchanged older comparisons, unmatched product rules, duplicates, invalid scope and bounds.
+- Hosted CI for this revision and rule-entry UI remain NOT VERIFIED.

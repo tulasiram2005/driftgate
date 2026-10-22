@@ -115,6 +115,53 @@ afterAll(async () => {
 });
 
 describe("manual comparison API with isolated local database", () => {
+  it("retains findings and records explicit scoped expectations without changing older comparisons", async () => {
+    const ids = await pair();
+    const rule = { field: "price", productId: "demo-shirt", reason: "Demo regional pricing" };
+    const original = await request(app).post(path()).set(auth()).send(ids);
+    const expected = await request(app)
+      .post(path())
+      .set(auth())
+      .send({ ...ids, expectedRules: [rule] });
+    expect(expected.status).toBe(200);
+    expect(expected.body.data.findingCount).toBe(original.body.data.findingCount);
+    expect(
+      expected.body.data.findings.find((f: { field: string }) => f.field === "price").expected,
+    ).toBe(true);
+    expect(expected.body.data.expectedRules).toEqual([rule]);
+    const older = await request(app).get(`${path()}/${original.body.data.id}`).set(auth());
+    expect(
+      older.body.data.findings.find((f: { field: string }) => f.field === "price").expected,
+    ).toBe(false);
+    const unmatched = await request(app)
+      .post(path())
+      .set(auth())
+      .send({ ...ids, expectedRules: [{ ...rule, productId: "other" }] });
+    expect(unmatched.body.data.findings.every((f: { expected: boolean }) => !f.expected)).toBe(
+      true,
+    );
+  });
+  it("rejects wildcard, duplicate, unreasoned and incorrectly scoped expectations", async () => {
+    const ids = await pair();
+    const rule = { field: "price", productId: "demo-shirt", reason: "Demo" };
+    for (const expectedRules of [
+      [{ ...rule, field: "*" }],
+      [rule, rule],
+      [{ ...rule, reason: " " }],
+      [{ ...rule, productId: null }],
+      [{ ...rule, field: "productCount" }],
+      [{ ...rule, environments: ["staging", "uat"] }],
+      Array(101).fill(rule),
+    ])
+      expect(
+        (
+          await request(app)
+            .post(path())
+            .set(auth())
+            .send({ ...ids, expectedRules })
+        ).status,
+      ).toBe(400);
+  });
   it("computes an S1 price finding and records server-owned provenance", async () => {
     const body = await pair();
     const created = await compare(body);

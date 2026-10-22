@@ -6,7 +6,48 @@ import { snapshotBody } from "./snapshots.js";
 import { rateLimit } from "express-rate-limit";
 
 const identifier = z.string().min(1).max(100);
-export const comparisonBody = z.object({ beforeId: identifier, afterId: identifier }).strict();
+const expectedRule = z
+  .object({
+    field: z.enum([
+      "product",
+      "productCount",
+      "price",
+      "compareAt",
+      "currency",
+      "size",
+      "stock",
+      "discountPercent",
+      "badge",
+      "image.status",
+      "image.width",
+      "image.height",
+      "title",
+      "canonical",
+      "jsonLd",
+    ]),
+    productId: identifier.nullable(),
+    reason: z.string().trim().min(1).max(500),
+  })
+  .strict()
+  .refine(
+    (r) => (r.field === "productCount") === (r.productId === null),
+    "Only productCount rules use a null product ID",
+  );
+export const comparisonBody = z
+  .object({
+    beforeId: identifier,
+    afterId: identifier,
+    expectedRules: z
+      .array(expectedRule)
+      .max(100)
+      .default([])
+      .refine(
+        (rules) =>
+          new Set(rules.map((r) => JSON.stringify([r.field, r.productId]))).size === rules.length,
+        "Duplicate expected-difference rule",
+      ),
+  })
+  .strict();
 const queryBody = z
   .object({
     limit: z.coerce.number().int().min(1).max(100).default(30),
@@ -50,6 +91,10 @@ export function mountComparisons(
         findings = compareEnvironments(
           JSON.parse(JSON.stringify(left)) as EnvironmentSnapshot,
           JSON.parse(JSON.stringify(right)) as EnvironmentSnapshot,
+          body.expectedRules.map((rule) => ({
+            ...rule,
+            environments: [left.environment, right.environment] as const,
+          })),
         );
       } catch {
         return fail(400, "INVALID_INPUT", "Snapshot contains values that cannot be compared");
@@ -57,7 +102,9 @@ export function mountComparisons(
       return tx.environmentComparison.create({
         data: {
           projectId,
-          ...body,
+          beforeId: body.beforeId,
+          afterId: body.afterId,
+          expectedRules: JSON.parse(JSON.stringify(body.expectedRules)),
           source:
             before.source === "RUNNER" && after.source === "RUNNER" ? "RUNNER" : "MANUAL_IMPORT",
           createdBy: res.locals.userId as string,

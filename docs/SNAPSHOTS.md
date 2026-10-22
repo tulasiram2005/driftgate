@@ -23,6 +23,16 @@ Cloud migrations and hosted execution of this new check remain unverified.
 
 ## API
 
+Comparison creation accepts optional `expectedRules` (maximum 100). Each rule
+contains an exact `field`, `productId`, and a nonblank `reason` (maximum 500
+characters). Only `productCount` uses a null product ID. Duplicate field/product
+rules and unknown fields are rejected. Environment scope is derived from the
+selected snapshot pair, never supplied by the caller. Rules are stored with the
+comparison and do not change older results. Expected findings remain visible,
+retain severity and count toward findingCount. For size/stock fields the current
+engine matches all sizes of the exact product; per-size exceptions are not yet
+supported. The rule-editing UI and reusable project rule library remain pending.
+
 All routes require a valid bearer session and project membership.
 
 - `POST /api/v1/projects/:projectId/snapshots`: ADMIN or QA only. Body contains
