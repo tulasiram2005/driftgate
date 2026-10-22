@@ -18,6 +18,46 @@ export function mountVisualBaselines(
   fail: (status: number, code: string, message: string) => never,
 ) {
   const base = "/api/v1/projects/:projectId/visual-baselines";
+  app.post(`${base}/:baselineId/activate`, guard(), async (req, res) => {
+    if (!["ADMIN", "APPROVER"].includes(res.locals.role as string))
+      return fail(403, "FORBIDDEN", "An Admin or Approver must activate baselines");
+    z.object({}).strict().parse(req.body);
+    const projectId = id.parse(req.params.projectId);
+    const baselineId = id.parse(req.params.baselineId);
+    const data = await db.$transaction(
+      async (tx) => {
+        const found = await tx.visualBaseline.findFirst({ where: { id: baselineId, projectId } });
+        if (!found) return fail(404, "NOT_FOUND", "Baseline not found");
+        if (found.status !== "APPROVED")
+          return fail(409, "CONFLICT", "Only approved baselines can be activated");
+        if (found.active) return found;
+        const { environment, browser, device, checkId, viewportWidth, viewportHeight } = found;
+        await tx.visualBaseline.updateMany({
+          where: {
+            projectId,
+            environment,
+            browser,
+            device,
+            checkId,
+            viewportWidth,
+            viewportHeight,
+            active: true,
+          },
+          data: { active: false },
+        });
+        return tx.visualBaseline.update({
+          where: { id: baselineId },
+          data: {
+            active: true,
+            activatedBy: res.locals.userId as string,
+            activatedAt: new Date(),
+          },
+        });
+      },
+      { isolationLevel: "Serializable" },
+    );
+    res.json({ data });
+  });
   app.post(base, guard(true), async (req, res) => {
     const body = candidate.parse(req.body);
     const projectId = id.parse(req.params.projectId);

@@ -15,6 +15,7 @@ type Baseline = {
   viewportWidth: number;
   viewportHeight: number;
   status: string;
+  active: boolean;
   reviewedBy: string | null;
   reviewedAt: string | null;
   reviewComment: string | null;
@@ -59,7 +60,10 @@ export function BaselinesView({ projectId, canReview }: { projectId: string; can
                 <p>
                   {row.environment} · {row.browser} · {row.viewportWidth} × {row.viewportHeight}
                 </p>
-                <p>{row.status}</p>
+                <p>
+                  {row.status}
+                  {row.active ? " · Active" : ""}
+                </p>
                 <button type="button" className="qa-link" onClick={() => setSelected(row)}>
                   Inspect baseline
                 </button>
@@ -119,6 +123,24 @@ function BaselineReview({
         resultId={baseline.evidence.resultId}
         evidence={baseline.evidence}
       />
+      {baseline.status === "APPROVED" && canReview && !baseline.active && (
+        <div>
+          <button
+            type="button"
+            className="qa-button"
+            disabled={write.isPending}
+            onClick={() =>
+              write.mutate({
+                path: projectPath(projectId, `/visual-baselines/${baseline.id}/activate`),
+                body: {},
+              })
+            }
+          >
+            Use as active baseline
+          </button>
+          <ErrorNotice error={write.error} />
+        </div>
+      )}
       {baseline.status === "PENDING" && canReview ? (
         <form
           className="qa-form"

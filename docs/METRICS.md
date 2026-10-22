@@ -1,5 +1,14 @@
 # Measured evidence
 
+## Active baseline checkpoint (2026-10-23)
+
+- Isolated local migration passed. API regression: 80/80 tests passed.
+- Tests verify role/ownership rejection, approved-only activation, unchanged
+  repeat-activation metadata, exact-scope replacement and isolation from UAT.
+- API build and web typecheck passed. Expanded browser fixtures cover approval,
+  rejection and activation; execution and visual screenshot review remain pending.
+- No cloud migration applied; no paid resource or temporary worker started.
+
 ## Baseline review UI checkpoint (2026-10-23)
 
 - Web typecheck, lint and unit tests (40/40) passed. API tests (79/79) and

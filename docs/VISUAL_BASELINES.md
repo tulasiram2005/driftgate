@@ -25,7 +25,16 @@ versioning this mapping or adding capture-time metadata before accepting new
 baseline candidates. These dimensions are not inferred from uploaded PNG bytes.
 Evidence stays private and uses existing authorized download routes.
 
-Approval records a reviewed candidate; it does not yet replace or select an
-active baseline automatically. Image comparison execution, active-baseline
-selection, persisted diffs, ignore-region persistence and review UI remain
-pending. No cloud migration or hosted verification is claimed.
+Approval records a reviewed candidate; it does not automatically activate it.
+`POST /api/v1/projects/:projectId/visual-baselines/:baselineId/activate` accepts
+an empty JSON object from ADMIN/APPROVER. Only an approved candidate qualifies.
+A serializable transaction replaces the active candidate in the exact project,
+environment, browser, device, check and viewport scope. A partial unique index
+enforces one active candidate per scope. Conflicting requests may return 409;
+refresh before retrying. Repeating activation of the active candidate preserves
+its activation timestamp and actor. Other environment scopes remain unchanged.
+
+The workspace supports proposing evidence, inspecting candidates, reviewing and
+activating approved candidates. Its browser fixtures remain unverified.
+Image comparison execution, persisted diffs and ignore-region persistence remain
+pending. No cloud migration or hosted visual verification is claimed.

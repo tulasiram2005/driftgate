@@ -168,3 +168,70 @@ it("rejects pending evidence and evidence belonging to manual runs", async () =>
     (await request(app).post(path()).set(auth()).send({ evidenceId, label: "Demo" })).status,
   ).toBe(404);
 });
+
+it("activates only approved candidates and replaces only the same scope", async () => {
+  const seed = await db.visualBaseline.findFirstOrThrow({ where: { projectId } });
+  async function create(environment: string, status = "APPROVED") {
+    const source = await db.evidence.findUniqueOrThrow({ where: { id: evidenceId } });
+    const evidence = await db.evidence.create({
+      data: {
+        resultId: source.resultId,
+        key: `demo/${randomUUID()}.png`,
+        kind: "screenshot",
+        contentType: "image/png",
+        ready: true,
+        sizeBytes: 100,
+      },
+    });
+    return db.visualBaseline.create({
+      data: {
+        projectId,
+        evidenceId: evidence.id,
+        label: "Demo activation",
+        environment,
+        browser: seed.browser,
+        device: seed.device,
+        checkId: seed.checkId,
+        viewportWidth: seed.viewportWidth,
+        viewportHeight: seed.viewportHeight,
+        createdBy: users.ADMIN!.id,
+        status,
+        ...(status === "PENDING"
+          ? {}
+          : {
+              reviewedBy: users.ADMIN!.id,
+              reviewedAt: new Date(),
+              reviewComment: "Demo reviewed",
+            }),
+      },
+    });
+  }
+  const first = await create("STAGING");
+  const second = await create("STAGING");
+  const other = await create("UAT");
+  const pending = await create("STAGING", "PENDING");
+  const rejected = await create("STAGING", "REJECTED");
+  const activate = (id: string, role = "ADMIN") =>
+    request(app).post(`${path()}/${id}/activate`).set(auth(role)).send({});
+  expect((await activate(first.id, "QA")).status).toBe(403);
+  expect((await activate(first.id, "OUTSIDER")).status).toBe(404);
+  expect((await activate("missing")).status).toBe(404);
+  expect((await activate(pending.id)).status).toBe(409);
+  expect((await activate(rejected.id)).status).toBe(409);
+  expect((await activate(other.id)).status).toBe(200);
+  const selected = await activate(first.id, "APPROVER");
+  expect(selected.status).toBe(200);
+  expect(selected.body.data.activatedBy).toBe(users.APPROVER!.id);
+  const repeat = await activate(first.id);
+  expect(repeat.body.data.activatedAt).toBe(selected.body.data.activatedAt);
+  expect((await activate(second.id)).status).toBe(200);
+  expect((await db.visualBaseline.findUniqueOrThrow({ where: { id: first.id } })).active).toBe(
+    false,
+  );
+  expect((await db.visualBaseline.findUniqueOrThrow({ where: { id: other.id } })).active).toBe(
+    true,
+  );
+  expect(
+    await db.visualBaseline.count({ where: { projectId, environment: "STAGING", active: true } }),
+  ).toBe(1);
+});

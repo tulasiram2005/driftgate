@@ -51,6 +51,9 @@ model Project {
 }
 
 model VisualBaseline {
+  active Boolean @default(false)
+  activatedBy String?
+  activatedAt DateTime?
   id String @id @default(cuid())
   projectId String
   evidenceId String

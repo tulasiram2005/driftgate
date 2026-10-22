@@ -1,5 +1,13 @@
 # Phase status
 
+Active baseline checkpoint (2026-10-23): scoped activation API and UI implemented.
+Only ADMIN/APPROVER can activate approved candidates. Database uniqueness and
+serializable replacement preserve one active baseline per exact scope. Local
+API tests pass 80/80; API build and web typecheck pass. Browser tests, cloud
+migration and end-to-end visual execution are not yet verified. Persisted diffs,
+ignore-region persistence, SQL outcomes/UI, reusable rules, broken-link checks
+and final verification remain Phase 4 work. Phase 5 has not started.
+
 ## Current summary (2026-10-22)
 
 - Baseline review UI: proposal from automated screenshot evidence, paginated
