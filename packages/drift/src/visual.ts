@@ -16,6 +16,39 @@ function validate(image: Raster) {
     throw new Error("Invalid or oversized RGBA image");
 }
 
+export function ignoreMask(width: number, height: number, regions: readonly IgnoreRegion[]) {
+  if (
+    !Number.isSafeInteger(width) ||
+    !Number.isSafeInteger(height) ||
+    width < 1 ||
+    height < 1 ||
+    width * height > 8_000_000
+  )
+    throw new Error("Invalid screenshot dimensions");
+  if (regions.length > 100) throw new Error("Too many ignore regions");
+  for (const region of regions) {
+    if (
+      ![region.x, region.y, region.width, region.height].every(Number.isSafeInteger) ||
+      region.x < 0 ||
+      region.y < 0 ||
+      region.width < 1 ||
+      region.height < 1 ||
+      region.x + region.width > width ||
+      region.y + region.height > height
+    )
+      throw new Error("Ignore region is outside the screenshot");
+  }
+  const totalPixels = width * height;
+  const mask = new Uint8Array(totalPixels);
+  for (const region of regions) {
+    for (let y = region.y; y < region.y + region.height; y++)
+      mask.fill(1, y * width + region.x, y * width + region.x + region.width);
+  }
+  const ignoredPixels = mask.reduce((sum, value) => sum + value, 0);
+  if (ignoredPixels === totalPixels) throw new Error("Ignore regions cover the entire screenshot");
+  return { mask, ignoredPixels };
+}
+
 /** Compare decoded screenshots without changing the original evidence. */
 export function compareVisual(
   before: Raster,
@@ -26,27 +59,8 @@ export function compareVisual(
   validate(after);
   if (before.width !== after.width || before.height !== after.height)
     throw new Error("Screenshot dimensions differ; use the matching viewport baseline");
-  if (regions.length > 100) throw new Error("Too many ignore regions");
-  for (const region of regions) {
-    if (
-      ![region.x, region.y, region.width, region.height].every(Number.isSafeInteger) ||
-      region.x < 0 ||
-      region.y < 0 ||
-      region.width < 1 ||
-      region.height < 1 ||
-      region.x + region.width > before.width ||
-      region.y + region.height > before.height
-    )
-      throw new Error("Ignore region is outside the screenshot");
-  }
   const totalPixels = before.width * before.height;
-  const mask = new Uint8Array(totalPixels);
-  for (const region of regions) {
-    for (let y = region.y; y < region.y + region.height; y++)
-      mask.fill(1, y * before.width + region.x, y * before.width + region.x + region.width);
-  }
-  const ignoredPixels = mask.reduce((sum, value) => sum + value, 0);
-  if (ignoredPixels === totalPixels) throw new Error("Ignore regions cover the entire screenshot");
+  const { mask, ignoredPixels } = ignoreMask(before.width, before.height, regions);
   const left = new Uint8Array(before.rgba);
   const right = new Uint8Array(after.rgba);
   for (let i = 0; i < totalPixels; i++) {

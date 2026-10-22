@@ -15,6 +15,8 @@ for (const decision of ["APPROVED", "REJECTED"] as const) {
       viewportHeight: 900,
       status: "PENDING",
       active: false,
+      ignoreRevision: 0,
+      ignoreRegions: [] as { x: number; y: number; width: number; height: number }[],
       reviewedBy: null,
       reviewedAt: null,
       reviewComment: null,
@@ -29,6 +31,19 @@ for (const decision of ["APPROVED", "REJECTED"] as const) {
     };
     await page.route("**/api/v1/projects/*/visual-baselines?*", (route) =>
       route.fulfill({ json: { data: [row], nextCursor: null } }),
+    );
+    await page.route(
+      "**/api/v1/projects/*/visual-baselines/demo-baseline/ignore-regions",
+      async (route) => {
+        expect(route.request().method()).toBe("PUT");
+        expect(route.request().postDataJSON()).toEqual({
+          revision: 0,
+          regions: [{ x: 0, y: 0, width: 1, height: 1 }],
+        });
+        row.ignoreRegions = [{ x: 0, y: 0, width: 1, height: 1 }];
+        row.ignoreRevision = 1;
+        await route.fulfill({ json: { data: row } });
+      },
     );
     await page.route("**/api/v1/projects/*/visual-comparisons?*", (route) =>
       route.fulfill({
@@ -134,6 +149,27 @@ for (const decision of ["APPROVED", "REJECTED"] as const) {
       await page.getByRole("button", { name: "Use as active baseline", exact: true }).click();
       await expect(page.getByRole("dialog")).toHaveCount(0);
       await expect(page.getByText("APPROVED · Active", { exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "Inspect baseline", exact: true }).click();
+      await page.getByRole("button", { name: "Add region", exact: true }).click();
+      for (const width of [360, 768, 1280, 1920]) {
+        await page.setViewportSize({ width, height: 1000 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+          true,
+        );
+        expect(
+          (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+            .violations,
+        ).toEqual([]);
+        await page.screenshot({
+          path: info.outputPath(`ignore-regions-${width}.png`),
+          fullPage: true,
+        });
+      }
+      await page.getByRole("button", { name: "Save ignore regions", exact: true }).click();
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await page.getByRole("button", { name: "Inspect baseline", exact: true }).click();
+      await expect(page.getByLabel("WIDTH (pixels)", { exact: true })).toHaveValue("1");
+      await expect(page.getByText("Revision 1 · 1280 × 900", { exact: true })).toBeVisible();
     } else {
       await expect(
         page.getByRole("button", { name: "Use as active baseline", exact: true }),

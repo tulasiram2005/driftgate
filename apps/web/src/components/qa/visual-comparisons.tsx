@@ -7,6 +7,8 @@ import { api, page, projectPath } from "../../lib/qa-api";
 import { Empty, ErrorNotice, Loading, useWrite } from "./ui";
 
 type Comparison = {
+  ignoredPixels?: number;
+  ignoreRevision?: number;
   id: string;
   changedPixels: number;
   comparedPixels: number;
@@ -123,6 +125,10 @@ export function VisualComparisons({ projectId }: { projectId: string }) {
                   {new Date(row.createdAt).toLocaleString()}
                 </p>
                 <p>{row.changedPixels === 0 ? "No visual changes" : "Visual changes detected"}</p>
+                <p>
+                  {(row.ignoredPixels ?? 0).toLocaleString()} ignored pixels · Region revision{" "}
+                  {row.ignoreRevision ?? 0}
+                </p>
                 <p>
                   {row.changedPixels.toLocaleString()} changed pixels (
                   {((row.changedPixels / row.comparedPixels) * 100).toFixed(2)}%)

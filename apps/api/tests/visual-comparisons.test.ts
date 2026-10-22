@@ -47,6 +47,8 @@ const auth = (role = "ADMIN") => ({ Authorization: `Bearer ${users[role]!.token}
 const path = () => `/api/v1/projects/${projectId}/visual-comparisons`;
 const compare = (evidenceId = currentId, role = "ADMIN") =>
   request(app).post(path()).set(auth(role)).send({ evidenceId });
+const regionsPath = () =>
+  `/api/v1/projects/${projectId}/visual-baselines/${baselineId}/ignore-regions`;
 function png(changed: boolean, width = 1280) {
   const p = new PNG({ width, height: 900 });
   p.data.fill(255);
@@ -182,6 +184,66 @@ it("requires new ready automated evidence and an active matching scope", async (
   await db.visualBaseline.update({ where: { id: baselineId }, data: { active: false } });
   expect((await compare()).status).toBe(409);
   await db.visualBaseline.update({ where: { id: baselineId }, data: { active: true } });
+});
+it("persists reusable regions, snapshots revisions and prevents stale edits", async () => {
+  const regions = [{ x: 0, y: 0, width: 1, height: 1 }];
+  expect(
+    (await request(app).put(regionsPath()).set(auth("DEVELOPER")).send({ revision: 0, regions }))
+      .status,
+  ).toBe(403);
+  expect(
+    (await request(app).put(regionsPath()).set(auth("OUTSIDER")).send({ revision: 0, regions }))
+      .status,
+  ).toBe(404);
+  for (const invalid of [
+    [{ x: -1, y: 0, width: 1, height: 1 }],
+    [{ x: 1279, y: 0, width: 2, height: 1 }],
+    [{ x: 0, y: 0, width: 1280, height: 900 }],
+    [
+      { x: 0, y: 0, width: 640, height: 900 },
+      { x: 640, y: 0, width: 640, height: 900 },
+    ],
+    [{ x: 0.5, y: 0, width: 1, height: 1 }],
+    Array.from({ length: 101 }, () => regions[0]),
+  ]) {
+    expect(
+      (await request(app).put(regionsPath()).set(auth()).send({ revision: 0, regions: invalid }))
+        .status,
+    ).toBe(400);
+  }
+  const saved = await request(app).put(regionsPath()).set(auth()).send({ revision: 0, regions });
+  expect(saved.status).toBe(200);
+  expect(saved.body.data).toMatchObject({
+    ignoreRevision: 1,
+    ignoreRegions: regions,
+    ignoreUpdatedBy: users.ADMIN!.id,
+  });
+  expect(
+    (await request(app).put(regionsPath()).set(auth()).send({ revision: 0, regions: [] })).status,
+  ).toBe(409);
+  const first = await compare();
+  expect(first.status).toBe(200);
+  expect(first.body.data).toMatchObject({
+    changedPixels: 0,
+    ignoredPixels: 1,
+    comparedPixels: 1280 * 900 - 1,
+    ignoreRevision: 1,
+    ignoreRegions: regions,
+  });
+  expect((await compare()).body.data.changedPixels).toBe(0);
+  expect(
+    (await request(app).put(regionsPath()).set(auth()).send({ revision: 1, regions: [] })).status,
+  ).toBe(200);
+  expect((await compare()).body.data).toMatchObject({
+    changedPixels: 1,
+    ignoredPixels: 0,
+    ignoreRevision: 2,
+  });
+  const historic = await db.visualComparison.findUniqueOrThrow({
+    where: { id: first.body.data.id },
+  });
+  expect(historic.ignoreRegions).toEqual(regions);
+  expect(historic.ignoreRevision).toBe(1);
 });
 it("does not save successful records for storage failures or invalid PNGs and recovers", async () => {
   const count = await db.visualComparison.count({ where: { projectId } });

@@ -52,6 +52,9 @@ model Project {
 }
 
 model VisualComparison {
+  ignoreRegions Json @default("[]")
+  ignoreRevision Int @default(0)
+  ignoredPixels Int @default(0)
   id String @id @default(cuid())
   projectId String
   baselineId String
@@ -69,6 +72,10 @@ model VisualComparison {
 }
 
 model VisualBaseline {
+  ignoreRegions Json @default("[]")
+  ignoreRevision Int @default(0)
+  ignoreUpdatedBy String?
+  ignoreUpdatedAt DateTime?
   comparisons VisualComparison[]
   active Boolean @default(false)
   activatedBy String?

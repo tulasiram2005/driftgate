@@ -1,5 +1,19 @@
 # Phase status
 
+## Latest checkpoint: saved ignore regions (2026-10-23)
+
+- Approved baselines now store reusable rectangle regions with revisions and
+  editor/time metadata. ADMIN/APPROVER edit them from Inspect baseline.
+- Comparison execution applies the saved regions and records the exact regions,
+  revision and ignored-pixel count. Later changes do not alter historical results.
+- Bounds, full-image masks, overlapping regions, permissions and stale updates
+  are checked. API regression 89/89 and runner 38/38 pass; web typecheck,
+  scoped lint and API build pass. Local test migration applied.
+- Current hosted check for 030dec1 passed through production build but was still
+  installing browser engines when checked. New browser fixtures and cloud
+  migrations remain NOT VERIFIED. SQL-results UI/persistence, reusable project
+  rules and broken-link detection remain pending. Phase 5 has not started.
+
 ## Latest checkpoint (2026-10-23): persisted visual comparisons
 
 - Implemented approved active baseline selection, bounded PNG comparison,

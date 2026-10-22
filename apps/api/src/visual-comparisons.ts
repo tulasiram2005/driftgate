@@ -4,6 +4,7 @@ import { compareScreenshots } from "@driftgate/drift/visual-png";
 import type { Express, RequestHandler } from "express";
 import type { PrismaClient } from "../generated/client/index.js";
 import type { EvidenceStorage } from "./storage.js";
+import { ignoreRegionsSchema } from "./visual-baselines.js";
 
 const id = z.string().min(1).max(100);
 export const visualComparisonBody = z.object({ evidenceId: id }).strict();
@@ -70,7 +71,11 @@ export function mountVisualComparisons(
       }
       let comparison: ReturnType<typeof compareScreenshots>;
       try {
-        comparison = compareScreenshots(before, after);
+        comparison = compareScreenshots(
+          before,
+          after,
+          ignoreRegionsSchema.parse(baseline.ignoreRegions),
+        );
         if (comparison.width !== width || comparison.height !== height)
           throw new Error("Viewport mismatch");
       } catch {
@@ -96,6 +101,14 @@ export function mountVisualComparisons(
           height,
           changedPixels: comparison.changedPixels,
           comparedPixels: comparison.comparedPixels,
+          ignoreRegions: baseline.ignoreRegions as {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+          }[],
+          ignoreRevision: baseline.ignoreRevision,
+          ignoredPixels: comparison.ignoredPixels,
           diffKey,
         },
         omit: { diffKey: true },

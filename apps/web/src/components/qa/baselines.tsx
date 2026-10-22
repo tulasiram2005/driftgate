@@ -6,8 +6,11 @@ import { page, projectPath } from "../../lib/qa-api";
 import { Empty, ErrorNotice, Field, Loading, Modal, SectionHeading, Submit, useWrite } from "./ui";
 import { EvidenceLink } from "./automated";
 import { CompareScreenshot, VisualComparisons } from "./visual-comparisons";
+import { IgnoreRegions, type IgnoreRegion } from "./ignore-regions";
 
 type Baseline = {
+  ignoreRegions?: IgnoreRegion[];
+  ignoreRevision?: number;
   id: string;
   label: string;
   environment: string;
@@ -125,6 +128,17 @@ function BaselineReview({
         resultId={baseline.evidence.resultId}
         evidence={baseline.evidence}
       />
+      {baseline.status === "APPROVED" && canReview && (
+        <IgnoreRegions
+          projectId={projectId}
+          baselineId={baseline.id}
+          regions={baseline.ignoreRegions ?? []}
+          revision={baseline.ignoreRevision ?? 0}
+          width={baseline.viewportWidth}
+          height={baseline.viewportHeight}
+          onSaved={onClose}
+        />
+      )}
       {baseline.status === "APPROVED" && canReview && !baseline.active && (
         <div>
           <button

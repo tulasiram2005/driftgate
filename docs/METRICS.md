@@ -1,5 +1,16 @@
 # Measured evidence
 
+## Saved ignore regions (2026-10-23)
+
+- API 89/89 tests pass. New integration covers persistence/reuse, exact masked
+  pixel counts, immutable comparison history, role restrictions, stale revisions,
+  invalid coordinates and full-coverage rejection.
+- Runner 38/38 tests pass after sharing the region-mask validator.
+- API build, web typecheck and scoped lint pass.
+- Migration 20261023040000_visual_ignore_regions applied to isolated local DB.
+- UI browser fixture extended to save/reopen regions and capture four widths.
+  Browser execution and cloud migration remain NOT VERIFIED.
+
 ## Persisted visual comparisons (2026-10-23)
 
 - API regression: 88/88 passed, including actual PNG comparison and PostgreSQL

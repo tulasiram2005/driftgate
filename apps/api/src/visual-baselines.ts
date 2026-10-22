@@ -1,8 +1,27 @@
 import { z } from "zod";
+import { ignoreMask } from "@driftgate/drift/visual";
 import type { Express, RequestHandler } from "express";
 import type { PrismaClient } from "../generated/client/index.js";
 
 const id = z.string().min(1).max(100);
+export const ignoreRegionsSchema = z
+  .array(
+    z
+      .object({
+        x: z.number().int().min(0).max(8000000),
+        y: z.number().int().min(0).max(8000000),
+        width: z.number().int().min(1).max(8000000),
+        height: z.number().int().min(1).max(8000000),
+      })
+      .strict(),
+  )
+  .max(100);
+export const ignoreRegionsBody = z
+  .object({
+    revision: z.number().int().min(0).max(2147483646),
+    regions: ignoreRegionsSchema,
+  })
+  .strict();
 const candidate = z.object({ evidenceId: id, label: z.string().trim().min(1).max(100) }).strict();
 const review = z
   .object({
@@ -18,6 +37,41 @@ export function mountVisualBaselines(
   fail: (status: number, code: string, message: string) => never,
 ) {
   const base = "/api/v1/projects/:projectId/visual-baselines";
+  app.put(`${base}/:baselineId/ignore-regions`, guard(), async (req, res) => {
+    if (!["ADMIN", "APPROVER"].includes(res.locals.role as string))
+      return fail(403, "FORBIDDEN", "An Admin or Approver must edit ignore regions");
+    const body = ignoreRegionsBody.parse(req.body);
+    const projectId = id.parse(req.params.projectId);
+    const baselineId = id.parse(req.params.baselineId);
+    const found = await db.visualBaseline.findFirst({ where: { id: baselineId, projectId } });
+    if (!found) return fail(404, "NOT_FOUND", "Baseline not found");
+    if (found.status !== "APPROVED")
+      return fail(409, "CONFLICT", "Only approved baselines can have ignore regions");
+    try {
+      ignoreMask(found.viewportWidth, found.viewportHeight, body.regions);
+    } catch {
+      return fail(
+        400,
+        "INVALID_INPUT",
+        "Regions must fit the viewport and cannot cover the entire screenshot",
+      );
+    }
+    const data = await db.$transaction(async (tx) => {
+      const updated = await tx.visualBaseline.updateMany({
+        where: { id: baselineId, projectId, status: "APPROVED", ignoreRevision: body.revision },
+        data: {
+          ignoreRegions: body.regions,
+          ignoreRevision: { increment: 1 },
+          ignoreUpdatedBy: res.locals.userId as string,
+          ignoreUpdatedAt: new Date(),
+        },
+      });
+      if (!updated.count)
+        return fail(409, "CONFLICT", "Ignore regions changed. Reopen the baseline and retry.");
+      return tx.visualBaseline.findUniqueOrThrow({ where: { id: baselineId } });
+    });
+    res.json({ data });
+  });
   app.post(`${base}/:baselineId/activate`, guard(), async (req, res) => {
     if (!["ADMIN", "APPROVER"].includes(res.locals.role as string))
       return fail(403, "FORBIDDEN", "An Admin or Approver must activate baselines");

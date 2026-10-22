@@ -33,9 +33,23 @@ database persistence, permissions, missing or mismatched evidence, corrupt PNGs,
 storage failures and recovery. Storage is injected in memory in these tests;
 these are not cloud-storage round-trip tests.
 
-The migration is applied to the isolated local test database only. Cloud
+## Saved ignore regions
+
+ADMIN and APPROVER members can edit rectangles in an approved baseline's
+inspection dialog. Coordinates are integer screenshot pixels. PUT
+/api/v1/projects/:projectId/visual-baselines/:baselineId/ignore-regions accepts
+revision and regions. An empty list clears the regions. Updates require the
+current revision, preventing silent overwrites by concurrent editors.
+
+Regions are reused for every subsequent comparison using that baseline.
+Each result snapshots the regions and revision, plus the ignored-pixel count.
+Regions must be inside the viewport; at most 100 are permitted; overlapping
+areas count once; covering the entire screenshot is rejected. Region edits are
+separate from image approval and record the editing actor/time. Switching to
+another baseline does not copy regions automatically.
+
+The migrations are applied to the isolated local test database only. Cloud
 migration and real hosted visual comparison remain unverified. Browser tests
-currently cannot launch in the macOS sandbox. Ignore-region persistence is not
-implemented; comparisons currently use all pixels. A database failure after a
+currently cannot launch in the macOS sandbox. A database failure after a
 successful object upload can leave an unreferenced private difference object;
 storage lifecycle cleanup is not yet implemented.

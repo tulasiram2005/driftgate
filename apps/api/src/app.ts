@@ -19,7 +19,7 @@ import type { PrismaClient } from "../generated/client/index.js";
 import type { Config } from "./config.js";
 import { mountSnapshots, snapshotBody } from "./snapshots.js";
 import { mountComparisons, comparisonBody } from "./comparisons.js";
-import { mountVisualBaselines } from "./visual-baselines.js";
+import { mountVisualBaselines, ignoreRegionsBody } from "./visual-baselines.js";
 import { mountVisualComparisons, visualComparisonBody } from "./visual-comparisons.js";
 import { storage } from "./storage.js";
 import { mountCallback, mountExecution, publicRun } from "./execution.js";
@@ -383,6 +383,7 @@ export function createApp(db: PrismaClient, config: Config, evidenceStorage?: Ev
   mountSnapshots(app, db, guard, fail);
   mountComparisons(app, db, guard, fail);
   mountVisualBaselines(app, db, guard, fail);
+  document("put", `${base}/visual-baselines/:baselineId/ignore-regions`, ignoreRegionsBody);
   mountVisualComparisons(app, db, guard, fail, evidenceStorage ?? storage(config));
   document("post", `${base}/visual-comparisons`, visualComparisonBody);
   document("get", `${base}/visual-comparisons`);
