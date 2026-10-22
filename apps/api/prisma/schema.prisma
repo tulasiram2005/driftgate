@@ -47,6 +47,30 @@ model Project {
   runs         Run[]
   snapshots    EnvironmentSnapshot[]
   comparisons  EnvironmentComparison[]
+  visualBaselines VisualBaseline[]
+}
+
+model VisualBaseline {
+  id String @id @default(cuid())
+  projectId String
+  evidenceId String
+  label String
+  environment String
+  browser String
+  device String
+  checkId String
+  viewportWidth Int
+  viewportHeight Int
+  status String @default("PENDING")
+  createdBy String
+  createdAt DateTime @default(now())
+  reviewedBy String?
+  reviewedAt DateTime?
+  reviewComment String?
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+  @@unique([projectId, evidenceId])
+  @@index([projectId, id])
 }
 
 model EnvironmentComparison {
@@ -218,6 +242,7 @@ model ResultAttempt {
 }
 
 model Evidence {
+  baselines VisualBaseline[]
   id String @id @default(cuid())
   resultId String
   key String @unique

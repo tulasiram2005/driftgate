@@ -2,6 +2,10 @@
 
 ## Current summary (2026-10-22)
 
+- Baseline candidate persistence and one-way ADMIN/APPROVER review API added.
+  Scope derives from automated evidence; tests cover roles and competing reviews.
+  Local API suite: 79/79 pass; build/lint pass. Local test migration only.
+  Active baseline selection, persisted visual diffs and review UI remain pending.
 - PNG comparison adapter now decodes bounded browser screenshots and emits a
   PNG difference image. Runner tests pass 38/38 and build passes. Baseline
   persistence, reviewer workflow and browser integration remain unfinished.

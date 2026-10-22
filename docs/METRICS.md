@@ -1,5 +1,14 @@
 # Measured evidence
 
+## Visual baseline candidate API
+
+- Isolated local driftgate_test migration applied successfully.
+- API suite: 79/79 passed, including candidate permissions, server-owned scope,
+  pending/manual evidence rejection, duplicate rejection, read access, missing
+  cursors, required review comments and competing reviewer decisions (200/409).
+- API production build and lint passed. Cloud migration, browser UI and hosted
+  visual workflow remain NOT VERIFIED. See VISUAL_BASELINES.md.
+
 ## PNG comparison adapter (2026-10-22)
 
 - Runner tests: 38/38 pass. Added PNG roundtrip/diff, ignore mask, corrupt CRC,

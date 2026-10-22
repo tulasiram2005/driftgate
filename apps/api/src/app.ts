@@ -19,6 +19,7 @@ import type { PrismaClient } from "../generated/client/index.js";
 import type { Config } from "./config.js";
 import { mountSnapshots, snapshotBody } from "./snapshots.js";
 import { mountComparisons, comparisonBody } from "./comparisons.js";
+import { mountVisualBaselines } from "./visual-baselines.js";
 import { mountCallback, mountExecution, publicRun } from "./execution.js";
 import { automatedRunBody, callbackBody, screenshotBody } from "./execution-contracts.js";
 import type { EvidenceStorage } from "./storage.js";
@@ -379,6 +380,7 @@ export function createApp(db: PrismaClient, config: Config, evidenceStorage?: Ev
   const base = "/api/v1/projects/:projectId";
   mountSnapshots(app, db, guard, fail);
   mountComparisons(app, db, guard, fail);
+  mountVisualBaselines(app, db, guard, fail);
   document("post", `${base}/comparisons`, comparisonBody);
   document("get", `${base}/comparisons`);
   document("get", `${base}/comparisons/:comparisonId`);
