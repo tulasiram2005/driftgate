@@ -1,5 +1,9 @@
 # Phase status
 
+Private screenshot reader checkpoint: bounded server-side evidence reads added
+for the upcoming comparison endpoint. API regression 85/85, build and lint pass.
+This is a storage prerequisite, not completed visual comparison execution.
+
 Active baseline checkpoint (2026-10-23): scoped activation API and UI implemented.
 Only ADMIN/APPROVER can activate approved candidates. Database uniqueness and
 serializable replacement preserve one active baseline per exact scope. Local

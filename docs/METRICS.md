@@ -1,5 +1,15 @@
 # Measured evidence
 
+## Private screenshot reading (2026-10-23)
+
+- API regression: 85/85 tests passed. Added exact/chunked read, truncation,
+  excess bytes, invalid sizes, pre-aborted/stalled read and storage metadata tests.
+- API build and lint passed. Reader is capped at 16 MiB, verifies recorded size
+  and PNG content type, and aborts S3 transport after 15 seconds. It uses the
+  server-configured bucket and key, not a client-supplied download URL.
+- Storage test uses mocked S3 responses, not a live cloud read. Comparison
+  endpoint and persisted difference results remain unimplemented.
+
 ## Active baseline checkpoint (2026-10-23)
 
 - Isolated local migration passed. API regression: 80/80 tests passed.
