@@ -313,3 +313,9 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 - 76 API tests passed; API production build passed.
 - Regression tests cover expected flags without dropping findings, saved reasons, unchanged older comparisons, unmatched product rules, duplicates, invalid scope and bounds.
 - Hosted CI for this revision and rule-entry UI remain NOT VERIFIED.
+
+# Expected-difference UI checkpoint
+
+- Web unit tests: 40 passed; lint passed.
+- Local production build: NOT VERIFIED, font network failure followed by Turbopack sandbox port-binding denial.
+- Added three-browser rule editor/save/readback/removal coverage with accessibility and four-width screenshot assertions; hosted execution pending.

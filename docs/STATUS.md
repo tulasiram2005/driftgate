@@ -1,5 +1,13 @@
 # Phase status
 
+Expected-difference UI checkpoint: comparison screen now includes bounded rule
+entry/removal and displays saved reasons. Changing either snapshot clears draft
+rules. Browser coverage includes saving expectations, preserving severity,
+removal, accessibility and four viewport widths. Web unit tests (40) and lint
+pass; local production build is blocked by sandbox port binding. Hosted browser
+checks and visual screenshot review remain pending. Reusable project-wide rule
+management is not implemented.
+
 Expected-difference API checkpoint (2026-10-22): comparisons accept bounded,
 reasoned field/product rules scoped to their selected environment pair. Rules
 are saved with each comparison; expected findings retain severity and remain

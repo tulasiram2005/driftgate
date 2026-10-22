@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { GitCompareArrows, Upload } from "lucide-react";
+import { GitCompareArrows, Upload, Plus, Trash2 } from "lucide-react";
 import { api, page, projectPath } from "../../lib/qa-api";
 import {
   Empty,
@@ -40,7 +40,25 @@ type Finding = {
   after: unknown;
   expected: unknown;
 };
-type Detail = Comparison & { findings: Finding[] };
+type ExpectedRule = { field: string; productId: string | null; reason: string };
+type Detail = Comparison & { findings: Finding[]; expectedRules?: ExpectedRule[] };
+const ruleFields = [
+  "product",
+  "productCount",
+  "price",
+  "compareAt",
+  "currency",
+  "size",
+  "stock",
+  "discountPercent",
+  "badge",
+  "image.status",
+  "image.width",
+  "image.height",
+  "title",
+  "canonical",
+  "jsonLd",
+];
 
 function provenance(source: string) {
   return source === "MANUAL_IMPORT"
@@ -64,6 +82,7 @@ export function ComparisonsView({ projectId, canWrite }: { projectId: string; ca
   const [beforeId, setBeforeId] = useState("");
   const [afterId, setAfterId] = useState("");
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [rules, setRules] = useState<(ExpectedRule & { id: string })[]>([]);
   const snapshots = useInfiniteQuery({
     queryKey: ["project", projectId, "snapshots"],
     initialPageParam: null as string | null,
@@ -84,7 +103,21 @@ export function ComparisonsView({ projectId, canWrite }: { projectId: string; ca
   const compare = useMutation({
     mutationFn: () => {
       if (!canWrite || !validPair) throw new Error("Choose snapshots from distinct environments.");
-      return api<Detail>(projectPath(projectId, "/comparisons"), "POST", { beforeId, afterId });
+      const expectedRules = rules.map(({ field, productId, reason }) => ({
+        field,
+        productId: field === "productCount" ? null : productId?.trim() || "",
+        reason: reason.trim(),
+      }));
+      if (
+        new Set(expectedRules.map((rule) => JSON.stringify([rule.field, rule.productId]))).size !==
+        expectedRules.length
+      )
+        throw new Error("Remove duplicate field and product rules.");
+      return api<Detail>(projectPath(projectId, "/comparisons"), "POST", {
+        beforeId,
+        afterId,
+        expectedRules,
+      });
     },
     onSuccess: (detail) => {
       client.setQueryData(["project", projectId, "comparison", detail.id], detail);
@@ -167,6 +200,7 @@ export function ComparisonsView({ projectId, canWrite }: { projectId: string; ca
                         onChange={(event) => {
                           setBeforeId(event.target.value);
                           setAfterId("");
+                          setRules([]);
                           compare.reset();
                         }}
                       >
@@ -184,6 +218,7 @@ export function ComparisonsView({ projectId, canWrite }: { projectId: string; ca
                         disabled={!canWrite || compare.isPending}
                         onChange={(event) => {
                           setAfterId(event.target.value);
+                          setRules([]);
                           compare.reset();
                         }}
                       >
@@ -203,6 +238,108 @@ export function ComparisonsView({ projectId, canWrite }: { projectId: string; ca
                   {canWrite && (
                     <>
                       <p className="muted">Choose snapshots from distinct environments.</p>
+                      <fieldset
+                        disabled={compare.isPending || !validPair}
+                        className="qa-rule-editor"
+                      >
+                        <legend>Expected differences</legend>
+                        {rules.map((rule, index) => (
+                          <fieldset key={rule.id} className="qa-rule-row">
+                            <legend>Rule {index + 1}</legend>
+                            <div className="qa-form-grid">
+                              <Field label={`Rule ${index + 1} field`}>
+                                <select
+                                  value={rule.field}
+                                  onChange={(event) =>
+                                    setRules((current) =>
+                                      current.map((item) =>
+                                        item.id === rule.id
+                                          ? {
+                                              ...item,
+                                              field: event.target.value,
+                                              productId:
+                                                event.target.value === "productCount" ? null : "",
+                                            }
+                                          : item,
+                                      ),
+                                    )
+                                  }
+                                >
+                                  {ruleFields.map((field) => (
+                                    <option key={field} value={field}>
+                                      {field}
+                                    </option>
+                                  ))}
+                                </select>
+                              </Field>
+                              {rule.field !== "productCount" && (
+                                <Field label={`Rule ${index + 1} product ID`}>
+                                  <input
+                                    required
+                                    maxLength={100}
+                                    value={rule.productId ?? ""}
+                                    onChange={(event) =>
+                                      setRules((current) =>
+                                        current.map((item) =>
+                                          item.id === rule.id
+                                            ? { ...item, productId: event.target.value }
+                                            : item,
+                                        ),
+                                      )
+                                    }
+                                  />
+                                </Field>
+                              )}
+                            </div>
+                            <Field label={`Rule ${index + 1} reason`}>
+                              <input
+                                required
+                                maxLength={500}
+                                value={rule.reason}
+                                onChange={(event) =>
+                                  setRules((current) =>
+                                    current.map((item) =>
+                                      item.id === rule.id
+                                        ? { ...item, reason: event.target.value }
+                                        : item,
+                                    ),
+                                  )
+                                }
+                              />
+                            </Field>
+                            <button
+                              type="button"
+                              className="icon-button"
+                              aria-label={`Remove rule ${index + 1}`}
+                              title={`Remove rule ${index + 1}`}
+                              onClick={() =>
+                                setRules((current) => current.filter((item) => item.id !== rule.id))
+                              }
+                            >
+                              <Trash2 size={16} aria-hidden="true" />
+                            </button>
+                          </fieldset>
+                        ))}
+                        <button
+                          type="button"
+                          className="qa-button"
+                          disabled={rules.length >= 100}
+                          onClick={() =>
+                            setRules((current) => [
+                              ...current,
+                              {
+                                id: crypto.randomUUID(),
+                                field: "price",
+                                productId: "",
+                                reason: "",
+                              },
+                            ])
+                          }
+                        >
+                          <Plus size={16} aria-hidden="true" />
+                          Add expected difference
+                        </button>
+                      </fieldset>
                       <ErrorNotice error={compare.error} />
                       <div className="qa-form-footer">
                         <button
@@ -393,6 +530,18 @@ function ComparisonFindings({
             <br />
             After: {detail.data.afterId}
           </p>
+          {!!detail.data.expectedRules?.length && (
+            <section aria-label="Saved expected differences">
+              <h3>Expected differences</h3>
+              <ul className="qa-prose">
+                {detail.data.expectedRules.map((rule, index) => (
+                  <li key={index}>
+                    {rule.field} · {rule.productId ?? "Catalogue"}: {rule.reason}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           {detail.data.findings.length === 0 ? (
             <Empty title="No differences found" />
           ) : (

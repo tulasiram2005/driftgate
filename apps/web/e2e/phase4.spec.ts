@@ -93,4 +93,30 @@ test("manual snapshots create a persisted comparison with safe rendered findings
   }
   await page.getByRole("button", { name: "Close dialog" }).click();
   await expect(page.getByRole("heading", { name: "Comparisons", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Add expected difference", exact: true }).click();
+  await page.getByLabel("Rule 1 product ID", { exact: true }).fill("demo-shirt");
+  await page.getByLabel("Rule 1 reason", { exact: true }).fill("Demo planned pricing difference");
+  for (const width of [360, 768, 1280, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    expect(
+      (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+        .violations,
+    ).toEqual([]);
+    await page.screenshot({ path: testInfo.outputPath(`rules-${width}.png`), fullPage: true });
+  }
+  const saved = page.waitForResponse(
+    (r) => r.url().endsWith("/comparisons") && r.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Compare snapshots", exact: true }).click();
+  const expectedResponse = await saved;
+  expect(expectedResponse.status()).toBe(200);
+  const expectedData = (await expectedResponse.json()).data;
+  expect(expectedData.findings).toMatchObject([{ field: "price", expected: true, severity: "S1" }]);
+  await expect(dialog).toContainText("Demo planned pricing difference");
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.getByRole("button", { name: "Remove rule 1", exact: true }).click();
+  await expect(page.getByLabel("Rule 1 reason", { exact: true })).toHaveCount(0);
 });
