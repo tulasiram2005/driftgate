@@ -96,6 +96,21 @@ test("manual snapshots create a persisted comparison with safe rendered findings
   await page.getByRole("button", { name: "Add expected difference", exact: true }).click();
   await page.getByLabel("Rule 1 product ID", { exact: true }).fill("demo-shirt");
   await page.getByLabel("Rule 1 reason", { exact: true }).fill("Demo planned pricing difference");
+  const savedRulesResponse = page.waitForResponse(
+    (r) => r.url().endsWith("/expected-rules") && r.request().method() === "PUT",
+  );
+  await page
+    .getByRole("button", { name: "Replace saved rules for this pair", exact: true })
+    .click();
+  expect((await savedRulesResponse).status()).toBe(200);
+  await expect(
+    page.getByText("1 saved project rules for this environment pair", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Remove rule 1", exact: true }).click();
+  await page.getByRole("button", { name: "Load saved project rules", exact: true }).click();
+  await expect(page.getByLabel("Rule 1 reason", { exact: true })).toHaveValue(
+    "Demo planned pricing difference",
+  );
   for (const width of [360, 768, 1280, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

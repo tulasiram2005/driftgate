@@ -1,0 +1,3 @@
+ALTER TABLE "Project" ADD COLUMN "expectedRuleSets" JSONB NOT NULL DEFAULT '{}',
+ADD COLUMN "expectedRulesRevision" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "EnvironmentComparison" ADD COLUMN "rulesRevision" INTEGER NOT NULL DEFAULT 0;

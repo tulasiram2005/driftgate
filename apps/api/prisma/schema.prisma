@@ -36,6 +36,8 @@ enum Role {
 }
 
 model Project {
+  expectedRuleSets Json @default("{}")
+  expectedRulesRevision Int @default(0)
   id           String @id @default(cuid())
   name         String
   description  String @default("")
@@ -118,6 +120,7 @@ model VisualBaseline {
 }
 
 model EnvironmentComparison {
+  rulesRevision Int @default(0)
   id String @id @default(cuid())
   projectId String
   beforeId String

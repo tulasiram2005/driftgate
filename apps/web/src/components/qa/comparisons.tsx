@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { GitCompareArrows, Upload, Plus, Trash2 } from "lucide-react";
+import { GitCompareArrows, Upload, Plus, Trash2, Save, Download } from "lucide-react";
 import { api, page, projectPath } from "../../lib/qa-api";
 import {
   Empty,
@@ -41,6 +41,7 @@ type Finding = {
   expected: unknown;
 };
 type ExpectedRule = { field: string; productId: string | null; reason: string };
+type SavedRules = { revision: number; sets: Record<string, ExpectedRule[]> };
 type Detail = Comparison & { findings: Finding[]; expectedRules?: ExpectedRule[] };
 const ruleFields = [
   "product",
@@ -100,6 +101,29 @@ export function ComparisonsView({ projectId, canWrite }: { projectId: string; ca
   const before = rows.find((row) => row.id === beforeId);
   const after = rows.find((row) => row.id === afterId);
   const validPair = Boolean(before && after && before.environment !== after.environment);
+  const savedKey = ["project", projectId, "expected-rules"];
+  const saved = useQuery({
+    queryKey: savedKey,
+    queryFn: () => api<SavedRules>(projectPath(projectId, "/expected-rules")),
+  });
+  const pair = [before?.environment ?? "", after?.environment ?? ""].sort().join(":");
+  const savedPair = saved.data?.sets[pair] ?? [];
+  const saveRules = useMutation({
+    mutationFn: () => {
+      if (!validPair || !saved.data)
+        throw new Error("Choose two environments and load saved rules first.");
+      return api<SavedRules>(projectPath(projectId, "/expected-rules"), "PUT", {
+        revision: saved.data.revision,
+        environments: [before!.environment, after!.environment],
+        rules: rules.map(({ field, productId, reason }) => ({
+          field,
+          productId: field === "productCount" ? null : productId?.trim(),
+          reason: reason.trim(),
+        })),
+      });
+    },
+    onSuccess: (data) => client.setQueryData(savedKey, data),
+  });
   const compare = useMutation({
     mutationFn: () => {
       if (!canWrite || !validPair) throw new Error("Choose snapshots from distinct environments.");
@@ -239,10 +263,48 @@ export function ComparisonsView({ projectId, canWrite }: { projectId: string; ca
                     <>
                       <p className="muted">Choose snapshots from distinct environments.</p>
                       <fieldset
-                        disabled={compare.isPending || !validPair}
+                        disabled={compare.isPending || saveRules.isPending || !validPair}
                         className="qa-rule-editor"
                       >
                         <legend>Expected differences</legend>
+                        <p>{savedPair.length} saved project rules for this environment pair</p>
+                        <ErrorNotice
+                          error={saved.error}
+                          retry={() => {
+                            void saved.refetch();
+                          }}
+                        />
+                        <ErrorNotice
+                          error={saveRules.error}
+                          retry={() => {
+                            void saved.refetch();
+                            saveRules.reset();
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="icon-button"
+                          title="Load saved project rules"
+                          aria-label="Load saved project rules"
+                          disabled={!saved.data}
+                          onClick={() =>
+                            setRules(
+                              savedPair.map((rule) => ({ ...rule, id: crypto.randomUUID() })),
+                            )
+                          }
+                        >
+                          <Download size={16} aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-button"
+                          title="Replace saved rules for this pair"
+                          aria-label="Replace saved rules for this pair"
+                          disabled={!saved.data || saveRules.isPending}
+                          onClick={() => saveRules.mutate()}
+                        >
+                          <Save size={16} aria-hidden="true" />
+                        </button>
                         {rules.map((rule, index) => (
                           <fieldset key={rule.id} className="qa-rule-row">
                             <legend>Rule {index + 1}</legend>
@@ -345,7 +407,7 @@ export function ComparisonsView({ projectId, canWrite }: { projectId: string; ca
                         <button
                           type="submit"
                           className="qa-button qa-primary"
-                          disabled={!validPair || compare.isPending}
+                          disabled={!validPair || compare.isPending || saveRules.isPending}
                         >
                           <GitCompareArrows size={16} aria-hidden="true" />
                           {compare.isPending ? "Comparing..." : "Compare snapshots"}

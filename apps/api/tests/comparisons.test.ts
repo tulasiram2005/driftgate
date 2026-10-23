@@ -115,6 +115,53 @@ afterAll(async () => {
 });
 
 describe("manual comparison API with isolated local database", () => {
+  it("reuses pair-scoped rules with conflict protection and immutable historical results", async () => {
+    const route = `/api/v1/projects/${project}/expected-rules`;
+    const rule = { field: "price", productId: "demo-shirt", reason: "Approved demo pricing" };
+    const body = { revision: 0, environments: ["staging", "prod"], rules: [rule] };
+    await addMember("qa");
+    await addMember("developer");
+    expect((await request(app).put(route).set(auth("developer")).send(body)).status).toBe(403);
+    expect((await request(app).get(route).set(auth("outsider"))).status).toBe(404);
+    expect((await request(app).put(route).set(auth("qa")).send(body)).status).toBe(200);
+    expect((await request(app).put(route).set(auth()).send(body)).status).toBe(409);
+    const ids = await pair();
+    const result = await request(app).post(path()).set(auth()).send(ids);
+    expect(result.body.data.expectedRules).toEqual([rule]);
+    expect(result.body.data.rulesRevision).toBe(1);
+    expect(result.body.data.findings[0].expected).toBe(true);
+    const reverse = await request(app)
+      .post(path())
+      .set(auth())
+      .send({ beforeId: ids.afterId, afterId: ids.beforeId });
+    expect(reverse.body.data.findings[0].expected).toBe(true);
+    const other = await importSnapshot(snapshot("uat", 125000));
+    expect(
+      (await request(app).post(path()).set(auth()).send({ beforeId: ids.beforeId, afterId: other }))
+        .body.data.findings[0].expected,
+    ).toBe(false);
+    expect(
+      (
+        await request(app)
+          .put(route)
+          .set(auth())
+          .send({ ...body, revision: 1, rules: [] })
+      ).status,
+    ).toBe(200);
+    expect(
+      (await request(app).post(path()).set(auth()).send(ids)).body.data.findings[0].expected,
+    ).toBe(false);
+    expect(
+      (await request(app).get(`${path()}/${result.body.data.id}`).set(auth())).body.data.findings[0]
+        .expected,
+    ).toBe(true);
+    for (const invalid of [
+      { ...body, environments: ["prod", "prod"] },
+      { ...body, rules: [rule, rule] },
+      { ...body, revision: -1 },
+    ])
+      expect((await request(app).put(route).set(auth()).send(invalid)).status).toBe(400);
+  });
   it("retains findings and records explicit scoped expectations without changing older comparisons", async () => {
     const ids = await pair();
     const rule = { field: "price", productId: "demo-shirt", reason: "Demo regional pricing" };

@@ -1,5 +1,21 @@
 # Phase status
 
+## Latest checkpoint: reusable rules (2026-10-23)
+
+- Project-wide environment-pair expected rules now persist with revision conflict protection.
+  Comparisons automatically apply matching rules and retain immutable rule snapshots.
+  The editor loads and replaces saved rules. See EXPECTED_RULES.md.
+- Local migration applied; API 92/92 tests, web 40/40 unit tests, API build,
+  web typecheck and scoped lint passed.
+- Previous CI 39895526675 reached all three browsers: SQL screen accessibility
+  failed due to primary-button hover contrast. Shared hover colors corrected;
+  rerun still required. Other web browser cases passed in that run.
+- New rules browser fixture and cloud migration remain NOT VERIFIED.
+  Broken-link detection and final browser/cloud verification remain pending.
+  Phase 5 has not started.
+
+## Earlier checkpoints
+
 ## Latest checkpoint: SQL result history (2026-10-23)
 
 - Fixed read-only SQL assertions now have project-bound execution, persisted

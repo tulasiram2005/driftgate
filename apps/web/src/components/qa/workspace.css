@@ -196,6 +196,8 @@
   font-weight: 600;
 }
 .qa-button.qa-primary:hover:not(:disabled) {
+  background: var(--primary);
+  color: var(--on-primary);
   box-shadow:
     0 0 0 2px var(--bg),
     0 0 0 3px var(--control-border);

@@ -417,3 +417,13 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 - Web unit tests: 40 passed; lint passed.
 - Local production build: NOT VERIFIED, font network failure followed by Turbopack sandbox port-binding denial.
 - Added three-browser rule editor/save/readback/removal coverage with accessibility and four-width screenshot assertions; hosted execution pending.
+
+# 2026-10-23 reusable rules checkpoint
+
+- Local isolated API database migration 20261023060000 applied successfully.
+- API suite: 92 passed; web unit suite: 40 passed.
+- API build, web typecheck, changed TypeScript file lint: passed.
+- Prior hosted quality run 39895526675: SQL screen failed axe color contrast in
+  Chromium, Firefox and WebKit. The remaining web browser tests passed.
+- Corrected primary-button hover colors. New browser fixture and post-fix
+  accessibility run are NOT VERIFIED at this checkpoint.

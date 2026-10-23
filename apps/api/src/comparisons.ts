@@ -54,6 +54,16 @@ const queryBody = z
     cursor: identifier.optional(),
   })
   .strict();
+const environment = z.enum(["staging", "uat", "preprod", "prod"]);
+export const savedRulesBody = z
+  .object({
+    revision: z.number().int().nonnegative(),
+    environments: z.tuple([environment, environment]).refine(([a, b]) => a !== b),
+    rules: comparisonBody.shape.expectedRules,
+  })
+  .strict();
+const pairKey = (a: string, b: string) => [a, b].sort().join(":");
+const ruleSets = z.record(z.array(expectedRule).max(100));
 export function mountComparisons(
   app: Express,
   db: PrismaClient,
@@ -61,6 +71,32 @@ export function mountComparisons(
   fail: (status: number, code: string, message: string) => never,
 ) {
   const base = "/api/v1/projects/:projectId/comparisons";
+  const rulesPath = "/api/v1/projects/:projectId/expected-rules";
+  app.get(rulesPath, guard(), async (req, res) => {
+    const project = await db.project.findUniqueOrThrow({
+      where: { id: identifier.parse(req.params.projectId) },
+    });
+    res.json({ data: { revision: project.expectedRulesRevision, sets: project.expectedRuleSets } });
+  });
+  app.put(rulesPath, guard(true), async (req, res) => {
+    const body = savedRulesBody.parse(req.body);
+    const projectId = identifier.parse(req.params.projectId);
+    const data = await db.$transaction(async (tx) => {
+      const project = await tx.project.findUniqueOrThrow({ where: { id: projectId } });
+      const sets = ruleSets.parse(project.expectedRuleSets);
+      sets[pairKey(...body.environments)] = body.rules;
+      const result = await tx.project.updateMany({
+        where: { id: projectId, expectedRulesRevision: body.revision },
+        data: {
+          expectedRuleSets: JSON.parse(JSON.stringify(sets)),
+          expectedRulesRevision: { increment: 1 },
+        },
+      });
+      if (!result.count) fail(409, "CONFLICT", "Rules changed. Reload before saving.");
+      return { revision: body.revision + 1, sets };
+    });
+    res.json({ data });
+  });
   const limit = rateLimit({
     windowMs: 60000,
     limit: 20,
@@ -80,6 +116,16 @@ export function mountComparisons(
       if (!before || !after) fail(404, "NOT_FOUND", "Snapshot not found in this project");
       if (before.environment === after.environment)
         fail(400, "INVALID_INPUT", "Choose distinct environments");
+      const project = await tx.project.findUniqueOrThrow({ where: { id: projectId } });
+      const saved =
+        ruleSets.parse(project.expectedRuleSets)[pairKey(before.environment, after.environment)] ??
+        [];
+      const merged = new Map(
+        saved.map((rule) => [JSON.stringify([rule.field, rule.productId]), rule]),
+      );
+      for (const rule of body.expectedRules)
+        merged.set(JSON.stringify([rule.field, rule.productId]), rule);
+      const appliedRules = [...merged.values()];
       let findings;
       try {
         const left = snapshotBody.parse({
@@ -91,7 +137,7 @@ export function mountComparisons(
         findings = compareEnvironments(
           JSON.parse(JSON.stringify(left)) as EnvironmentSnapshot,
           JSON.parse(JSON.stringify(right)) as EnvironmentSnapshot,
-          body.expectedRules.map((rule) => ({
+          appliedRules.map((rule) => ({
             ...rule,
             environments: [left.environment, right.environment] as const,
           })),
@@ -104,7 +150,8 @@ export function mountComparisons(
           projectId,
           beforeId: body.beforeId,
           afterId: body.afterId,
-          expectedRules: JSON.parse(JSON.stringify(body.expectedRules)),
+          expectedRules: JSON.parse(JSON.stringify(appliedRules)),
+          rulesRevision: project.expectedRulesRevision,
           source:
             before.source === "RUNNER" && after.source === "RUNNER" ? "RUNNER" : "MANUAL_IMPORT",
           createdBy: res.locals.userId as string,
