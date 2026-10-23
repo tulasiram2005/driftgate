@@ -1,5 +1,15 @@
 # Phase status
 
+## Hosted verification blocker (2026-10-23)
+
+- Quality Gates run 39979148539 passed typecheck, lint, unit tests, restricted
+  SQL integration and production build, then exhausted its 25-minute budget
+  downloading browser system packages from the Azure Ubuntu mirror.
+- Browser tests did not execute; cancelled runs are not passing evidence.
+- CI now pins Ubuntu 24.04, uses the official Ubuntu archive mirror and bounds
+  package network waits and browser setup steps. All browser coverage is retained.
+- Verification of this infrastructure fix and the recent defect UI is pending.
+
 ## Phase 5 defect aging and resolution metrics (2026-10-23)
 
 - Added project-wide aggregate API and responsive summary for open/closed defects,

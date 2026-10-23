@@ -21,7 +21,7 @@ env:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     services:
       store-db:
@@ -85,8 +85,19 @@ jobs:
         run: pnpm --filter @driftgate/api exec tsx integration/sql-checks.ts
       - name: Production build
         run: pnpm build
+      - name: Install browser system dependencies
+        timeout-minutes: 8
+        run: |
+          # The Azure Ubuntu mirror stalled until the entire job timed out.
+          # Keep package signature verification and all three browser engines.
+          sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          printf 'Acquire::Retries "2";\nAcquire::http::Timeout "20";\nAcquire::https::Timeout "20";\n' | sudo tee /etc/apt/apt.conf.d/80-driftgate-timeouts > /dev/null
+          pnpm --filter ./apps/web exec playwright install-deps chromium firefox webkit
       - name: Install browser engines
-        run: pnpm --filter ./apps/web exec playwright install --with-deps chromium firefox webkit
+        timeout-minutes: 5
+        env:
+          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: "60000"
+        run: pnpm --filter ./apps/web exec playwright install chromium firefox webkit
       - name: Browser and accessibility checks
         run: |
           DATABASE_URL="$TEST_API_DATABASE_URL" JWT_SECRET="ci-only-testing-secret-with-no-production-access-123456789" API_CORS_ORIGINS="http://localhost:3100,http://127.0.0.1:3100" pnpm --filter @driftgate/api start > /tmp/driftgate-api.log 2>&1 &
