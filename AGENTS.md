@@ -6,6 +6,7 @@ Read this file at the start of every session. The full user specification is in 
 
 - Implement one phase at a time. Phase 0 is repository, tooling, CI skeleton, design tokens and token preview. Stop after each phase with evidence and wait for continue.
 - MVP is phases 0 through 5. Skip optional AI, notifications and performance budgets for the MVP. Deployment and full demonstration remain a separate phase 7 deliverable, not implicitly complete at phase 5.
+- User scope update: complete every phase through 7; do not skip Phase 6. The MVP is an intermediate milestone, not the final delivery. Phase 6 requires a dedicated high-polish product review. Optional feature exclusions above remain explicit and are not evidence that the full original feature list passed.
 - Use GPT-6.1 Sol for bulk implementation and GPT-6 Astra for the design system or hard bugs when model-specific delegation is available. Report actual usage honestly.
 - Free tiers only. Ask before any paid service. Never commit secrets or ask for tokens in chat.
 - No em dash character in source, UI or documentation.

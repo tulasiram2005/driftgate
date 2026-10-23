@@ -567,3 +567,13 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   missing/duplicate/foreign runs, concurrent revisions and removal of run bindings.
 - No readiness approval endpoint exists yet. No hosted migration or worker restart
   performed; cloud verification remains pending.
+
+# Phase 5 audit-chain primitives (2026-10-23)
+
+- API typecheck and lint: PASS. API regression: 16 files, 117 tests PASS.
+- Seven new audit-chain tests cover signed-field mutations, deletion/reordering/
+  duplication, retained-head tail truncation, malformed payloads, cross-release
+  append, tampered predecessors, backwards timestamps and deterministic hashing.
+- No approval endpoint, persistent audit chain or sign-off UI is verified yet.
+  Existing coverage scope does not include the new module; no percentage claimed.
+- No cloud migration, worker restart or paid resource created.

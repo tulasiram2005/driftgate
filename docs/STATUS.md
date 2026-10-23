@@ -1,5 +1,18 @@
 # Phase status
 
+## Phase 5 audit-chain foundation (2026-10-23)
+
+- Implemented versioned sign-off payload hashing and chain verification, with
+  project/release scope, ordered sequence, evidence/revision binding and retained
+  head/count checks. See SIGNOFF.md for threat-model limits.
+- This is a tested primitive, not an approval API. Transactional storage,
+  Approver authorization, trusted readiness collection and sign-off UI remain pending.
+- Full delivery includes Phase 6 polish and Phase 7 verification/deployment;
+  neither phase may be skipped under the latest user instruction.
+
+Current consolidated scope and phase count: [REMAINING_WORK.md](REMAINING_WORK.md).
+Older checkpoint notes below retain their historical pending statements.
+
 ## Phase 5 saved releases and gate bindings (2026-10-23)
 
 - Release creation atomically saves four ordered environment gates. Paginated
@@ -431,20 +444,20 @@ Latest checkpoint: GitHub Quality Gates run 39358112421 and CodeQL run 393581124
 
 CI startup diagnosis (2026-10-20): GitHub Actions supplies `GITHUB_WORKFLOW=Quality Gates`, conflicting with the runner filename validation. The application now uses `RUNNER_GITHUB_WORKFLOW` (default `runner.yml`). A regression test and compiled API startup with that CI environment pass; `/ready` returns `{"data":{"status":"ready"}}`. The updated API suite passes 28 tests. A fresh hosted CI run is still required.
 
-| Phase | Scope                                                       | State                                                          |
-| ----- | ----------------------------------------------------------- | -------------------------------------------------------------- |
-| 0     | Tooling, CI skeleton, tokens and preview                    | Locally and CI verified                                        |
-| 1     | Threadline and bug bank                                     | Locally and CI verified                                        |
-| 2     | API, database, RBAC, test cases, manual execution           | Core implemented; local and CI gates pass                      |
-| 3     | Runner, storage, live results, Actions execution            | Local flow and hosted happy path verified                      |
-| 4     | Drift, visual regression, contract/SQL/accessibility checks | In progress; comparison core and two runner checks implemented |
-| 5     | Defects, Jira, gates, sign-off, PDF                         | Not started                                                    |
-| 6     | Dashboard and motion polish                                 | Outside MVP                                                    |
-| 7     | Deployment and measured demo                                | Separate follow-up after MVP                                   |
+| Phase | Scope                                                       | State                                                  |
+| ----- | ----------------------------------------------------------- | ------------------------------------------------------ |
+| 0     | Tooling, CI skeleton, tokens and preview                    | Locally and CI verified                                |
+| 1     | Threadline and bug bank                                     | Locally and CI verified                                |
+| 2     | API, database, RBAC, test cases, manual execution           | Core implemented; local and CI gates pass              |
+| 3     | Runner, storage, live results, Actions execution            | Local flow and hosted happy path verified              |
+| 4     | Drift, visual regression, contract/SQL/accessibility checks | Complete within approved MVP scope; see PHASE4_EXIT.md |
+| 5     | Defects, Jira, gates, sign-off, PDF                         | In progress; see REMAINING_WORK.md                     |
+| 6     | Dashboard and motion polish                                 | Outside MVP                                            |
+| 7     | Deployment and measured demo                                | Separate follow-up after MVP                           |
 
-Optional AI, notifications and performance budgets are deferred for MVP. Public repository: https://github.com/tulasiram2005/driftgate. Cloud deployment is pending. Account-specific no-card storage availability needs confirmation.
+Optional AI, notifications and performance budgets are deferred for MVP. Public repository: https://github.com/tulasiram2005/driftgate. Some cloud infrastructure and private storage have been verified; full deployment and final-version verification remain Phase 7 work.
 
-The user requests a stop after each completed phase. Phase 4 was authorized by the latest continue request. Do not begin Phase 5 until Phase 4 is verified.
+The user requests a stop after each completed phase. Phase 4 is closed and Phase 5 is authorized and in progress. Stop at the Phase 5 exit gate with evidence before proceeding to a later phase.
 
 2026-10-20 local storage follow-up: corrected presigned browser uploads that incorrectly included an empty-body checksum. LocalStack round-trip, exact bytes, URL expiry and metadata checks pass. LocalStack accepts unsigned and tampered requests, so private-provider enforcement remains NOT VERIFIED. The strict storage check retains rejection assertions unless explicitly run with `TEST_S3_EMULATOR=1`. The local queue-to-storage integration then passed through API creation, durable outbox, BullMQ, isolated Chromium, relay upload, signed callbacks, persisted PASS state and an authorized 629,484-byte evidence download. Hosted GitHub execution remains pending.
 
