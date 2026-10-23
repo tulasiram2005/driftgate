@@ -9,6 +9,10 @@ const schema = z.object({
     .url()
     .refine((s) => /^postgres(ql)?:/.test(s)),
   JWT_SECRET: z.string().min(48),
+  INTEGRATION_ENCRYPTION_KEY: z
+    .string()
+    .regex(/^[a-fA-F0-9]{64}$/)
+    .optional(),
   THREADLINE_SQL_PROJECT_ID: z.string().min(1).max(100).optional(),
   THREADLINE_READONLY_DATABASE_URL: z
     .string()

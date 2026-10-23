@@ -1,5 +1,39 @@
 # Measured evidence
 
+## Jira persisted configuration verification (2026-10-24)
+
+- Applied migration 20261024000000_jira_integration to local driftgate_test.
+- Full API suite: 19 files, 157 tests passed, 14.05 seconds. Includes project-admin
+  access, outsider isolation, encrypted persistence, response redaction, audit
+  events, stale revisions and competing simultaneous settings replacements.
+- API build (including TypeScript) and lint passed.
+- Initial rerun failed to connect to the database because network access needed
+  renewal; not counted as a passing run. Successful rerun followed permission.
+- Cloud migration, live Jira, configuration UI and hosted checks remain NOT VERIFIED.
+
+## Jira client unit verification (2026-10-24)
+
+- `pnpm --filter @driftgate/api exec vitest run tests/jira-client.test.ts tests/integration-secrets.test.ts --coverage.enabled=false`:
+  34 tests passed (22 client, 12 encryption). All client requests mocked.
+- Covered origin restrictions, redirects-disabled request configuration, plain-text
+  ADF, trusted issue URLs, HTTP error categories, network-error redaction, no
+  automatic create retries, remote status, key isolation, malformed responses,
+  bounded response bodies and input validation.
+- API `tsc --noEmit` and lint passed. No full database suite, live Jira calls,
+  browser tests or hosted CI executed for this change.
+- API reference: https://developer.atlassian.com/cloud/jira/platform/rest/v3/
+- Auth reference: https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
+
+## Jira credential foundation (2026-10-24)
+
+- `pnpm --filter @driftgate/api exec vitest run tests/integration-secrets.test.ts --coverage.enabled=false`:
+  12 passed, covering round trip, fresh nonce, cross-project/provider rejection,
+  wrong keys, tampered IV/tag/ciphertext, malformed envelopes and input bounds.
+- `pnpm --filter @driftgate/api exec tsc --noEmit`: passed.
+- `pnpm --filter @driftgate/api lint`: passed.
+- Scoped unit tests only; full database suite, hosted CI and live Jira integration
+  were not run for this change. The helper is not yet wired into application routes.
+
 ## Phase 5 hosted verification recovery (2026-10-23)
 
 - Quality Gates 39998074072 at bd44616: success. CodeQL 39998074017: success.

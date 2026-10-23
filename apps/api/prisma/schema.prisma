@@ -36,6 +36,7 @@ enum Role {
 }
 
 model Project {
+  jiraIntegration JiraIntegration?
   releases Release[]
   defects Defect[]
   expectedRuleSets Json @default("{}")
@@ -54,6 +55,29 @@ model Project {
   visualBaselines VisualBaseline[]
   visualComparisons VisualComparison[]
   sqlCheckRuns SqlCheckRun[]
+}
+
+model JiraIntegration {
+  projectId String @id
+  site String
+  jiraProjectKey String
+  issueTypeId String
+  encryptedCredentials String
+  revision Int @default(1)
+  updatedAt DateTime @updatedAt
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  events JiraIntegrationEvent[]
+}
+
+model JiraIntegrationEvent {
+  id String @id @default(cuid())
+  projectId String
+  actorId String
+  revision Int
+  action String
+  createdAt DateTime @default(now())
+  integration JiraIntegration @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
+  @@index([projectId, createdAt])
 }
 
 model Release {

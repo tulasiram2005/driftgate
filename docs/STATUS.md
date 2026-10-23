@@ -1,5 +1,45 @@
 # Phase status
 
+## Phase 5 persisted Jira configuration (2026-10-24)
+
+- Added project-admin-only settings GET/PUT, encrypted credential persistence,
+  transactional audit metadata and revision conflicts including simultaneous saves.
+- API responses exclude both credentials and ciphertext. Missing encryption keys
+  fail closed; non-admin members and outsiders cannot read or write settings.
+- Migration 20261024000000_jira_integration applied to isolated local test DB only.
+- Full API suite: 157 passed; API build/TypeScript and lint passed. An initial
+  rerun could not reach the local DB before network permission was renewed.
+- No live credentials, external Jira issues or cloud migrations were created.
+  Settings UI, defect export/deduplication, polling and live verification remain pending.
+
+## Phase 5 Jira client (2026-10-24)
+
+- Added a server-side Jira REST v3 client for issue creation with plain-text ADF
+  and status reads. Validates Atlassian HTTPS origins and project-specific issue
+  keys, refuses redirects, applies a 15-second deadline and caps responses at 64 KiB.
+- Errors exclude remote bodies and network diagnostics. Creation has no automatic
+  retry because an uncertain response can still represent a successfully created issue.
+- Uses email plus an unscoped personal API token for this direct-site adapter;
+  scoped tokens/OAuth gateway support is not implemented. No credentials configured.
+- 34 focused tests passed across client and encryption, plus API TypeScript/lint.
+  Requests were mocked; no live Jira issues created and no cloud deployment changed.
+- Pending: admin-only configuration/persistence, export deduplication and uncertain
+  outcome reconciliation, defect issue links, polling, UI, live verification and
+  Free-plan confirmation. This is not a completed integration.
+
+## Phase 5 Jira setup and credential foundation (2026-10-24)
+
+- Jira software project DriftGate exists on ramtulasi062005.atlassian.net,
+  project key KAN, board 2. User screenshot confirms the board loads. Support
+  remains separate. The Jira subscription plan has not yet been verified.
+- Added versioned AES-256-GCM credential encryption with random nonces and
+  authenticated project/provider context, strict envelopes and redacted failures.
+- Focused encryption tests: 12 passed. API TypeScript and lint passed.
+- This helper is not yet connected to persistence or API routes. Admin-only
+  credential configuration, issue creation/linking, polling, UI and live verification
+  remain pending. No real token was requested, stored or transmitted in this step.
+- Board: https://ramtulasi062005.atlassian.net/jira/software/projects/KAN/boards/2
+
 ## Phase 5 release screens (2026-10-23)
 
 - Added release history, creation, ordered environment gates and run-selection

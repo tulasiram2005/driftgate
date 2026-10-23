@@ -24,6 +24,7 @@ import { mountVisualComparisons, visualComparisonBody } from "./visual-compariso
 import { storage } from "./storage.js";
 import { mountSqlResults, sqlRunBody, type SqlExecutor } from "./sql-results.js";
 import { mountDefects, defectBody, defectTransitionBody } from "./defects.js";
+import { mountJiraSettings, jiraSettingsBody } from "./jira-settings.js";
 import { mountReleases, releaseBody, gateRunsBody } from "./releases.js";
 import { mountCallback, mountExecution, publicRun } from "./execution.js";
 import { automatedRunBody, callbackBody, screenshotBody } from "./execution-contracts.js";
@@ -393,6 +394,9 @@ export function createApp(
   mountVisualBaselines(app, db, guard, fail);
   mountSqlResults(app, db, config, guard, fail, sqlExecutor);
   mountDefects(app, db, guard, fail);
+  mountJiraSettings(app, db, config, guard, fail);
+  document("get", `${base}/integrations/jira`);
+  document("put", `${base}/integrations/jira`, jiraSettingsBody);
   mountReleases(app, db, guard, fail);
   document("post", `${base}/releases`, releaseBody);
   document("get", `${base}/releases`);
