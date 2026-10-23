@@ -15,3 +15,16 @@ test("runner detects Threadline seeded broken links without flagging clean stagi
     /Broken or unavailable links/,
   );
 });
+
+test("runner detects Threadline seeded missing alt text without flagging clean staging", async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(120000);
+  const origin = new URL(baseURL!).origin;
+  if (origin !== "http://127.0.0.1:3200") throw new Error("Isolated local demo required");
+  await runCheck(page, "accessibility", origin, "staging");
+  await expect(runCheck(page, "accessibility", origin, "uat")).rejects.toThrow(
+    /WCAG violations .*image-alt/,
+  );
+});

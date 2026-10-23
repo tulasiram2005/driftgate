@@ -1,5 +1,16 @@
 # Phase status
 
+## Latest checkpoint: seeded accessibility verification added (2026-10-23)
+
+- Quality Gates 39898325492 and CodeQL 39898325437 passed for fd90276.
+- Added actual Threadline staging accessibility control and UAT missing-alt
+  detection to the three-browser suite. Typecheck and scoped lint pass;
+  execution of this new browser case is pending CI.
+- All five Phase 4 feature groups are implemented. Remaining closure work is
+  manual screenshot review, hosted visual comparison round-trip, dedicated
+  cloud read-only SQL configuration and final seeded-defect verification.
+- Phase 5 has not started. No temporary cloud worker was restarted.
+
 ## Latest checkpoint: seeded link detection verified (2026-10-23)
 
 - Quality Gates run 39897482199 passed for ec01402, including the real Threadline

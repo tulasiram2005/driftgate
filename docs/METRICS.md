@@ -463,3 +463,11 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   assertion, focused API suite 15 passed.
 - Hosted `/openapi.json`: HTTP 200 with Phase 4 route definitions.
 - Screenshot archive retrieval timed out; no manual visual review is claimed.
+
+# 2026-10-23 accessibility detection checkpoint
+
+- Quality Gates 39898325492 and CodeQL 39898325437 succeeded for fd90276.
+- Added a real seeded UAT missing-alt detection case with a clean staging
+  control, configured for Chromium, Firefox and WebKit.
+- Demo-store typecheck and scoped ESLint passed. The new browser case is
+  pending hosted execution; these static checks do not establish detection.
