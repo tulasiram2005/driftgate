@@ -18,7 +18,7 @@ import { Prisma } from "../generated/client/index.js";
 import type { PrismaClient } from "../generated/client/index.js";
 import type { Config } from "./config.js";
 import { mountSnapshots, snapshotBody } from "./snapshots.js";
-import { mountComparisons, comparisonBody } from "./comparisons.js";
+import { mountComparisons, comparisonBody, savedRulesBody } from "./comparisons.js";
 import { mountVisualBaselines, ignoreRegionsBody } from "./visual-baselines.js";
 import { mountVisualComparisons, visualComparisonBody } from "./visual-comparisons.js";
 import { storage } from "./storage.js";
@@ -398,6 +398,8 @@ export function createApp(
   document("get", `${base}/visual-comparisons`);
   document("get", `${base}/visual-comparisons/:comparisonId/url`);
   document("post", `${base}/comparisons`, comparisonBody);
+  document("get", `${base}/expected-rules`);
+  document("put", `${base}/expected-rules`, savedRulesBody);
   document("get", `${base}/comparisons`);
   document("get", `${base}/comparisons/:comparisonId`);
   document("post", `${base}/snapshots`, snapshotBody);

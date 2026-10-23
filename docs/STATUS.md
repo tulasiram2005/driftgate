@@ -1,5 +1,18 @@
 # Phase status
 
+## Latest checkpoint: seeded link detection verified (2026-10-23)
+
+- Quality Gates run 39897482199 passed for ec01402, including the real Threadline
+  staging/prod broken-link test in all configured browser engines and runner fixtures.
+- Added missing GET/PUT expected-rules endpoints to generated OpenAPI with a
+  regression assertion. Full API suite passed 93 tests; the focused API suite
+  passed 15 tests after adding the documentation assertion.
+- Public hosted OpenAPI responds HTTP 200 and lists Phase 4 comparison/SQL routes.
+  This confirms route publication, not authenticated end-to-end feature success.
+- Screenshot artifact download from the earlier successful run timed out at 90s;
+  manual screenshot review remains NOT VERIFIED.
+- Cloud SQL binding and hosted visual round-trip remain pending. Phase 5 not started.
+
 ## Latest checkpoint: cloud schema updated (2026-10-23)
 
 - Applied all 11 pending Phase 4 Prisma migrations to the existing dedicated

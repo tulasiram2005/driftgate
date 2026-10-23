@@ -399,6 +399,11 @@ describe("phase 2 end-to-end API", () => {
     const spec = await request(app).get("/openapi.json");
     expect(spec.status).toBe(200);
     expect(spec.body.paths["/api/v1/projects/{projectId}/cases"]).toBeTruthy();
+    const rules = spec.body.paths["/api/v1/projects/{projectId}/expected-rules"];
+    expect(rules.get).toBeTruthy();
+    expect(
+      rules.put.requestBody.content["application/json"].schema.properties.revision,
+    ).toBeTruthy();
     const isolated = createApp(db, config);
     let last = 0;
     for (let i = 0; i < 11; i++) {

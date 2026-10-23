@@ -454,3 +454,12 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 - Hosted `/ready`: HTTP 200 after deployment of the schema changes.
 - API suite: 93 passed, including combined-rule-limit rejection and matching-rule override.
 - Latest browser run 39897482199 was still in progress; not reported as passed.
+
+# 2026-10-23 seeded link browser verification
+
+- GitHub Quality Gates 39897482199: success for ec01402. Actual Threadline staging
+  clean control and prod brokenLink detection ran in Chromium, Firefox and WebKit.
+- Documentation update: full API suite 93 passed; after the added OpenAPI path
+  assertion, focused API suite 15 passed.
+- Hosted `/openapi.json`: HTTP 200 with Phase 4 route definitions.
+- Screenshot archive retrieval timed out; no manual visual review is claimed.
