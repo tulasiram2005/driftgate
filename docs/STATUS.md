@@ -1,5 +1,17 @@
 # Phase status
 
+## Latest checkpoint: cloud schema updated (2026-10-23)
+
+- Applied all 11 pending Phase 4 Prisma migrations to the existing dedicated
+  Neon driftgate database through its direct connection. No reset or data wipe.
+- Hosted API readiness still returns HTTP 200 after migration.
+- Fixed combined saved/one-off rule validation: more than 100 applied rules now
+  returns 400 before database persistence, rather than violating a database constraint.
+- API suite passes 93 tests. Browser run 39897482199 remains in progress.
+- Dedicated cloud SQL read-only connection/project binding is not configured.
+  Hosted visual round-trip, screenshot review and final seeded-defect verification
+  remain pending. Phase 5 has not started.
+
 ## Latest checkpoint: client-rendered missing products (2026-10-23)
 
 - Found and fixed a link-check blind spot: Threadline serves an HTTP 200 shell

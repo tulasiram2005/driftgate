@@ -446,3 +446,11 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   engines. Not executed locally because browser launch remains blocked.
 - Quality run 39897098854 for preceding commit 9943033 was still running when
   checked; no success claim is made for that run.
+
+# 2026-10-23 cloud migration checkpoint
+
+- Prisma migrate deploy applied 11 pending migrations to the existing Neon
+  driftgate database, bringing it from 4 to 15 migrations without resetting data.
+- Hosted `/ready`: HTTP 200 after deployment of the schema changes.
+- API suite: 93 passed, including combined-rule-limit rejection and matching-rule override.
+- Latest browser run 39897482199 was still in progress; not reported as passed.

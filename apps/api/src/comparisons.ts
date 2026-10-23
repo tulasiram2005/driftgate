@@ -126,6 +126,8 @@ export function mountComparisons(
       for (const rule of body.expectedRules)
         merged.set(JSON.stringify([rule.field, rule.productId]), rule);
       const appliedRules = [...merged.values()];
+      if (appliedRules.length > 100)
+        fail(400, "INVALID_INPUT", "Combined saved and one-off rules exceed 100");
       let findings;
       try {
         const left = snapshotBody.parse({

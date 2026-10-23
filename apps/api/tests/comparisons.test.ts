@@ -115,6 +115,36 @@ afterAll(async () => {
 });
 
 describe("manual comparison API with isolated local database", () => {
+  it("rejects combined saved and one-off rules exceeding the persistence limit", async () => {
+    const rules = Array.from({ length: 100 }, (_, index) => ({
+      field: "price",
+      productId: `demo-${index}`,
+      reason: "Demo expectation",
+    }));
+    const saved = await request(app)
+      .put(`/api/v1/projects/${project}/expected-rules`)
+      .set(auth())
+      .send({ revision: 0, environments: ["staging", "prod"], rules });
+    expect(saved.status).toBe(200);
+    const ids = await pair();
+    const rejected = await request(app)
+      .post(path())
+      .set(auth())
+      .send({
+        ...ids,
+        expectedRules: [{ field: "price", productId: "extra", reason: "Demo extra" }],
+      });
+    expect(rejected.status).toBe(400);
+    expect(await db.environmentComparison.count({ where: { projectId: project } })).toBe(0);
+    expect(
+      (
+        await request(app)
+          .post(path())
+          .set(auth())
+          .send({ ...ids, expectedRules: [rules[0]] })
+      ).status,
+    ).toBe(200);
+  });
   it("reuses pair-scoped rules with conflict protection and immutable historical results", async () => {
     const route = `/api/v1/projects/${project}/expected-rules`;
     const rule = { field: "price", productId: "demo-shirt", reason: "Approved demo pricing" };
