@@ -5,6 +5,13 @@ https://ramtulasi062005.atlassian.net/jira/software/projects/KAN/boards/2
 
 ## Implemented locally
 
+- `POST /api/v1/projects/:projectId/integrations/jira/verify` accepts the saved
+  revision and is admin-only. Checks active identity, configured project/type,
+  and browse/create permissions with read-only requests. A successful timestamped
+  result is a point-in-time access check, not an issue creation guarantee. Custom
+  required fields can still prevent export. No persistent verification flag exists.
+- Reference: [Jira project details](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-projects/#api-rest-api-3-project-projectidorkey-get)
+  and [project-scoped permissions](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-permissions/#api-rest-api-3-mypermissions-get).
 - Project-admin Integrations screen loads public metadata, saves full replacement
   credentials and reloads on revision conflicts. Email/token inputs clear after
   save attempts. Saved settings explicitly remain connection-not-verified.

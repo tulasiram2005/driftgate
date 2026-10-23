@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, expect, it, vi } from "vitest";
 import request from "supertest";
 import { PrismaClient } from "../generated/client/index.js";
 import { createApp } from "../src/app.js";
@@ -34,6 +34,7 @@ const body = {
   token: "demo-token-not-real",
   revision: 0,
 };
+afterEach(() => vi.unstubAllGlobals());
 beforeAll(async () => {
   for (let i = 0; i < 5; i++) {
     const res = await request(app)
@@ -71,6 +72,9 @@ it("requires authentication and project admin for reads and writes", async () =>
   ]) {
     expect((await request(app).get(path()).set(auth(index))).status).toBe(code);
     expect((await request(app).put(path()).set(auth(index)).send(body)).status).toBe(code);
+    expect(
+      (await request(app).post(`${path()}/verify`).set(auth(index)).send({ revision: 1 })).status,
+    ).toBe(code);
   }
   expect((await request(app).get(path()).set(auth())).body).toEqual({
     data: null,
@@ -136,4 +140,76 @@ it("allows only one simultaneous replacement and commits exactly one audit event
   expect(
     JSON.parse(decryptIntegrationSecret(saved.encryptedCredentials, key, projectId, "jira")).token,
   ).toBe(winner);
+});
+it("checks saved credentials without exposing them, and rejects stale verification", async () => {
+  const current = await db.jiraIntegration.findUniqueOrThrow({ where: { projectId } });
+  const send = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(Response.json({ accountId: "demo", active: true }))
+    .mockResolvedValueOnce(
+      Response.json({ key: "KAN", issueTypes: [{ id: "10011", subtask: false }] }),
+    )
+    .mockResolvedValueOnce(
+      Response.json({
+        permissions: {
+          BROWSE_PROJECTS: { havePermission: true },
+          CREATE_ISSUES: { havePermission: true },
+        },
+      }),
+    );
+  vi.stubGlobal("fetch", send);
+  const stale = await request(app)
+    .post(`${path()}/verify`)
+    .set(auth())
+    .send({ revision: current.revision + 1 });
+  expect(stale.status).toBe(409);
+  expect(send).not.toHaveBeenCalled();
+  const result = await request(app)
+    .post(`${path()}/verify`)
+    .set(auth())
+    .send({ revision: current.revision });
+  expect(result.status).toBe(200);
+  expect(result.body.data).toMatchObject({
+    status: "ACCESS_CONFIRMED",
+    revision: current.revision,
+  });
+  expect(JSON.stringify(result.body)).not.toContain(body.email);
+  expect(result.body.data).not.toHaveProperty("token");
+});
+it("sanitizes verification failures and rejects configurations changed during a check", async () => {
+  const current = await db.jiraIntegration.findUniqueOrThrow({ where: { projectId } });
+  vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockRejectedValue(new Error("secret-token")));
+  const failed = await request(app)
+    .post(`${path()}/verify`)
+    .set(auth())
+    .send({ revision: current.revision });
+  expect(failed.status).toBe(502);
+  expect(failed.body.error.code).toBe("JIRA_UNAVAILABLE");
+  expect(JSON.stringify(failed.body)).not.toContain("secret-token");
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(Response.json({ accountId: "demo", active: true }))
+      .mockResolvedValueOnce(
+        Response.json({ key: "KAN", issueTypes: [{ id: "10011", subtask: false }] }),
+      )
+      .mockImplementationOnce(async () => {
+        await db.jiraIntegration.update({
+          where: { projectId },
+          data: { revision: { increment: 1 } },
+        });
+        return Response.json({
+          permissions: {
+            BROWSE_PROJECTS: { havePermission: true },
+            CREATE_ISSUES: { havePermission: true },
+          },
+        });
+      }),
+  );
+  const changed = await request(app)
+    .post(`${path()}/verify`)
+    .set(auth())
+    .send({ revision: current.revision });
+  expect(changed.status).toBe(409);
 });

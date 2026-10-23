@@ -1,5 +1,17 @@
 # Phase status
 
+## Phase 5 Jira access check (2026-10-24)
+
+- Added admin-only POST verification of saved credentials: authenticated active
+  identity, matching project/non-subtask issue type, browse/create permissions.
+  Remote calls are GET-only and never create an issue.
+- Rejects stale settings before and after the check; errors exclude credentials.
+  UI shows a per-view timestamped access result, resets on settings replacement,
+  and explicitly does not claim successful issue creation. No persistent verified flag.
+- Full API suite: 167 passed; API build/lint and web TypeScript/lint passed.
+- Real Jira verification, browser checks, export/reconciliation, status syncing,
+  hosted migration and Free-plan confirmation remain pending. Phase 5 continues.
+
 ## Phase 5 Jira settings screen (2026-10-24)
 
 - Added admin-only Integrations navigation and Jira configuration form, unavailable

@@ -1,5 +1,16 @@
 # Measured evidence
 
+## Jira access-check verification (2026-10-24)
+
+- Full API suite: 19 files, 167 tests passed in 15.38 seconds with isolated local
+  database. Jira transport mocked; no real account requests or tickets created.
+- New coverage: active identity, matching project and issue type, subtask rejection,
+  denied/malformed permissions, admin authorization, stale revision before/after
+  remote requests, credential redaction and sanitized network failures.
+- API build and lint; web TypeScript and lint passed.
+- Added UI fixture assertions for access-check result and revision reset.
+  Browser checks, actual Jira access and hosted checks remain NOT VERIFIED.
+
 ## Jira settings UI verification (2026-10-24)
 
 - Web unit suite: 3 files, 41 tests passed (239 ms), including authenticated Jira

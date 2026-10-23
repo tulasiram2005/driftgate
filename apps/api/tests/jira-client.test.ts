@@ -13,6 +13,72 @@ const response = (data: unknown, code = 200) =>
   new Response(JSON.stringify(data), { status: code });
 
 describe("Jira client", () => {
+  it("checks authenticated identity, configured issue type and project permissions using GET only", async () => {
+    const send = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(response({ accountId: "demo", active: true }))
+      .mockResolvedValueOnce(
+        response({ key: "KAN", issueTypes: [{ id: "10011", subtask: false }] }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          permissions: {
+            BROWSE_PROJECTS: { havePermission: true },
+            CREATE_ISSUES: { havePermission: true },
+          },
+        }),
+      );
+    expect(await createJiraClient(config, send).verifyAccess()).toEqual({
+      projectKey: "KAN",
+      issueTypeId: "10011",
+    });
+    expect(send).toHaveBeenCalledTimes(3);
+    expect(send.mock.calls.every(([, options]) => options?.method === "GET" && !options.body)).toBe(
+      true,
+    );
+    expect(send.mock.calls[2]![0]).toContain(
+      "projectKey=KAN&permissions=BROWSE_PROJECTS%2CCREATE_ISSUES",
+    );
+  });
+  it.each([
+    { key: "OTHER", issueTypes: [] },
+    { key: "KAN", issueTypes: [] },
+    { key: "KAN", issueTypes: [{ id: "10011", subtask: true }] },
+  ])("rejects wrong projects, missing types and subtask types", async (project) => {
+    const send = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(response({ accountId: "demo", active: true }))
+      .mockResolvedValueOnce(response(project));
+    await expect(createJiraClient(config, send).verifyAccess()).rejects.toThrow();
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+  it("rejects inactive identities before checking the project", async () => {
+    const send = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(response({ accountId: "demo", active: false }));
+    await expect(createJiraClient(config, send).verifyAccess()).rejects.toThrow("AUTH");
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+  it.each([false, "true", undefined])(
+    "does not accept missing, denied or malformed permissions",
+    async (allowed) => {
+      const send = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(response({ accountId: "demo", active: true }))
+        .mockResolvedValueOnce(
+          response({ key: "KAN", issueTypes: [{ id: "10011", subtask: false }] }),
+        )
+        .mockResolvedValueOnce(
+          response({
+            permissions: {
+              BROWSE_PROJECTS: { havePermission: true },
+              CREATE_ISSUES: { havePermission: allowed },
+            },
+          }),
+        );
+      await expect(createJiraClient(config, send).verifyAccess()).rejects.toThrow();
+    },
+  );
   it.each([
     "http://example.atlassian.net",
     "https://atlassian.net.evil.com",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
 import { api, ApiError, getJiraSettings, projectPath, type JiraSettings } from "../../lib/qa-api";
 import { Empty, ErrorNotice, Field, Loading, SectionHeading, Submit } from "./ui";
@@ -32,9 +32,17 @@ export function IntegrationsView({ projectId, isAdmin }: { projectId: string; is
         />
       ) : (
         <>
-          <p role="status">
-            {settings.data.data ? "Settings saved. Connection not verified." : "Not configured"}
-          </p>
+          {settings.data.data && settings.data.available === true ? (
+            <JiraAccessCheck
+              key={settings.data.data.revision}
+              projectId={projectId}
+              revision={settings.data.data.revision}
+            />
+          ) : (
+            <p role="status">
+              {settings.data.data ? "Settings saved. Connection not verified." : "Not configured"}
+            </p>
+          )}
           {settings.data.available !== true ? (
             <ErrorNotice
               error={
@@ -55,6 +63,37 @@ export function IntegrationsView({ projectId, isAdmin }: { projectId: string; is
         </>
       )}
     </>
+  );
+}
+
+function JiraAccessCheck({ projectId, revision }: { projectId: string; revision: number }) {
+  const check = useMutation({
+    mutationFn: () =>
+      api<{ revision: number; checkedAt: string; status: string }>(
+        projectPath(projectId, "/integrations/jira/verify"),
+        "POST",
+        { revision },
+      ),
+    retry: false,
+  });
+  return (
+    <div>
+      <p role="status">
+        {check.isSuccess && check.data.revision === revision
+          ? `Jira access confirmed at ${new Date(check.data.checkedAt).toLocaleTimeString()}. Issue creation not tested.`
+          : "Settings saved. Connection not verified."}
+      </p>
+      <ErrorNotice error={check.error} />
+      <button
+        type="button"
+        className="qa-button"
+        disabled={check.isPending}
+        onClick={() => check.mutate()}
+      >
+        <RefreshCw size={16} aria-hidden="true" />
+        {check.isPending ? "Checking access..." : "Check Jira access"}
+      </button>
+    </div>
   );
 }
 

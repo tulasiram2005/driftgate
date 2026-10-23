@@ -106,6 +106,41 @@ export function createJiraClient(
     if (!key.startsWith(`${project}-`)) throw new JiraRequestError("INVALID_RESPONSE");
   }
   return {
+    async verifyAccess() {
+      const identity = checked(
+        z.object({ accountId: z.string().min(1), active: z.boolean() }),
+        await request("myself", "GET"),
+      );
+      if (!identity.active) throw new JiraRequestError("AUTH");
+      const details = checked(
+        z.object({
+          key: projectKey,
+          issueTypes: z.array(z.object({ id: z.string(), subtask: z.boolean() })),
+        }),
+        await request(`project/${encodeURIComponent(project)}?expand=issueTypes`, "GET"),
+      );
+      if (details.key !== project) throw new JiraRequestError("INVALID_RESPONSE");
+      if (!details.issueTypes.some((item) => item.id === type && !item.subtask)) {
+        throw new JiraRequestError("REJECTED");
+      }
+      const permission = z.object({ havePermission: z.boolean() });
+      const access = checked(
+        z.object({
+          permissions: z.object({ BROWSE_PROJECTS: permission, CREATE_ISSUES: permission }),
+        }),
+        await request(
+          `mypermissions?projectKey=${encodeURIComponent(project)}&permissions=BROWSE_PROJECTS%2CCREATE_ISSUES`,
+          "GET",
+        ),
+      );
+      if (
+        !access.permissions.BROWSE_PROJECTS.havePermission ||
+        !access.permissions.CREATE_ISSUES.havePermission
+      ) {
+        throw new JiraRequestError("AUTH");
+      }
+      return { projectKey: project, issueTypeId: type };
+    },
     async createIssue(input: { summary: string; description: string }) {
       const summary = z.string().trim().min(1).max(255).parse(input.summary);
       const description = z.string().min(1).max(16000).parse(input.description);

@@ -24,6 +24,17 @@ test("Jira settings save, clear credentials, and recover from revision conflicts
   page,
 }, info) => {
   await workspace(page);
+  await page.route("**/integrations/jira/verify", (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          revision: route.request().postDataJSON().revision,
+          checkedAt: "2026-10-24T00:00:00Z",
+          status: "ACCESS_CONFIRMED",
+        },
+      },
+    }),
+  );
   let saved: Record<string, unknown> | null = null;
   let conflict = false;
   await page.route("**/api/v1/projects/demo-project/integrations/jira", async (route) => {
@@ -65,6 +76,8 @@ test("Jira settings save, clear credentials, and recover from revision conflicts
   ).toBeVisible();
   await expect(page.getByLabel("API token")).toHaveValue("");
   await expect(page.getByLabel("Atlassian email")).toHaveValue("");
+  await page.getByRole("button", { name: "Check Jira access", exact: true }).click();
+  await expect(page.getByText(/Jira access confirmed at/)).toBeVisible();
   conflict = true;
   await page.getByLabel("Atlassian email").fill("demo@example.test");
   await page.getByLabel("API token").fill("demo-token-not-real");
@@ -72,6 +85,9 @@ test("Jira settings save, clear credentials, and recover from revision conflicts
   await expect(page.getByLabel("API token")).toHaveValue("");
   await page.getByRole("button", { name: "Reload saved settings" }).click();
   await expect(page.getByLabel("Project key")).toHaveValue("NEW");
+  await expect(
+    page.getByText("Settings saved. Connection not verified.", { exact: true }),
+  ).toBeVisible();
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const theme of ["dark", "light"]) {
     await page.evaluate((value) => {
