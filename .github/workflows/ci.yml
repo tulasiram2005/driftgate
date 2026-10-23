@@ -55,7 +55,7 @@ jobs:
       RUNNER_CALLBACK_SECRET: ci-test-only-runner-callback-secret-123456789
       REDIS_URL: redis://127.0.0.1:6379
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: pnpm/action-setup@v4
