@@ -8,7 +8,11 @@
 - Browser tests did not execute; cancelled runs are not passing evidence.
 - CI now pins Ubuntu 24.04, uses the official Ubuntu archive mirror and bounds
   package network waits and browser setup steps. All browser coverage is retained.
-- Verification of this infrastructure fix and the recent defect UI is pending.
+- Verified by Quality Gates 39998074072 at bd44616: all steps passed. Browser
+  system dependencies took 54 seconds and browser engines 12 seconds.
+- Web E2E: 39 passed; demo-store E2E: 24 passed. Defect creation, search/filtering,
+  project metrics and persisted transitions passed in Chromium, Firefox and WebKit.
+- CodeQL 39998074017 passed. Phase 5 implementation remains in progress.
 
 ## Phase 5 defect aging and resolution metrics (2026-10-23)
 

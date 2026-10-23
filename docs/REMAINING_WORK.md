@@ -1,6 +1,6 @@
 # Remaining delivery work
 
-Current checkpoint: 7b363af, 2026-10-23. This is the consolidated roadmap;
+Current checkpoint: bd44616, 2026-10-23. This is the consolidated roadmap;
 older entries in STATUS.md are historical, not a current pending-work list.
 
 ## Phase count
@@ -13,8 +13,10 @@ The MVP is an intermediate milestone, not the final delivery.
 
 ## Phase 5: remaining implementation and verification
 
-- Defects: board/filtering, aging and MTTR. Existing creation, list/detail,
-  reproduction snapshots, role-restricted transitions and event history are built.
+- Defects: board remains pending. Creation, list/detail, project-wide search and
+  filters, aging and mean-time-to-closure metrics, reproduction snapshots,
+  role-restricted transitions and event history are built. Hosted browser checks
+  passed in Quality Gates 39998074072; final product polish remains Phase 6 work.
 - Jira Cloud: server-side encrypted token configuration, issue creation with
   reproduction/evidence references, issue link-back, bounded status polling and
   failure/retry handling. A connected assistant plugin is not application integration.

@@ -1,5 +1,24 @@
 # Measured evidence
 
+## Phase 5 hosted verification recovery (2026-10-23)
+
+- Quality Gates 39998074072 at bd44616: success. CodeQL 39998074017: success.
+- Typecheck, lint/formatting, unit coverage, restricted SQL integration,
+  production build and all runner browser fixtures passed.
+- API: 118 tests. Web E2E: 39 passed; demo-store E2E: 24 passed.
+- Defect creation, project-wide filters/metrics and persisted status history
+  passed Chromium, Firefox and WebKit, including accessibility and screenshots
+  at 360, 768, 1280 and 1920 pixels.
+- Browser system dependencies: 54 seconds; engine installation: 12 seconds.
+  Prior run 39979148539 timed out on the Azure Ubuntu package mirror and is not
+  passing evidence. The fix retains all browsers and package signature checks.
+- Dependency audit reported no known vulnerabilities at execution time.
+- Evidence: https://github.com/tulasiram2005/driftgate/actions/runs/39998074072
+- Manual review of the new defect screenshots remains NOT VERIFIED. The 122 MB
+  evidence download was stopped while incomplete; automated checks passed, but
+  that is not a manual visual sign-off.
+- These results do not verify unfinished Phase 5 integrations or cloud deployment.
+
 ## SQL result persistence (2026-10-23)
 
 - API: 91/91 passed after renewing network access. Earlier attempt could not
