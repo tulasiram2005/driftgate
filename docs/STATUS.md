@@ -1,5 +1,21 @@
 # Phase status
 
+## Phase 4 complete within approved MVP scope (2026-10-23)
+
+- Quality Gates 39929634240 and CodeQL 39929634248 passed for dff31ef.
+  The full browser rerun verifies the Chromium probe-close correction.
+- Snapshot/drift comparisons, saved expected rules, visual baseline review,
+  pixel differences, saved ignore regions, API/accessibility checks, SQL
+  persistence/UI and bounded link detection are implemented and verified by
+  the recorded local/CI checks. Screenshot review is complete at four widths.
+- Re-ran local restricted-role SQL integration: write denial, privileged-role
+  rejection and seeded total/orphan findings passed; temporary fixtures removed.
+- Hosted visual API/storage verification passed with synthetic PNGs. This is
+  not a claim of complete real-device or full bug-bank coverage.
+- Full cloud SQL setup, all-service deployment and complete demo measurements
+  remain Phase 7 work. Performance budgets are excluded from the MVP.
+- Phase 5 is next; implementation has not started. See PHASE4_EXIT.md.
+
 ## Latest checkpoint: Chromium probe-close stall (2026-10-23)
 
 - Run 39927297310 again timed out in Chromium; its trace shows the final probe
