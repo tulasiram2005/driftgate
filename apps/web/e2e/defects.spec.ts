@@ -54,6 +54,11 @@ test("real API: failed result creates a defect with persisted status history", a
   await page.getByRole("button", { name: "Create defect", exact: true }).click();
   await expect(page.getByText("Defect saved: S1 · NEW", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Defects", exact: true }).click();
+  await page.getByLabel("Filter severity").selectOption("S4");
+  await expect(page.getByRole("heading", { name: "No matching defects" })).toBeVisible();
+  await page.getByRole("button", { name: "Clear filters", exact: true }).click();
+  await page.getByLabel("Search defects").fill("checkout");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
   await page.getByRole("button", { name: "Demo checkout total", exact: true }).click();
   await expect(page.getByText("Demo total mismatch", { exact: true })).toBeVisible();
   await expect(page.getByText("Expected: Correct total", { exact: true })).toBeVisible();

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Express, RequestHandler } from "express";
-import type { PrismaClient } from "../generated/client/index.js";
+import type { Prisma, PrismaClient } from "../generated/client/index.js";
 
 const id = z.string().min(1).max(100);
 const status = z.enum(["NEW", "OPEN", "IN_PROGRESS", "FIXED", "RETEST", "CLOSED", "REOPENED"]);
@@ -83,13 +83,22 @@ export function mountDefects(
       .object({
         cursor: id.optional(),
         limit: z.coerce.number().int().min(1).max(100).default(30),
+        status: status.optional(),
+        severity: z.enum(["S1", "S2", "S3", "S4"]).optional(),
+        search: z.string().trim().max(200).optional(),
       })
       .strict()
       .parse(req.query);
-    if (query.cursor && !(await db.defect.findFirst({ where: { id: query.cursor, projectId } })))
+    const where: Prisma.DefectWhereInput = {
+      projectId,
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.severity ? { severity: query.severity } : {}),
+      ...(query.search ? { title: { contains: query.search, mode: "insensitive" } } : {}),
+    };
+    if (query.cursor && !(await db.defect.findFirst({ where: { ...where, id: query.cursor } })))
       return fail(404, "NOT_FOUND", "Defect cursor not found");
     const rows = await db.defect.findMany({
-      where: { projectId },
+      where,
       orderBy: { id: "desc" },
       take: query.limit + 1,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),

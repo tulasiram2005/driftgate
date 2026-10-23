@@ -1,5 +1,18 @@
 # Phase status
 
+## Phase 5 project-wide defect filters (2026-10-23)
+
+- Added server-side title search, status and severity filters before pagination,
+  including cursor validation against the active filter set.
+- Connected filter controls, search submission, clear filters and no-match state
+  in the Defects screen. Query keys isolate each filter combination.
+- API regression suite passes 117 tests with added combined-filter, case-insensitive,
+  cursor-mismatch and invalid-input assertions. API/web typechecks and web lint pass.
+- Extended real-API browser test for severity no-match, clear and search. Its new
+  browser assertions and screenshot review remain NOT VERIFIED pending hosted CI.
+- Defect board and aging/MTTR remain pending, as do connected release readiness,
+  persistent sign-off, Jira integration and PDF reports. Phase 6 will not be skipped.
+
 ## Phase 5 audit-chain foundation (2026-10-23)
 
 - Implemented versioned sign-off payload hashing and chain verification, with

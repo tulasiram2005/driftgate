@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Search, X } from "lucide-react";
 import { api, page, projectPath } from "../../lib/qa-api";
 import {
   Empty,
@@ -88,10 +88,15 @@ export function CreateDefect({ projectId, resultId }: { projectId: string; resul
 
 export function DefectsView({ projectId, role }: { projectId: string; role: string }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState({ search: "", status: "", severity: "" });
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
   const query = useInfiniteQuery({
-    queryKey: ["project", projectId, "defects"],
+    queryKey: ["project", projectId, "defects", filters],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) => page<Defect>(projectPath(projectId, "/defects"), pageParam),
+    queryFn: ({ pageParam }) =>
+      page<Defect>(projectPath(projectId, `/defects?${params}`), pageParam),
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
   if (selected)
@@ -107,12 +112,73 @@ export function DefectsView({ projectId, role }: { projectId: string; role: stri
   return (
     <>
       <SectionHeading title="Defects" />
+      <form
+        className="qa-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setFilters({ ...filters, search: search.trim() });
+        }}
+      >
+        <Field label="Search defects">
+          <input
+            type="search"
+            maxLength={200}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </Field>
+        <Field label="Filter status">
+          <select
+            value={filters.status}
+            onChange={(event) => setFilters({ ...filters, status: event.target.value })}
+          >
+            <option value="">All statuses</option>
+            {Object.keys(transitions).map((value) => (
+              <option key={value} value={value}>
+                {label(value)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Filter severity">
+          <select
+            value={filters.severity}
+            onChange={(event) => setFilters({ ...filters, severity: event.target.value })}
+          >
+            <option value="">All severities</option>
+            {["S1", "S2", "S3", "S4"].map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        </Field>
+        <div className="qa-actions">
+          <button type="submit" className="qa-button">
+            <Search size={16} aria-hidden="true" />
+            Search
+          </button>
+          <button
+            type="button"
+            className="qa-button"
+            onClick={() => {
+              setSearch("");
+              setFilters({ search: "", status: "", severity: "" });
+            }}
+          >
+            <X size={16} aria-hidden="true" />
+            Clear filters
+          </button>
+        </div>
+      </form>
       <ErrorNotice error={query.error} retry={() => void query.refetch()} />
       {query.isPending ? (
         <Loading label="Loading defects" />
       ) : (
         <>
-          {!query.isError && !rows.length && <Empty title="No defects" />}
+          {!query.isError && !rows.length && (
+            <Empty
+              title={Object.values(filters).some(Boolean) ? "No matching defects" : "No defects"}
+            />
+          )}
           <div className="qa-record-list">
             {rows.map((row) => (
               <article key={row.id}>

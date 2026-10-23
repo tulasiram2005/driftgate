@@ -577,3 +577,12 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
 - No approval endpoint, persistent audit chain or sign-off UI is verified yet.
   Existing coverage scope does not include the new module; no percentage claimed.
 - No cloud migration, worker restart or paid resource created.
+
+# Phase 5 defect filtering (2026-10-23)
+
+- API tests: 16 files, 117 tests PASS; filter assertions added to the existing
+  defect workflow test. API and web typechecks, web lint: PASS.
+- Combined status/severity/title search, case-insensitive lookup, unmatched cursor,
+  invalid status/severity and overlong search were checked against isolated DB.
+- Browser test extended, not executed locally due to previously established
+  macOS browser-launch restriction. Updated UI screenshots remain NOT VERIFIED.

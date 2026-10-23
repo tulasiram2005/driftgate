@@ -188,4 +188,22 @@ it("snapshots reproduction once and enforces audited, revision-protected workflo
     ).status,
   ).toBe(404);
   expect((await request(app).get(`${path()}?limit=1`).set(auth())).body.data).toHaveLength(1);
+  const filtered = await request(app)
+    .get(`${path()}?status=REOPENED&severity=S1&search=CHECKOUT`)
+    .set(auth());
+  expect(filtered.status).toBe(200);
+  expect(filtered.body.data.map((row: { id: string }) => row.id)).toEqual([defect.id]);
+  expect((await request(app).get(`${path()}?status=CLOSED`).set(auth())).body.data).toEqual([]);
+  expect(
+    (await request(app).get(`${path()}?status=CLOSED&cursor=${defect.id}`).set(auth())).status,
+  ).toBe(404);
+  expect((await request(app).get(`${path()}?severity=S9`).set(auth())).status).toBe(400);
+  expect((await request(app).get(`${path()}?status=invalid`).set(auth())).status).toBe(400);
+  expect(
+    (
+      await request(app)
+        .get(`${path()}?search=${"x".repeat(201)}`)
+        .set(auth())
+    ).status,
+  ).toBe(400);
 });
