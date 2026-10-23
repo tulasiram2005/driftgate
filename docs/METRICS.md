@@ -1,5 +1,17 @@
 # Measured evidence
 
+## SQL result persistence (2026-10-23)
+
+- API: 91/91 passed after renewing network access. Earlier attempt could not
+  reach the isolated database and is not counted as a product-test pass.
+- Real Threadline read-only SQL integration passed: write denial, unsafe-role
+  rejection, environment validation and seeded total/orphan defect detection.
+- Web unit tests: 40/40. API build, web production build (webpack) and scoped
+  API/web lint passed.
+- Local migration 20261023050000_sql_check_results applied.
+- GitHub 39868253087: cancelled during browser installation; browser and runner
+  browser fixtures skipped. No new screenshot verification claimed.
+
 ## Saved ignore regions (2026-10-23)
 
 - API 89/89 tests pass. New integration covers persistence/reuse, exact masked

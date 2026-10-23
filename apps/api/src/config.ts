@@ -9,6 +9,12 @@ const schema = z.object({
     .url()
     .refine((s) => /^postgres(ql)?:/.test(s)),
   JWT_SECRET: z.string().min(48),
+  THREADLINE_SQL_PROJECT_ID: z.string().min(1).max(100).optional(),
+  THREADLINE_READONLY_DATABASE_URL: z
+    .string()
+    .url()
+    .regex(/^postgres(ql)?:/)
+    .optional(),
   RUNNER_CALLBACK_SECRET: z.string().min(32).optional(),
   RUNNER_CALLBACK_URL: z.string().url().optional(),
   RUNNER_LOCAL_SANDBOX_ENABLED: z

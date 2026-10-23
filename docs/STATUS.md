@@ -1,5 +1,18 @@
 # Phase status
 
+## Latest checkpoint: SQL result history (2026-10-23)
+
+- Fixed read-only SQL assertions now have project-bound execution, persisted
+  PASS/FAIL/ERROR results and a workspace history screen.
+- API suite: 91/91; web unit suite: 40/40; real isolated SQL integration passes.
+  API/web builds and scoped lint pass. Local SQL-result migration applied.
+- Hosted run 39868253087 was cancelled during browser installation. Browser
+  checks were skipped, not passed. Current browser fixtures and cloud migrations
+  remain NOT VERIFIED.
+- Visual comparison, saved ignore regions and SQL-results UI are implemented
+  locally. Reusable project expected-difference rules, broken-link detection and
+  final browser/cloud verification remain pending. Phase 5 has not started.
+
 ## Latest checkpoint: saved ignore regions (2026-10-23)
 
 - Approved baselines now store reusable rectangle regions with revisions and

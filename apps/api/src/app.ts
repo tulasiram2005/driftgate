@@ -22,6 +22,7 @@ import { mountComparisons, comparisonBody } from "./comparisons.js";
 import { mountVisualBaselines, ignoreRegionsBody } from "./visual-baselines.js";
 import { mountVisualComparisons, visualComparisonBody } from "./visual-comparisons.js";
 import { storage } from "./storage.js";
+import { mountSqlResults, sqlRunBody, type SqlExecutor } from "./sql-results.js";
 import { mountCallback, mountExecution, publicRun } from "./execution.js";
 import { automatedRunBody, callbackBody, screenshotBody } from "./execution-contracts.js";
 import type { EvidenceStorage } from "./storage.js";
@@ -79,7 +80,12 @@ function page<T extends { id: string }>(req: Request, rows: T[]) {
   };
 }
 
-export function createApp(db: PrismaClient, config: Config, evidenceStorage?: EvidenceStorage) {
+export function createApp(
+  db: PrismaClient,
+  config: Config,
+  evidenceStorage?: EvidenceStorage,
+  sqlExecutor?: SqlExecutor,
+) {
   const app = express();
   const key = new TextEncoder().encode(config.JWT_SECRET);
   const secure = config.NODE_ENV === "production";
@@ -383,6 +389,9 @@ export function createApp(db: PrismaClient, config: Config, evidenceStorage?: Ev
   mountSnapshots(app, db, guard, fail);
   mountComparisons(app, db, guard, fail);
   mountVisualBaselines(app, db, guard, fail);
+  mountSqlResults(app, db, config, guard, fail, sqlExecutor);
+  document("post", `${base}/sql-checks`, sqlRunBody);
+  document("get", `${base}/sql-checks`);
   document("put", `${base}/visual-baselines/:baselineId/ignore-regions`, ignoreRegionsBody);
   mountVisualComparisons(app, db, guard, fail, evidenceStorage ?? storage(config));
   document("post", `${base}/visual-comparisons`, visualComparisonBody);

@@ -15,6 +15,7 @@ import {
   BookOpen,
   CheckCheck,
   ClipboardList,
+  Database,
   Folder,
   GitCompareArrows,
   Layers3,
@@ -54,6 +55,7 @@ import { RunsView, SuitesView } from "./execution";
 import { AutomatedRuns } from "./automated";
 import { ComparisonsView } from "./comparisons";
 import { BaselinesView } from "./baselines";
+import { SqlChecksView } from "./sql-checks";
 import "./workspace.css";
 
 const sessionKey = ["session"] as const;
@@ -262,7 +264,8 @@ type View =
   | "runs"
   | "automated"
   | "comparisons"
-  | "baselines";
+  | "baselines"
+  | "sql-checks";
 const navigation = [
   { id: "requirements", title: "Requirements", icon: BookOpen },
   { id: "cases", title: "Test cases", icon: ClipboardList },
@@ -271,6 +274,7 @@ const navigation = [
   { id: "automated", title: "Automated runs", icon: CheckCheck },
   { id: "comparisons", title: "Comparisons", icon: GitCompareArrows },
   { id: "baselines", title: "Visual baselines", icon: Layers3 },
+  { id: "sql-checks", title: "SQL checks", icon: Database },
 ] as const;
 
 function SignedIn({ user }: { user: User }) {
@@ -469,6 +473,8 @@ function SignedIn({ user }: { user: User }) {
                     projectId={projectId}
                     canReview={selected.role === "ADMIN" || selected.role === "APPROVER"}
                   />
+                ) : view === "sql-checks" ? (
+                  <SqlChecksView projectId={projectId} canWrite={canWrite} />
                 ) : view === "comparisons" ? (
                   <ComparisonsView key={projectId} projectId={projectId} canWrite={canWrite} />
                 ) : (
