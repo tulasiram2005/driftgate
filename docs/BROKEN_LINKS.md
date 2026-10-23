@@ -21,8 +21,10 @@ failed check with counts. These mean broken or unavailable, not necessarily a
 permanent 404. The trace contains the navigation evidence. An empty in-scope
 link set or an exceeded limit fails rather than silently claiming success.
 
-Scope is catalogue links, not a recursive whole-site crawl. Soft-404 HTML pages
-returning HTTP 200 are not detected. This check does not add link differences to
+Scope is catalogue links, not a recursive whole-site crawl. Threadline product
+links also check their fixed product-data endpoint, detecting its client-rendered
+HTTP 200 not-found shells. Other generic soft-404 pages are not detected.
+This check does not add link differences to
 the environment snapshot comparison table.
 
 Unit scope/limit tests pass locally. Browser fixtures cover clean destinations,

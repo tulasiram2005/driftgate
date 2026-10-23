@@ -1,5 +1,16 @@
 # Phase status
 
+## Latest checkpoint: client-rendered missing products (2026-10-23)
+
+- Found and fixed a link-check blind spot: Threadline serves an HTTP 200 shell
+  for unknown product slugs. Product links now also probe the fixed product-data
+  endpoint through the existing browser routing policy.
+- Local runner tests: 41 passed. Runner and storefront typechecks passed.
+- Added actual seeded-store verification for clean staging versus prod brokenLink
+  in Chromium, Firefox and WebKit. Execution remains NOT VERIFIED until CI runs.
+- Cloud migration, screenshot review and remaining seeded-defect verification
+  are still pending. Phase 5 has not started.
+
 ## Latest checkpoint: bounded link detection (2026-10-23)
 
 - Added `broken-links` to the runner, API contracts and automated-run selector.

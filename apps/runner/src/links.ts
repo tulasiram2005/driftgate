@@ -50,7 +50,25 @@ export async function checkLinks(page: Page, origin: string, environment: string
     for (const target of targets) {
       try {
         const response = await probe.goto(target, { waitUntil: "commit", timeout: 3000 });
-        if (!response || response.status() < 200 || response.status() >= 300) failures++;
+        if (!response || response.status() < 200 || response.status() >= 300) {
+          failures++;
+          continue;
+        }
+        // Threadline product pages are client-rendered HTTP 200 shells, even for missing slugs.
+        const pathname = new URL(target).pathname;
+        const prefix = `/${environment}/products/`;
+        if (pathname.startsWith(prefix)) {
+          const slug = pathname.slice(prefix.length);
+          if (!/^[a-z0-9-]{1,100}$/.test(slug)) {
+            failures++;
+            continue;
+          }
+          const product = await probe.goto(`${origin}/api/${environment}/products/${slug}`, {
+            waitUntil: "commit",
+            timeout: 3000,
+          });
+          if (!product || product.status() !== 200) failures++;
+        }
       } catch {
         failures++;
       }

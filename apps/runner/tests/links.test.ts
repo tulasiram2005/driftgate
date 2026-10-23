@@ -1,7 +1,35 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { linkTargets } from "../src/links.js";
+import { checkLinks, linkTargets } from "../src/links.js";
+import type { Page } from "@playwright/test";
 const origin = "http://127.0.0.1:3201";
+test("HTTP 200 product shells are checked against fixed product data and missing products fail", async () => {
+  for (const status of [200, 404]) {
+    const visited: string[] = [];
+    let closed = false;
+    const probe = {
+      route: async () => {},
+      goto: async (url: string) => {
+        visited.push(url);
+        return { status: () => (url.includes("/api/") ? status : 200) };
+      },
+      close: async () => {
+        closed = true;
+      },
+    };
+    const page = {
+      locator: () => ({ evaluateAll: async () => [`${origin}/staging/products/demo`] }),
+      context: () => ({ newPage: async () => probe }),
+    } as unknown as Page;
+    if (status === 200) await checkLinks(page, origin, "staging");
+    else await assert.rejects(checkLinks(page, origin, "staging"), /1 of 1/);
+    assert.deepEqual(visited, [
+      `${origin}/staging/products/demo`,
+      `${origin}/api/staging/products/demo`,
+    ]);
+    assert.equal(closed, true);
+  }
+});
 test("links stay in the exact origin and environment, deduplicate and ignore fragments", () => {
   assert.deepEqual(
     linkTargets(

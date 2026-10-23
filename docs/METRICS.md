@@ -436,3 +436,13 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   runner/web typechecks and scoped lint passed.
 - Local link browser fixture attempt failed before execution: Chromium MachPort
   bootstrap permission denied. No local browser pass is claimed for the new check.
+
+# 2026-10-23 soft-404 detection checkpoint
+
+- Runner suite: 41 tests passed, including mocked HTTP 200 product shells with
+  successful and missing product-data responses and probe cleanup.
+- Runner and demo-store typechecks passed.
+- Added a real Threadline seeded brokenLink browser test across all configured
+  engines. Not executed locally because browser launch remains blocked.
+- Quality run 39897098854 for preceding commit 9943033 was still running when
+  checked; no success claim is made for that run.
