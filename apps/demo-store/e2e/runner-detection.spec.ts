@@ -8,12 +8,18 @@ test("runner detects Threadline seeded broken links without flagging clean stagi
   test.setTimeout(120000);
   const origin = new URL(baseURL!).origin;
   if (origin !== "http://127.0.0.1:3200") throw new Error("Isolated local demo required");
-  const staging = await page.request.get(`${origin}/api/staging/config`);
-  expect(staging.ok()).toBe(true);
-  await runCheck(page, "broken-links", origin, "staging");
-  await expect(runCheck(page, "broken-links", origin, "prod")).rejects.toThrow(
-    /Broken or unavailable links/,
-  );
+  await test.step("Threadline startup responds", async () => {
+    const staging = await page.request.get(`${origin}/api/staging/config`, { timeout: 10000 });
+    expect(staging.ok()).toBe(true);
+  });
+  await test.step("Clean staging links pass", async () => {
+    await runCheck(page, "broken-links", origin, "staging");
+  });
+  await test.step("Seeded production link is detected", async () => {
+    await expect(runCheck(page, "broken-links", origin, "prod")).rejects.toThrow(
+      /Broken or unavailable links/,
+    );
+  });
 });
 
 test("runner detects Threadline seeded missing alt text without flagging clean staging", async ({

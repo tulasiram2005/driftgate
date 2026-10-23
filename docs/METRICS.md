@@ -471,3 +471,17 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   control, configured for Chromium, Firefox and WebKit.
 - Demo-store typecheck and scoped ESLint passed. The new browser case is
   pending hosted execution; these static checks do not establish detection.
+
+# 2026-10-23 hosted visual round-trip
+
+- Explicitly ran apps/api/integration/visual-cloud.ts against the existing
+  hosted API and private S3-compatible storage using temporary demo fixtures.
+- Approved and activated baseline through API. Comparing synthetic 1280x900
+  PNGs persisted exactly 1 changed pixel out of 1,152,000.
+- Signed difference download decoded to 1280x900; unsigned access returned 403.
+- Saved 1x1 ignore region produced 0 changed pixels, 1 ignored pixel, revision 1.
+- Cleanup removed temporary objects, comparisons, baseline, project and account.
+- This verifies hosted API/storage integration, not a new browser capture or
+  worker dispatch. Script ESLint passed.
+- CI 39926164946: seeded missing-alt detection passed in all three engines;
+  overall run failed on a 120s Chromium broken-link test timeout. No full pass claimed.

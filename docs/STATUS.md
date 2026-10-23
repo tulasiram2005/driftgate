@@ -1,5 +1,21 @@
 # Phase status
 
+## Latest checkpoint: hosted visual verification passed (2026-10-23)
+
+- Executed integration/visual-cloud.ts against the existing Render API, Neon
+  database and private storage. Baseline proposal, approval, activation, exact
+  one-pixel difference, private PNG download and saved ignore-region reuse passed.
+- Fixtures were synthetic 1280x900 PNGs, not fresh browser captures. Temporary
+  account, project, records and objects were removed. No worker was started.
+- Reviewed saved-rule editor screenshots at 360/768/1280/1920; no content overlap
+  found. SQL-results and ignore-region screenshots were reviewed previously.
+- Run 39926164946 passed seeded missing-alt detection in all three engines but
+  failed a Chromium broken-link timeout. Added bounded startup and named stages
+  for diagnosis; this is not yet a verified timeout fix. CodeQL passed.
+- Remaining: green browser rerun, remaining screenshot review, dedicated cloud
+  read-only SQL binding/execution and final seeded-defect measurement. Phase 5
+  has not started.
+
 ## Latest checkpoint: seeded accessibility verification added (2026-10-23)
 
 - Quality Gates 39898325492 and CodeQL 39898325437 passed for fd90276.
