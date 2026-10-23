@@ -1,5 +1,17 @@
 # Phase status
 
+## Phase 5 readiness evaluator checkpoint (2026-10-23)
+
+- Quality Gates 39971627029 and CodeQL 39971627252 passed for c2c430e.
+  This includes the new defect real-API browser scenario in hosted CI. Manual
+  review of its screenshot artifacts remains pending.
+- Added versioned mvp-1 readiness evaluator: explicit weights, missing/stale
+  evidence handling, hard S1/critical/accessibility blocks, threshold and evidence
+  fingerprint. Performance is explicitly excluded, not silently passed.
+- Readiness is a tested server-side foundation only. Release/gate persistence,
+  trusted evidence collection, readiness API/UI, hash chain and reports remain
+  pending, along with Jira and the remaining defect-management scope.
+
 ## Phase 5 defect screens checkpoint (2026-10-23)
 
 - Added Defects navigation, paginated list, reproduction detail, protected
