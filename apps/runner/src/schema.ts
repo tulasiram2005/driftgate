@@ -5,6 +5,7 @@ export const checks = [
   "api-contract",
   "accessibility",
   "snapshot",
+  "broken-links",
 ] as const;
 export type CheckId = (typeof checks)[number];
 export type BrowserId = "chromium" | "firefox" | "webkit";

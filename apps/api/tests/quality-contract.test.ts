@@ -5,8 +5,9 @@ test("quality checks can be requested without changing the existing default suit
   const base = { environment: "STAGING", matrix: [{ browser: "chromium", device: "desktop" }] };
   expect(automatedRunBody.parse(base).checks).toEqual(["catalogue", "product", "cart"]);
   expect(
-    automatedRunBody.parse({ ...base, checks: ["api-contract", "accessibility"] }).checks,
-  ).toHaveLength(2);
+    automatedRunBody.parse({ ...base, checks: ["api-contract", "accessibility", "broken-links"] })
+      .checks,
+  ).toHaveLength(3);
   expect(automatedRunBody.safeParse({ ...base, checks: ["sql-arbitrary"] }).success).toBe(false);
   expect(
     automatedRunBody.safeParse({ ...base, checks: ["accessibility", "accessibility"] }).success,

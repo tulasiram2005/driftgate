@@ -1,5 +1,19 @@
 # Phase status
 
+## Latest checkpoint: bounded link detection (2026-10-23)
+
+- Added `broken-links` to the runner, API contracts and automated-run selector.
+  It checks up to 20 catalogue destinations within the selected environment,
+  rejects redirects and reports non-2xx/timeouts through existing run results.
+  See BROKEN_LINKS.md for limitations; this is not a recursive crawl or snapshot diff.
+- Local checks: 40 runner tests, 92 API tests, runner/web typechecks and scoped lint pass.
+- Previous commit 91fb61b passed hosted Quality Gates run 39896580106 and CodeQL.
+  This verifies the previous rules/SQL browser fixtures and hover-contrast correction.
+- Local browser fixture retry still fails at Chromium launch with macOS MachPort
+  permission denied. New broken-link browser fixtures are NOT VERIFIED.
+- Phase 4 still needs final browser/cloud verification and demonstration against
+  the actual seeded bugs. Phase 5 has not started.
+
 ## Latest checkpoint: reusable rules (2026-10-23)
 
 - Project-wide environment-pair expected rules now persist with revision conflict protection.

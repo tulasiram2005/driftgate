@@ -427,3 +427,12 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   Chromium, Firefox and WebKit. The remaining web browser tests passed.
 - Corrected primary-button hover colors. New browser fixture and post-fix
   accessibility run are NOT VERIFIED at this checkpoint.
+
+# 2026-10-23 bounded link detection checkpoint
+
+- Commit 91fb61b: hosted Quality Gates run 39896580106 completed successfully;
+  CodeQL run 39896580108 also passed. This supersedes the previous contrast failure.
+- New link-check implementation: 40 runner unit tests and 92 API tests passed;
+  runner/web typechecks and scoped lint passed.
+- Local link browser fixture attempt failed before execution: Chromium MachPort
+  bootstrap permission denied. No local browser pass is claimed for the new check.

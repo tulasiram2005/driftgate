@@ -37,11 +37,11 @@ test("new quality checks remain declarative and bounded", () => {
     runId: "quality",
     environment: "staging",
     targetId: "threadline",
-    checks: ["api-contract", "accessibility"],
+    checks: ["api-contract", "accessibility", "broken-links"],
     matrix: [{ browser: "chromium", device: "desktop" }],
     retries: 0,
   };
-  assert.equal(parseJob(job).checks.length, 2);
+  assert.equal(parseJob(job).checks.length, 3);
   assert.throws(() => parseJob({ ...job, checks: ["api-contract", "api-contract"] }));
   assert.throws(() => parseJob({ ...job, script: "arbitrary" }));
 });

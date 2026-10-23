@@ -41,6 +41,7 @@ const checks = [
   "product",
   "cart",
   "api-contract",
+  "broken-links",
   "accessibility",
   "snapshot",
 ] as const;

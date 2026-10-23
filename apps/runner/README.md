@@ -37,7 +37,9 @@ private trace evidence for diagnosis. API must time out infrastructure failures.
 
 Validation commands: pnpm --filter @driftgate/runner typecheck, lint, test, build.
 Install Playwright browser binaries separately after dependencies are installed.
-Optional Phase 4 checks: `api-contract`, `accessibility`, and `snapshot`.
+Optional Phase 4 checks: `api-contract`, `accessibility`, `snapshot`, and `broken-links`.
+The link check is a bounded catalogue scan, not a recursive crawler; see
+`docs/BROKEN_LINKS.md` for scope and safety limits.
 Snapshot collection emits bounded data on the signed result callback and retains
 normal screenshot/video/trace evidence. Failed collection emits no snapshot.
 Performance checks remain outside this catalog.

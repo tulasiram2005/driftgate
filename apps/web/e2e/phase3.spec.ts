@@ -21,7 +21,7 @@ test("automated matrix: queued run, authenticated live results and attempt histo
   await page.getByRole("button", { name: "Automated runs", exact: true }).click();
   await expect(page.getByText("No automated runs yet", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Start automated run", exact: true }).click();
-  for (const check of ["snapshot", "api-contract", "accessibility"]) {
+  for (const check of ["snapshot", "api-contract", "accessibility", "broken-links"]) {
     await expect(page.getByRole("checkbox", { name: check, exact: true })).not.toBeChecked();
     await page.getByRole("checkbox", { name: check, exact: true }).check();
     await expect(page.getByRole("checkbox", { name: check, exact: true })).toBeChecked();

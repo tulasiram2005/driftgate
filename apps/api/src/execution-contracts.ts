@@ -8,6 +8,7 @@ export const checks = [
   "api-contract",
   "accessibility",
   "snapshot",
+  "broken-links",
 ] as const;
 export const cell = z
   .object({

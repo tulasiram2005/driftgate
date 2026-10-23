@@ -3,6 +3,7 @@ import type { CheckId, Job } from "./schema.js";
 import { checkAccessibility, QualityCheckError, validateCatalogue } from "./quality.js";
 import { collectThreadlineSnapshot } from "./snapshot.js";
 import type { EnvironmentSnapshot } from "./drift.js";
+import { checkLinks } from "./links.js";
 export async function runCheck(
   page: Page,
   check: CheckId,
@@ -40,7 +41,10 @@ export async function runCheck(
     timeout: 20000,
   });
   expect(response?.status()).toBe(200);
-  if (check === "accessibility") {
+  if (check === "broken-links") {
+    await expect(page.getByRole("searchbox", { name: "Search products" })).toBeVisible();
+    await checkLinks(page, origin, environment);
+  } else if (check === "accessibility") {
     await expect(page.getByRole("searchbox", { name: "Search products" })).toBeVisible();
     await checkAccessibility(page);
   } else if (check === "catalogue") {
