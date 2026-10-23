@@ -207,3 +207,112 @@ it("snapshots reproduction once and enforces audited, revision-protected workflo
     ).status,
   ).toBe(400);
 });
+
+it("aggregates project-wide aging and latest closure without counting reopened defects", async () => {
+  const projectId = projects[1]!;
+  const createdAt = new Date("2026-01-01T00:00:00Z");
+  const first = await db.defect.create({
+    data: {
+      projectId,
+      resultId: "demo-metric-closed",
+      title: "Demo closed",
+      severity: "S2",
+      status: "CLOSED",
+      createdBy: users.ADMIN!.id,
+      reproduction: {},
+      createdAt,
+      events: {
+        create: [
+          {
+            actorId: users.ADMIN!.id,
+            toStatus: "CLOSED",
+            comment: "First close",
+            createdAt: new Date("2026-01-01T01:00:00Z"),
+          },
+          {
+            actorId: users.ADMIN!.id,
+            toStatus: "CLOSED",
+            comment: "Latest close",
+            createdAt: new Date("2026-01-01T03:00:00Z"),
+          },
+        ],
+      },
+    },
+  });
+  await db.defect.create({
+    data: {
+      projectId,
+      resultId: "demo-metric-reopened",
+      title: "Demo reopened",
+      severity: "S1",
+      status: "REOPENED",
+      createdBy: users.ADMIN!.id,
+      reproduction: {},
+      createdAt,
+      events: {
+        create: {
+          actorId: users.ADMIN!.id,
+          toStatus: "CLOSED",
+          comment: "Earlier close",
+          createdAt: new Date("2026-01-01T20:00:00Z"),
+        },
+      },
+    },
+  });
+  await db.defect.create({
+    data: {
+      projectId,
+      resultId: "demo-metric-no-history",
+      title: "Demo missing history",
+      severity: "S3",
+      status: "CLOSED",
+      createdBy: users.ADMIN!.id,
+      reproduction: {},
+      createdAt,
+    },
+  });
+  const response = await request(app)
+    .get(`${path(projectId)}/metrics`)
+    .set(auth());
+  expect(response.status).toBe(200);
+  expect(response.body.data).toMatchObject({
+    total: 3,
+    open: 1,
+    closed: 2,
+    openS1: 1,
+    meanResolutionHours: 3,
+    resolvedWithHistory: 1,
+  });
+  expect(response.body.data.oldestOpenHours).toBeGreaterThan(0);
+  expect(
+    (
+      await request(app)
+        .get(`${path(projectId)}/metrics`)
+        .set(auth("OUTSIDER"))
+    ).status,
+  ).toBe(404);
+  expect((await request(app).get(`${path(projectId)}/metrics`)).status).toBe(401);
+  await db.defect.update({ where: { id: first.id }, data: { status: "REOPENED" } });
+  expect(
+    (
+      await request(app)
+        .get(`${path(projectId)}/metrics`)
+        .set(auth())
+    ).body.data.meanResolutionHours,
+  ).toBeNull();
+  await db.defect.deleteMany({ where: { projectId } });
+  expect(
+    (
+      await request(app)
+        .get(`${path(projectId)}/metrics`)
+        .set(auth())
+    ).body.data,
+  ).toMatchObject({
+    total: 0,
+    open: 0,
+    closed: 0,
+    oldestOpenHours: null,
+    meanResolutionHours: null,
+    resolvedWithHistory: 0,
+  });
+});

@@ -400,6 +400,7 @@ export function createApp(
   document("put", `${base}/releases/:releaseId/gates/:environment/runs`, gateRunsBody);
   document("post", `${base}/defects`, defectBody);
   document("get", `${base}/defects`);
+  document("get", `${base}/defects/metrics`);
   document("get", `${base}/defects/:defectId`);
   document("post", `${base}/defects/:defectId/transitions`, defectTransitionBody);
   document("post", `${base}/sql-checks`, sqlRunBody);

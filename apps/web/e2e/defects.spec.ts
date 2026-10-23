@@ -54,11 +54,24 @@ test("real API: failed result creates a defect with persisted status history", a
   await page.getByRole("button", { name: "Create defect", exact: true }).click();
   await expect(page.getByText("Defect saved: S1 · NEW", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Defects", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Project-wide defect metrics" })).toBeVisible();
+  await expect(page.getByText("Mean time to closure", { exact: true })).toBeVisible();
   await page.getByLabel("Filter severity").selectOption("S4");
   await expect(page.getByRole("heading", { name: "No matching defects" })).toBeVisible();
   await page.getByRole("button", { name: "Clear filters", exact: true }).click();
   await page.getByLabel("Search defects").fill("checkout");
   await page.getByRole("button", { name: "Search", exact: true }).click();
+  for (const width of [360, 768, 1280, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    expect(
+      (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+        .violations,
+    ).toEqual([]);
+    await page.screenshot({ path: info.outputPath(`defect-metrics-${width}.png`), fullPage: true });
+  }
   await page.getByRole("button", { name: "Demo checkout total", exact: true }).click();
   await expect(page.getByText("Demo total mismatch", { exact: true })).toBeVisible();
   await expect(page.getByText("Expected: Correct total", { exact: true })).toBeVisible();

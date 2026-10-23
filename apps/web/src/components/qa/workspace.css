@@ -957,6 +957,18 @@
     flex-wrap: wrap;
   }
 }
+.qa-defect-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 16px;
+  margin-block: 16px 24px;
+}
+.qa-defect-metrics dd {
+  margin: 6px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
 @media (prefers-reduced-motion: reduce) {
   .qa-root *,
   .qa-root *::before,

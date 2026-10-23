@@ -1,5 +1,16 @@
 # Phase status
 
+## Phase 5 defect aging and resolution metrics (2026-10-23)
+
+- Added project-wide aggregate API and responsive summary for open/closed defects,
+  open S1 count, oldest open age, mean time to closure and valid resolution sample.
+- Mean time is creation to latest closure for currently closed defects. Reopened
+  defects and invalid/missing closure history are excluded; absent samples are null.
+- API tests: 118 passed. Browser metrics/screenshot assertions added; execution
+  and manual review remain NOT VERIFIED pending hosted CI.
+- Defect board, Jira, release readiness integration, persisted sign-off and reports
+  remain pending. All phases, including Phase 6 polish, remain required.
+
 ## Phase 5 project-wide defect filters (2026-10-23)
 
 - Added server-side title search, status and severity filters before pagination,

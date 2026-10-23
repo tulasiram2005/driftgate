@@ -586,3 +586,13 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   invalid status/severity and overlong search were checked against isolated DB.
 - Browser test extended, not executed locally due to previously established
   macOS browser-launch restriction. Updated UI screenshots remain NOT VERIFIED.
+
+# Phase 5 defect metrics checkpoint (2026-10-23)
+
+- API suite: 16 files, 118 tests PASS. New aggregate test verifies exact 3-hour
+  latest closure, reopened exclusion, missing-history exclusion, no-sample nulls,
+  empty project totals, authorization and cross-project isolation.
+- Aggregation uses parameterized SQL over all project defects, not UI pagination.
+  UTC timestamp arithmetic matches Prisma timestamp storage.
+- Extended browser scenario for metrics visibility and four-width screenshots;
+  new browser assertions and image review are NOT VERIFIED locally.

@@ -99,6 +99,19 @@ export function DefectsView({ projectId, role }: { projectId: string; role: stri
       page<Defect>(projectPath(projectId, `/defects?${params}`), pageParam),
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
+  const metrics = useQuery({
+    queryKey: ["project", projectId, "defect-metrics"],
+    queryFn: () =>
+      api<{
+        total: number;
+        open: number;
+        closed: number;
+        openS1: number;
+        oldestOpenHours: number | null;
+        meanResolutionHours: number | null;
+        resolvedWithHistory: number;
+      }>(projectPath(projectId, "/defects/metrics")),
+  });
   if (selected)
     return (
       <DefectDetail
@@ -112,6 +125,46 @@ export function DefectsView({ projectId, role }: { projectId: string; role: stri
   return (
     <>
       <SectionHeading title="Defects" />
+      <ErrorNotice error={metrics.error} retry={() => void metrics.refetch()} />
+      {metrics.data && (
+        <section aria-label="Project-wide defect metrics">
+          <h2>Project totals</h2>
+          <dl className="qa-defect-metrics">
+            <div>
+              <dt>Open</dt>
+              <dd>{metrics.data.open}</dd>
+            </div>
+            <div>
+              <dt>Closed</dt>
+              <dd>{metrics.data.closed}</dd>
+            </div>
+            <div>
+              <dt>Open S1</dt>
+              <dd>{metrics.data.openS1}</dd>
+            </div>
+            <div>
+              <dt>Oldest open</dt>
+              <dd>
+                {metrics.data.oldestOpenHours === null
+                  ? "Not available"
+                  : `${metrics.data.oldestOpenHours.toFixed(1)} h`}
+              </dd>
+            </div>
+            <div>
+              <dt>Mean time to closure</dt>
+              <dd>
+                {metrics.data.meanResolutionHours === null
+                  ? "Not available"
+                  : `${metrics.data.meanResolutionHours.toFixed(1)} h`}
+              </dd>
+            </div>
+            <div>
+              <dt>Resolution sample</dt>
+              <dd>{metrics.data.resolvedWithHistory}</dd>
+            </div>
+          </dl>
+        </section>
+      )}
       <form
         className="qa-form"
         onSubmit={(event) => {

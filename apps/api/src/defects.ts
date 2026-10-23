@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Express, RequestHandler } from "express";
 import type { Prisma, PrismaClient } from "../generated/client/index.js";
+import { defectMetrics } from "./defect-metrics.js";
 
 const id = z.string().min(1).max(100);
 const status = z.enum(["NEW", "OPEN", "IN_PROGRESS", "FIXED", "RETEST", "CLOSED", "REOPENED"]);
@@ -107,6 +108,9 @@ export function mountDefects(
       data: rows.slice(0, query.limit),
       nextCursor: rows.length > query.limit ? rows[query.limit - 1]!.id : null,
     });
+  });
+  app.get(`${base}/metrics`, guard(), async (req, res) => {
+    res.json({ data: await defectMetrics(db, id.parse(req.params.projectId)) });
   });
   app.get(`${base}/:defectId`, guard(), async (req, res) => {
     const data = await db.defect.findFirst({
