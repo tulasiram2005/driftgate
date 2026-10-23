@@ -36,6 +36,7 @@ enum Role {
 }
 
 model Project {
+  defects Defect[]
   expectedRuleSets Json @default("{}")
   expectedRulesRevision Int @default(0)
   id           String @id @default(cuid())
@@ -52,6 +53,36 @@ model Project {
   visualBaselines VisualBaseline[]
   visualComparisons VisualComparison[]
   sqlCheckRuns SqlCheckRun[]
+}
+
+model Defect {
+  id String @id @default(cuid())
+  projectId String
+  resultId String
+  title String
+  severity String
+  status String @default("NEW")
+  revision Int @default(0)
+  reproduction Json
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  events DefectEvent[]
+  @@unique([projectId, resultId])
+  @@index([projectId, id])
+}
+
+model DefectEvent {
+  id String @id @default(cuid())
+  defectId String
+  fromStatus String?
+  toStatus String
+  comment String
+  actorId String
+  createdAt DateTime @default(now())
+  defect Defect @relation(fields: [defectId], references: [id], onDelete: Cascade)
+  @@index([defectId, createdAt])
 }
 
 model SqlCheckRun {

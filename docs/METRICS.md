@@ -519,3 +519,17 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   environment validation and seeded total/orphan detection. Cleanup completed.
 - Phase 4 is complete within the approved MVP scope. This is not a zero-bug,
   full deployment, real-device or complete bug-bank detection claim.
+
+# Phase 5 defect API checkpoint (2026-10-23)
+
+- Local isolated driftgate_test migration: 20261023070000_defects applied.
+- API typecheck and API lint: PASS.
+- API test suite: 13 files, 96 tests PASS, including three new defect tests.
+- Defect assertions cover membership/role denial, cross-project result/detail/
+  cursor isolation, non-failed and malformed input rejection, idempotent create,
+  immutable reproduction snapshots, automated failure detail fallback, legal
+  transitions, developer closure denial and simultaneous revision conflicts.
+- Existing configured coverage scope (app/config/contracts, not the new defect
+  module): statements 91.71%, branches 71.66%, functions 86.66%, lines 93.52%.
+- git diff --check: PASS. New cloud migration, hosted CI and UI/browser checks
+  remain NOT VERIFIED. No cloud worker started or paid services provisioned.

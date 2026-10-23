@@ -1,5 +1,19 @@
 # Phase status
 
+## Phase 5 started: defect API foundation (2026-10-23)
+
+- Failed-result defect creation snapshots steps, expected outcomes, actual
+  notes/failure details, environment, browser, device and protected evidence IDs.
+- Duplicate creation reuses the existing defect. Project isolation, role checks,
+  status transitions, revision conflicts and transactional actor/event history
+  are implemented with API documentation and a local database migration.
+- This is a backend checkpoint, not completion of Phase 5. Defect board/list UI,
+  Jira encrypted integration and polling, aging/MTTR, release readiness scoring,
+  named hash-chained sign-off and PDF reports remain pending.
+- New cloud migration, hosted tests and browser verification are NOT VERIFIED.
+  No worker was restarted and no paid resource was created.
+- Phase 4 checkpoint fcfe582 has been pushed to GitHub.
+
 ## Phase 4 complete within approved MVP scope (2026-10-23)
 
 - Quality Gates 39929634240 and CodeQL 39929634248 passed for dff31ef.
