@@ -557,3 +557,13 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   percentage is claimed for it. No real release readiness score was measured.
 - Release collection/persistence/UI and sign-off remain pending. No paid resources
   created, cloud migration applied or temporary worker restarted in this checkpoint.
+
+# Phase 5 release persistence checkpoint (2026-10-23)
+
+- Local migration 20261023080000_release_gates: PASS after network permission grant.
+- API typecheck/lint: PASS. API suite: 15 files, 110 tests PASS.
+- New tests cover atomic ordered gates, membership/write restrictions, strict
+  request shape, project isolation, cursor isolation, mismatched environment,
+  missing/duplicate/foreign runs, concurrent revisions and removal of run bindings.
+- No readiness approval endpoint exists yet. No hosted migration or worker restart
+  performed; cloud verification remains pending.

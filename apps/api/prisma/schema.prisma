@@ -36,6 +36,7 @@ enum Role {
 }
 
 model Project {
+  releases Release[]
   defects Defect[]
   expectedRuleSets Json @default("{}")
   expectedRulesRevision Int @default(0)
@@ -53,6 +54,29 @@ model Project {
   visualBaselines VisualBaseline[]
   visualComparisons VisualComparison[]
   sqlCheckRuns SqlCheckRun[]
+}
+
+model Release {
+  id String @id @default(cuid())
+  projectId String
+  name String
+  createdBy String
+  createdAt DateTime @default(now())
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  gates ReleaseGate[]
+  @@index([projectId, id])
+}
+
+model ReleaseGate {
+  id String @id @default(cuid())
+  releaseId String
+  environment String
+  position Int
+  revision Int @default(0)
+  runIds String[] @default([])
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  @@unique([releaseId, environment])
+  @@unique([releaseId, position])
 }
 
 model Defect {

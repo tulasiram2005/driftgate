@@ -1,5 +1,21 @@
 # Data model
 
+## Phase 5 additions
+
+```mermaid
+erDiagram
+  Project ||--o{ Defect : owns
+  Defect ||--o{ DefectEvent : history
+  Project ||--o{ Release : owns
+  Release ||--|{ ReleaseGate : environments
+```
+
+Defects preserve reproduction snapshots and original result IDs. Release gates
+store ordered environment names, optimistic revisions and selected run IDs.
+Run references are validated for project/environment by the API and must be
+revalidated when evaluating readiness. They are not foreign keys, approvals or
+immutable evidence. Sign-off and audit-chain persistence are not implemented yet.
+
 ## Implemented Threadline schema
 
 The separate Threadline database has migration `202610190001_threadline` under `apps/demo-store/prisma/migrations`. Products and sizes are scoped by environment. Orders store an immutable JSON line-item snapshot, integer totals, request hash and a unique environment/idempotency-key pair. Seeding creates missing records without resetting stock or deleting orders.

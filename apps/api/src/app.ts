@@ -24,6 +24,7 @@ import { mountVisualComparisons, visualComparisonBody } from "./visual-compariso
 import { storage } from "./storage.js";
 import { mountSqlResults, sqlRunBody, type SqlExecutor } from "./sql-results.js";
 import { mountDefects, defectBody, defectTransitionBody } from "./defects.js";
+import { mountReleases, releaseBody, gateRunsBody } from "./releases.js";
 import { mountCallback, mountExecution, publicRun } from "./execution.js";
 import { automatedRunBody, callbackBody, screenshotBody } from "./execution-contracts.js";
 import type { EvidenceStorage } from "./storage.js";
@@ -392,6 +393,11 @@ export function createApp(
   mountVisualBaselines(app, db, guard, fail);
   mountSqlResults(app, db, config, guard, fail, sqlExecutor);
   mountDefects(app, db, guard, fail);
+  mountReleases(app, db, guard, fail);
+  document("post", `${base}/releases`, releaseBody);
+  document("get", `${base}/releases`);
+  document("get", `${base}/releases/:releaseId`);
+  document("put", `${base}/releases/:releaseId/gates/:environment/runs`, gateRunsBody);
   document("post", `${base}/defects`, defectBody);
   document("get", `${base}/defects`);
   document("get", `${base}/defects/:defectId`);

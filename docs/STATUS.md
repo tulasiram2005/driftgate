@@ -1,5 +1,16 @@
 # Phase status
 
+## Phase 5 saved releases and gate bindings (2026-10-23)
+
+- Release creation atomically saves four ordered environment gates. Paginated
+  release history and details enforce project membership; writes require QA/Admin.
+- Gate run bindings validate project and environment, reject duplicate IDs and
+  protect concurrent edits with revisions. Bindings are references, not approvals.
+- Local release_gates migration, API typecheck/lint and 110 API tests passed.
+- Cloud migration and hosted checks for this checkpoint are not yet verified.
+  Readiness evidence collection, release UI, sign-off, Jira, PDF and remaining
+  defect scope are still pending. Phase 5 remains in progress.
+
 ## Phase 5 readiness evaluator checkpoint (2026-10-23)
 
 - Quality Gates 39971627029 and CodeQL 39971627252 passed for c2c430e.
