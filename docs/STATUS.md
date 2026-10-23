@@ -1,5 +1,18 @@
 # Phase status
 
+## Phase 5 release screens (2026-10-23)
+
+- Added release history, creation, ordered environment gates and run-selection
+  dialogs for QA/Admin. Other project members can inspect saved releases.
+- Selection includes manual and automated runs for the matching environment,
+  preserves unavailable references for explicit removal and caps bindings at 100.
+- Writes include the gate revision; conflicts offer refresh instead of overwriting.
+  The UI explicitly marks readiness unevaluated and sign-off absent.
+- Web lint, production build/TypeScript and 40 existing web unit tests passed.
+  New real-API browser coverage and screenshot review are pending hosted execution.
+- Trusted readiness collection, gate criteria, persistent sign-off, Jira and PDF
+  reporting remain unfinished. No phase-completion claim is made.
+
 ## Hosted verification blocker (2026-10-23)
 
 - Quality Gates run 39979148539 passed typecheck, lint, unit tests, restricted

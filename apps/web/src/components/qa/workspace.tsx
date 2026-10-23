@@ -23,6 +23,7 @@ import {
   Palette,
   Play,
   Plus,
+  Rocket,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -57,6 +58,7 @@ import { ComparisonsView } from "./comparisons";
 import { BaselinesView } from "./baselines";
 import { SqlChecksView } from "./sql-checks";
 import { DefectsView } from "./defects";
+import { ReleasesView } from "./releases";
 import "./workspace.css";
 
 const sessionKey = ["session"] as const;
@@ -267,7 +269,8 @@ type View =
   | "comparisons"
   | "baselines"
   | "sql-checks"
-  | "defects";
+  | "defects"
+  | "releases";
 const navigation = [
   { id: "requirements", title: "Requirements", icon: BookOpen },
   { id: "cases", title: "Test cases", icon: ClipboardList },
@@ -278,6 +281,7 @@ const navigation = [
   { id: "baselines", title: "Visual baselines", icon: Layers3 },
   { id: "sql-checks", title: "SQL checks", icon: Database },
   { id: "defects", title: "Defects", icon: ClipboardList },
+  { id: "releases", title: "Releases", icon: Rocket },
 ] as const;
 
 function SignedIn({ user }: { user: User }) {
@@ -480,6 +484,8 @@ function SignedIn({ user }: { user: User }) {
                   <SqlChecksView projectId={projectId} canWrite={canWrite} />
                 ) : view === "defects" ? (
                   <DefectsView projectId={projectId} role={selected.role} />
+                ) : view === "releases" ? (
+                  <ReleasesView projectId={projectId} canWrite={canWrite} />
                 ) : view === "comparisons" ? (
                   <ComparisonsView key={projectId} projectId={projectId} canWrite={canWrite} />
                 ) : (

@@ -20,8 +20,9 @@ The MVP is an intermediate milestone, not the final delivery.
 - Jira Cloud: server-side encrypted token configuration, issue creation with
   reproduction/evidence references, issue link-back, bounded status polling and
   failure/retry handling. A connected assistant plugin is not application integration.
-- Releases: UI for saved releases and environment gate run selection. Persistence
-  and same-project/environment validation are built.
+- Releases: saved-release UI and environment gate run selection are built,
+  including persistence and same-project/environment validation. New browser
+  checks and screenshot review remain pending.
 - Readiness: collect authoritative project records, preserve actual source dates,
   handle missing/deleted/changed evidence and expose results through API/UI. The
   versioned evaluator is built but is not yet connected to release gates.
