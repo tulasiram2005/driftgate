@@ -25,6 +25,19 @@ afterEach(() => {
 });
 
 describe("memory-only authentication", () => {
+  it("loads Jira metadata and encryption availability through authenticated requests", async () => {
+    const { acceptSession, getJiraSettings, fetchMock } = await setup();
+    acceptSession(session);
+    fetchMock.mockResolvedValueOnce(Response.json({ data: null, available: false }));
+    expect(await getJiraSettings("project-1")).toEqual({ data: null, available: false });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/projects/project-1/integrations/jira",
+      expect.objectContaining({
+        cache: "no-store",
+        headers: { Authorization: "Bearer access-original" },
+      }),
+    );
+  });
   it("authenticates event streams and sends the resume cursor in a header", async () => {
     const { acceptSession, runEvents, fetchMock } = await setup();
     acceptSession(session);

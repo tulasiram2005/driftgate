@@ -1,5 +1,19 @@
 # Phase status
 
+## Phase 5 Jira settings screen (2026-10-24)
+
+- Added admin-only Integrations navigation and Jira configuration form, unavailable
+  state when server encryption is missing, revision-conflict reload and explicit
+  saved-but-not-verified status. Credentials clear after each save attempt and are
+  excluded from React Query mutation caches and browser storage.
+- Web unit tests: 41 passed; web TypeScript and lint passed.
+- Added three mocked browser scenarios for save/conflict recovery, unavailable
+  encryption and non-admin access, including responsive screenshots and axe checks.
+  These browser scenarios are NOT VERIFIED locally: production build failed on
+  restricted port binding; development preview failed on macOS FSEvent startup.
+- Still pending: live connection verification, defect export/reconciliation,
+  polling, cloud migration and confirmed Free-plan status. Phase 5 is not complete.
+
 ## Phase 5 persisted Jira configuration (2026-10-24)
 
 - Added project-admin-only settings GET/PUT, encrypted credential persistence,

@@ -325,6 +325,10 @@
   padding: 40px 0;
   color: var(--text-dim);
 }
+.qa-integration-form {
+  max-width: 640px;
+}
+
 .qa-form {
   display: grid;
   gap: 20px;

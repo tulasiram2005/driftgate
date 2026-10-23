@@ -57,7 +57,7 @@ let refreshRequest: Promise<User | null> | null = null;
 
 async function readEnvelope<T>(
   response: Response,
-): Promise<{ data: T; nextCursor?: string | null }> {
+): Promise<{ data: T; nextCursor?: string | null; available?: boolean }> {
   const body = await response.json().catch(() => null);
   if (!response.ok) {
     throw new ApiError(
@@ -154,6 +154,21 @@ export async function api<T>(
   });
   if (response.ok && response.status === 204) return undefined as T;
   return readData<T>(response);
+}
+
+export type JiraSettings = {
+  projectId: string;
+  site: string;
+  jiraProjectKey: string;
+  issueTypeId: string;
+  revision: number;
+  updatedAt: string;
+};
+
+export async function getJiraSettings(projectId: string) {
+  return readEnvelope<JiraSettings | null>(
+    await authorizedFetch(projectPath(projectId, "/integrations/jira")),
+  );
 }
 
 export async function page<T>(path: string, cursor?: string | null) {

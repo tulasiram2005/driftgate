@@ -1,5 +1,16 @@
 # Measured evidence
 
+## Jira settings UI verification (2026-10-24)
+
+- Web unit suite: 3 files, 41 tests passed (239 ms), including authenticated Jira
+  metadata retrieval and encryption availability. Not component/browser coverage.
+- Web TypeScript and lint passed after new browser tests were added.
+- Production build NOT VERIFIED: first attempt failed fetching Google Fonts;
+  retry after network permission failed with Turbopack port-binding EPERM.
+- Development preview exited with unable-to-start-FSEvent-stream error.
+- Three new mocked Playwright scenarios are authored but NOT EXECUTED locally.
+  Screenshots, accessibility checks, hosted CI and live Jira are NOT VERIFIED.
+
 ## Jira persisted configuration verification (2026-10-24)
 
 - Applied migration 20261024000000_jira_integration to local driftgate_test.

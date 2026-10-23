@@ -5,6 +5,9 @@ https://ramtulasi062005.atlassian.net/jira/software/projects/KAN/boards/2
 
 ## Implemented locally
 
+- Project-admin Integrations screen loads public metadata, saves full replacement
+  credentials and reloads on revision conflicts. Email/token inputs clear after
+  save attempts. Saved settings explicitly remain connection-not-verified.
 - `GET /api/v1/projects/:projectId/integrations/jira`: project-admin-only
   non-secret configuration, revision and server encryption availability.
 - `PUT /api/v1/projects/:projectId/integrations/jira`: project-admin-only save.
@@ -23,7 +26,7 @@ https://ramtulasi062005.atlassian.net/jira/software/projects/KAN/boards/2
 
 ## Still pending
 
-Configuration UI, live verification, defect export/link persistence, duplicate
+Browser verification of the configuration UI, live verification, defect export/link persistence, duplicate
 prevention and ambiguous-outcome reconciliation, status polling, disconnect/key
 rotation workflows and hosted migration. No live credentials are configured.
 Do not treat the connector's Jira access as application authentication.

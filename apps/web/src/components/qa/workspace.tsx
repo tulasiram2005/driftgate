@@ -23,6 +23,7 @@ import {
   Palette,
   Play,
   Plus,
+  Plug,
   Rocket,
   ShieldCheck,
   Users,
@@ -59,6 +60,7 @@ import { BaselinesView } from "./baselines";
 import { SqlChecksView } from "./sql-checks";
 import { DefectsView } from "./defects";
 import { ReleasesView } from "./releases";
+import { IntegrationsView } from "./integrations";
 import "./workspace.css";
 
 const sessionKey = ["session"] as const;
@@ -270,7 +272,8 @@ type View =
   | "baselines"
   | "sql-checks"
   | "defects"
-  | "releases";
+  | "releases"
+  | "integrations";
 const navigation = [
   { id: "requirements", title: "Requirements", icon: BookOpen },
   { id: "cases", title: "Test cases", icon: ClipboardList },
@@ -282,6 +285,7 @@ const navigation = [
   { id: "sql-checks", title: "SQL checks", icon: Database },
   { id: "defects", title: "Defects", icon: ClipboardList },
   { id: "releases", title: "Releases", icon: Rocket },
+  { id: "integrations", title: "Integrations", icon: Plug },
 ] as const;
 
 function SignedIn({ user }: { user: User }) {
@@ -374,7 +378,7 @@ function SignedIn({ user }: { user: User }) {
                   key={id}
                   className="qa-nav-button"
                   aria-current={view === id ? "page" : undefined}
-                  disabled={!selected}
+                  disabled={!selected || (id === "integrations" && selected.role !== "ADMIN")}
                   onClick={() => setView(id)}
                 >
                   <Icon size={18} aria-hidden="true" />
@@ -484,6 +488,8 @@ function SignedIn({ user }: { user: User }) {
                   <SqlChecksView projectId={projectId} canWrite={canWrite} />
                 ) : view === "defects" ? (
                   <DefectsView projectId={projectId} role={selected.role} />
+                ) : view === "integrations" ? (
+                  <IntegrationsView projectId={projectId} isAdmin={selected.role === "ADMIN"} />
                 ) : view === "releases" ? (
                   <ReleasesView projectId={projectId} canWrite={canWrite} />
                 ) : view === "comparisons" ? (
