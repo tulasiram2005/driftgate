@@ -9,7 +9,9 @@ test("HTTP 200 product shells are checked against fixed product data and missing
     let closed = false;
     const probe = {
       route: async () => {},
-      goto: async (url: string) => {
+      goto: async (url: string, options: { waitUntil: string; timeout: number }) => {
+        assert.equal(options.waitUntil, "domcontentloaded");
+        assert.equal(options.timeout, 3000);
         visited.push(url);
         return { status: () => (url.includes("/api/") ? status : 200) };
       },

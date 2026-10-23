@@ -49,7 +49,9 @@ export async function checkLinks(page: Page, origin: string, environment: string
     });
     for (const target of targets) {
       try {
-        const response = await probe.goto(target, { waitUntil: "commit", timeout: 3000 });
+        // Finish document parsing before navigating again or closing the probe tab.
+        // Chromium can stall closing a tab whose final navigation only committed.
+        const response = await probe.goto(target, { waitUntil: "domcontentloaded", timeout: 3000 });
         if (!response || response.status() < 200 || response.status() >= 300) {
           failures++;
           continue;
@@ -64,7 +66,7 @@ export async function checkLinks(page: Page, origin: string, environment: string
             continue;
           }
           const product = await probe.goto(`${origin}/api/${environment}/products/${slug}`, {
-            waitUntil: "commit",
+            waitUntil: "domcontentloaded",
             timeout: 3000,
           });
           if (!product || product.status() !== 200) failures++;

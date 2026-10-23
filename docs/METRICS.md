@@ -485,3 +485,14 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   worker dispatch. Script ESLint passed.
 - CI 39926164946: seeded missing-alt detection passed in all three engines;
   overall run failed on a 120s Chromium broken-link test timeout. No full pass claimed.
+
+# 2026-10-23 Chromium timeout diagnosis
+
+- CI 39927297310 repeated the Chromium timeout. Extracted Playwright trace:
+  final navigation completed at approximately 4298ms; Page.close began at
+  4299ms with no completion before the test timeout.
+- Changed link probes to DOMContentLoaded, preserving the 3s limit, asset
+  blocking and redirect validation. Runner unit suite: 41/41 passed; scoped lint
+  passed. A hosted browser pass is still required.
+- Reviewed comparison findings at 360/768/1280/1920 widths. Cloud SQL database
+  inspection found postgres and driftgate only; no Threadline database yet.

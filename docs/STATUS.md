@@ -1,5 +1,17 @@
 # Phase status
 
+## Latest checkpoint: Chromium probe-close stall (2026-10-23)
+
+- Run 39927297310 again timed out in Chromium; its trace shows the final probe
+  navigation completed around 4.3s, then Page.close never returned before 120s.
+- Probe navigation now waits for DOMContentLoaded instead of commit, retaining
+  the 3s request timeout and existing routing/redirect restrictions. Hosted
+  browser rerun is required before claiming this resolves the stall.
+- Cloud SQL inspection confirms there is no Threadline database on the existing
+  dedicated server yet. SQL documentation now reflects implemented persistence/UI.
+- Reviewed comparison-findings screenshots at all four required widths; tables
+  remain within a horizontal scroll container. Phase 5 has not started.
+
 ## Latest checkpoint: hosted visual verification passed (2026-10-23)
 
 - Executed integration/visual-cloud.ts against the existing Render API, Neon

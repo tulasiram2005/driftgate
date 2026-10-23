@@ -1,7 +1,8 @@
 # Read-only Threadline checks
 
-This is an operator-side Phase 4 component, not yet a dashboard or cloud integration.
-It reads the Threadline database, never the DriftGate application database.
+Phase 4 includes an operator CLI and project-bound API execution with persisted
+results and a SQL checks screen. See SQL_RESULTS.md for the API/UI contract.
+Both read the Threadline database, never the DriftGate application database.
 
 Configure `THREADLINE_READONLY_DATABASE_URL` privately in the process environment
 and set `SQL_CHECK_ENVIRONMENT` to staging, uat, preprod or prod. Then run:
@@ -49,4 +50,9 @@ TEST_DATABASE_URL='<local threadline_test admin URL>' pnpm --filter @driftgate/a
 
 This integration passed locally on 2026-10-21. Negative-stock detection is a
 defensive query; the current demo database already prevents negative stock with
-a constraint. Cloud SQL verification and result persistence are still pending.
+a constraint. Result persistence and its UI are implemented and tested. Cloud SQL
+verification is still pending: the existing cloud server currently contains only
+postgres and driftgate, not a separate Threadline database. Provision the demo
+database and restricted role before setting THREADLINE_READONLY_DATABASE_URL and
+THREADLINE_SQL_PROJECT_ID on the API. Never reuse the DriftGate owner's connection
+as the SQL checker credential.
