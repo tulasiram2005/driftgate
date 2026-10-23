@@ -1,5 +1,6 @@
 "use client";
 import { ProposeBaseline } from "./baselines";
+import { CreateDefect } from "./defects";
 
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -382,6 +383,9 @@ function AutomatedDetail({
                 {result.browser} · {result.device}
               </p>
               <RunStatus value={result.flaky ? "FLAKY" : result.status} />
+              {canWrite && result.status === "FAIL" && (
+                <CreateDefect key={result.id} projectId={projectId} resultId={result.id} />
+              )}
               <h3>Attempt history</h3>
               {!result.attempts?.length ? (
                 <p className="muted">No attempts recorded yet.</p>

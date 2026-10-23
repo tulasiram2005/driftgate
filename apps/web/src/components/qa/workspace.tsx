@@ -56,6 +56,7 @@ import { AutomatedRuns } from "./automated";
 import { ComparisonsView } from "./comparisons";
 import { BaselinesView } from "./baselines";
 import { SqlChecksView } from "./sql-checks";
+import { DefectsView } from "./defects";
 import "./workspace.css";
 
 const sessionKey = ["session"] as const;
@@ -265,7 +266,8 @@ type View =
   | "automated"
   | "comparisons"
   | "baselines"
-  | "sql-checks";
+  | "sql-checks"
+  | "defects";
 const navigation = [
   { id: "requirements", title: "Requirements", icon: BookOpen },
   { id: "cases", title: "Test cases", icon: ClipboardList },
@@ -275,6 +277,7 @@ const navigation = [
   { id: "comparisons", title: "Comparisons", icon: GitCompareArrows },
   { id: "baselines", title: "Visual baselines", icon: Layers3 },
   { id: "sql-checks", title: "SQL checks", icon: Database },
+  { id: "defects", title: "Defects", icon: ClipboardList },
 ] as const;
 
 function SignedIn({ user }: { user: User }) {
@@ -475,6 +478,8 @@ function SignedIn({ user }: { user: User }) {
                   />
                 ) : view === "sql-checks" ? (
                   <SqlChecksView projectId={projectId} canWrite={canWrite} />
+                ) : view === "defects" ? (
+                  <DefectsView projectId={projectId} role={selected.role} />
                 ) : view === "comparisons" ? (
                   <ComparisonsView key={projectId} projectId={projectId} canWrite={canWrite} />
                 ) : (

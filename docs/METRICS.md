@@ -533,3 +533,14 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   module): statements 91.71%, branches 71.66%, functions 86.66%, lines 93.52%.
 - git diff --check: PASS. New cloud migration, hosted CI and UI/browser checks
   remain NOT VERIFIED. No cloud worker started or paid services provisioned.
+
+# Phase 5 defect screens (2026-10-23)
+
+- Web typecheck, lint and next build --webpack: PASS.
+- Web unit tests: 3 files, 40 tests PASS (existing helper tests, not UI coverage).
+- New e2e/defects.spec.ts uses real isolated test API data and includes 360/768/
+  1280/1920 screenshots, axe checks and history persistence after reload.
+- Local Chromium launch: NOT VERIFIED. Initial missing executable resolved by
+  installing pinned Playwright Chromium in /tmp/driftgate-playwright; retry
+  failed before test execution with MachPort registration permission denied.
+- No new browser screenshots were produced; hosted CI/review pending.

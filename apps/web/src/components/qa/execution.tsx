@@ -15,6 +15,7 @@ import {
 } from "../../lib/qa-api";
 import { CaseSnapshot, useCases } from "./cases";
 import { ManualEvidence } from "./evidence";
+import { CreateDefect } from "./defects";
 import {
   Empty,
   ErrorNotice,
@@ -526,6 +527,9 @@ function ResultEditor({
   return (
     <>
       <CaseSnapshot record={result} />
+      {canWrite && result.status === "FAIL" && (
+        <CreateDefect key={result.id} projectId={projectId} resultId={result.id} />
+      )}
       <ManualEvidence
         projectId={projectId}
         runId={runId}

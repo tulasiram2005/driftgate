@@ -1,5 +1,20 @@
 # Phase status
 
+## Phase 5 defect screens checkpoint (2026-10-23)
+
+- Added Defects navigation, paginated list, reproduction detail, protected
+  evidence links, actor/status history and revision-aware transition forms.
+- Failed manual and automated results can create defects with a severity.
+  Developer transitions are limited to in-progress/fixed; Approvers are read-only.
+- Web typecheck, lint, 40 unit tests and production webpack build passed.
+- Added a real-API browser scenario for failed-result creation, defect creation,
+  persisted transition history, accessibility and four responsive screenshots.
+- Browser execution is NOT VERIFIED: after installing the pinned browser locally,
+  macOS denied Chromium MachPort registration before test execution. Hosted CI
+  and screenshot review remain pending. No cloud worker was started.
+- Still pending in Phase 5: defect board/filtering and aging/MTTR, Jira integration,
+  release scoring/gates, hash-chained sign-off, PDF reports and full verification.
+
 ## Phase 5 started: defect API foundation (2026-10-23)
 
 - Failed-result defect creation snapshots steps, expected outcomes, actual
