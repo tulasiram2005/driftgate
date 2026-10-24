@@ -34,7 +34,7 @@ export function IntegrationsView({ projectId, isAdmin }: { projectId: string; is
         <>
           {settings.data.data && settings.data.available === true ? (
             <JiraAccessCheck
-              key={settings.data.data.revision}
+              key={`jira-access-${projectId}-${settings.data.data.revision}`}
               projectId={projectId}
               revision={settings.data.data.revision}
             />
@@ -51,7 +51,7 @@ export function IntegrationsView({ projectId, isAdmin }: { projectId: string; is
             />
           ) : (
             <JiraForm
-              key={settings.data.data?.revision ?? 0}
+              key={`jira-form-${projectId}-${settings.data.data?.revision ?? 0}`}
               projectId={projectId}
               initial={settings.data.data}
               onSaved={(data) => client.setQueryData(queryKey, { data, available: true })}

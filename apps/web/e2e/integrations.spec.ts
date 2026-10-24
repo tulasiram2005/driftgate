@@ -23,6 +23,10 @@ async function workspace(page: Page, role = "ADMIN") {
 test("Jira settings save, clear credentials, and recover from revision conflicts", async ({
   page,
 }, info) => {
+  const duplicateKeyWarnings: string[] = [];
+  page.on("console", (message) => {
+    if (/same key|unique.*key/i.test(message.text())) duplicateKeyWarnings.push(message.text());
+  });
   await workspace(page);
   await page.route("**/integrations/jira/verify", (route) =>
     route.fulfill({
@@ -108,6 +112,7 @@ test("Jira settings save, clear credentials, and recover from revision conflicts
       });
     }
   }
+  expect(duplicateKeyWarnings).toEqual([]);
 });
 
 test("Jira form is unavailable without server encryption", async ({ page }) => {
