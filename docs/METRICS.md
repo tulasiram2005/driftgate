@@ -1,5 +1,17 @@
 # Measured evidence
 
+## Initial Jira export verification (2026-10-24)
+
+- Restarted only driftgate-driftgate-test-db-1 after finding the local test DB stopped.
+  Applied migrations to driftgate_test on 127.0.0.1:55435, not cloud or development DB.
+- API suite: 19 files, 169 tests passed in 13.85 seconds. New tests cover concurrent
+  duplicate prevention, saved-link reuse, changed integration targets, admin access,
+  stale defect revisions, redaction and ambiguous failures without retries.
+- API build/lint and web TypeScript passed. Web lint caught an unescaped apostrophe,
+  corrected before final verification. Jira network calls were mocked.
+- Export browser scenario added using mocked Jira; not yet executed. Hosted migration,
+  real Jira export and reconciliation remain NOT VERIFIED.
+
 ## Hosted Jira UI checks (2026-10-24)
 
 - GitHub quality run 40039791436 for 7389b30 reached browser tests after build.

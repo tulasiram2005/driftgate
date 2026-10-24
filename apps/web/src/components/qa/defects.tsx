@@ -8,6 +8,7 @@ import {
   ErrorNotice,
   Field,
   Loading,
+  Modal,
   OpenButton,
   SectionHeading,
   Submit,
@@ -334,6 +335,7 @@ function DefectDetail({
               role={role}
               refresh={() => void query.refetch()}
             />
+            <JiraExport projectId={projectId} defect={query.data} role={role} />
             <h2>Status history</h2>
             <div className="qa-record-list">
               {query.data.events.map((event) => (
@@ -351,6 +353,92 @@ function DefectDetail({
         )
       )}
     </>
+  );
+}
+
+type JiraExportRecord = {
+  state: "PENDING" | "LINKED" | "REVIEW_REQUIRED";
+  issueKey: string | null;
+  issueUrl: string | null;
+};
+
+function JiraExport({
+  projectId,
+  defect,
+  role,
+}: {
+  projectId: string;
+  defect: Defect;
+  role: string;
+}) {
+  const [confirm, setConfirm] = useState(false);
+  const path = projectPath(projectId, `/defects/${defect.id}/jira`);
+  const query = useQuery({
+    queryKey: ["project", projectId, "jira-export", defect.id],
+    queryFn: () => api<JiraExportRecord | null>(path),
+  });
+  const write = useWrite<JiraExportRecord>(projectId, () => setConfirm(false));
+  const record = query.data;
+  return (
+    <section aria-label="Jira ticket">
+      <h2>Jira ticket</h2>
+      <ErrorNotice error={query.error} retry={() => void query.refetch()} />
+      {query.isPending ? (
+        <Loading label="Loading Jira ticket" />
+      ) : record ? (
+        record.state === "LINKED" && record.issueUrl ? (
+          <a className="qa-button" href={record.issueUrl} target="_blank" rel="noopener noreferrer">
+            <ExternalLink size={16} aria-hidden="true" />
+            {record.issueKey}
+          </a>
+        ) : (
+          <>
+            <p role="status">
+              {record.state === "PENDING"
+                ? "Export started. Confirmation pending."
+                : "Export needs review. A Jira ticket may already exist."}
+            </p>
+            <button
+              type="button"
+              className="qa-button"
+              onClick={() => void query.refetch()}
+              disabled={query.isFetching}
+            >
+              Refresh status
+            </button>
+          </>
+        )
+      ) : !query.isError && role === "ADMIN" ? (
+        <button type="button" className="qa-button" onClick={() => setConfirm(true)}>
+          <ExternalLink size={16} aria-hidden="true" />
+          Export to Jira
+        </button>
+      ) : !query.isError ? (
+        <p>No Jira ticket linked</p>
+      ) : null}
+      {confirm && (
+        <Modal
+          title="Export defect to Jira?"
+          onClose={() => setConfirm(false)}
+          busy={write.isPending}
+        >
+          <p>
+            The defect title, severity and reproduction snapshot will be sent to this project&apos;s
+            configured Jira site. Evidence files are not uploaded.
+          </p>
+          <p>{defect.title}</p>
+          <ErrorNotice error={write.error} />
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!write.isPending) write.mutate({ path, body: { revision: defect.revision } });
+            }}
+          >
+            <Submit pending={write.isPending}>Confirm export</Submit>
+          </form>
+        </Modal>
+      )}
+    </section>
   );
 }
 

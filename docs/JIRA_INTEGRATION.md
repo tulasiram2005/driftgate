@@ -5,6 +5,13 @@ https://ramtulasi062005.atlassian.net/jira/software/projects/KAN/boards/2
 
 ## Implemented locally
 
+- Admin-only `POST /api/v1/projects/:projectId/defects/:defectId/jira` takes the
+  defect revision. Member-readable GET returns the export record. A unique durable
+  reservation precedes the external create, so repeats never create again. The
+  target site/revision are retained with the link even after integration changes.
+- Failed or uncertain exports are marked REVIEW_REQUIRED without automatic retry.
+  Process interruption can leave PENDING; manual reconciliation is not implemented
+  yet. No exactly-once delivery claim is made. UI requires export confirmation.
 - `POST /api/v1/projects/:projectId/integrations/jira/verify` accepts the saved
   revision and is admin-only. Checks active identity, configured project/type,
   and browse/create permissions with read-only requests. A successful timestamped
@@ -33,8 +40,8 @@ https://ramtulasi062005.atlassian.net/jira/software/projects/KAN/boards/2
 
 ## Still pending
 
-Browser verification of the configuration UI, live verification, defect export/link persistence, duplicate
-prevention and ambiguous-outcome reconciliation, status polling, disconnect/key
+Live verification, browser verification of export, ambiguous-outcome reconciliation,
+status polling, disconnect/key
 rotation workflows and hosted migration. No live credentials are configured.
 Do not treat the connector's Jira access as application authentication.
 

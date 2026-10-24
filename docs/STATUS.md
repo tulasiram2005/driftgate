@@ -1,5 +1,18 @@
 # Phase status
 
+## Phase 5 initial Jira defect export (2026-10-24)
+
+- Added admin-confirmed defect export, persisted ticket links and immutable target
+  site metadata. A unique reservation before the remote request prevents duplicate
+  creation from concurrent/repeated requests. Network failures remain REVIEW_REQUIRED;
+  crash-interrupted reservations remain PENDING. Neither is automatically retried.
+- Added export confirmation and linked/pending/review states in defect details.
+  Reproduction snapshot text is sent; evidence files are not uploaded.
+- Applied migration 20261024010000_jira_defect_export to isolated local test DB only.
+  Full API tests: 169 passed; API build/lint and web TypeScript passed.
+- Remaining: uncertain-export reconciliation, status syncing, live Jira tests,
+  browser verification of export UI and cloud migration. No real Jira tickets created.
+
 ## Phase 5 hosted browser follow-up (2026-10-24)
 
 - Inspected hosted quality run 40039791436: 48 web browser checks passed; three

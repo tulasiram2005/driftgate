@@ -2,10 +2,21 @@ import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-test("real API: failed result creates a defect with persisted status history", async ({
-  page,
-}, info) => {
+test("real API defect history with mocked Jira export confirmation", async ({ page }, info) => {
   test.setTimeout(120000);
+  let jira: object | null = null;
+  let exports = 0;
+  await page.route("**/defects/*/jira", async (route) => {
+    if (route.request().method() === "POST") {
+      exports++;
+      jira = {
+        state: "LINKED",
+        issueKey: "KAN-1",
+        issueUrl: "https://example.atlassian.net/browse/KAN-1",
+      };
+    }
+    await route.fulfill({ json: { data: jira } });
+  });
   const registered = await page.request.post("/api/v1/auth/register", {
     data: {
       name: "Demo defect reviewer",
@@ -79,6 +90,15 @@ test("real API: failed result creates a defect with persisted status history", a
   await page.getByRole("button", { name: "Update status", exact: true }).click();
   await expect(page.getByText("Demo triage confirmed", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Next status")).toHaveValue("IN_PROGRESS");
+  await page.getByRole("button", { name: "Export to Jira", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("reproduction snapshot");
+  await page.getByRole("button", { name: "Confirm export", exact: true }).click();
+  await expect(page.getByRole("link", { name: "KAN-1", exact: true })).toHaveAttribute(
+    "href",
+    "https://example.atlassian.net/browse/KAN-1",
+  );
+  expect(exports).toBe(1);
+  await expect(page.getByRole("button", { name: "Export to Jira", exact: true })).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of [360, 768, 1280, 1920]) {
     await page.setViewportSize({ width, height: 1000 });

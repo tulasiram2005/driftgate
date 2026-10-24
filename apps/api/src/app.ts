@@ -25,6 +25,7 @@ import { storage } from "./storage.js";
 import { mountSqlResults, sqlRunBody, type SqlExecutor } from "./sql-results.js";
 import { mountDefects, defectBody, defectTransitionBody } from "./defects.js";
 import { mountJiraSettings, jiraSettingsBody, jiraVerifyBody } from "./jira-settings.js";
+import { mountJiraExport, jiraExportBody } from "./jira-export.js";
 import { mountReleases, releaseBody, gateRunsBody } from "./releases.js";
 import { mountCallback, mountExecution, publicRun } from "./execution.js";
 import { automatedRunBody, callbackBody, screenshotBody } from "./execution-contracts.js";
@@ -395,6 +396,9 @@ export function createApp(
   mountSqlResults(app, db, config, guard, fail, sqlExecutor);
   mountDefects(app, db, guard, fail);
   mountJiraSettings(app, db, config, guard, fail);
+  mountJiraExport(app, db, config, guard, fail);
+  document("get", `${base}/defects/:defectId/jira`);
+  document("post", `${base}/defects/:defectId/jira`, jiraExportBody);
   document("get", `${base}/integrations/jira`);
   document("post", `${base}/integrations/jira/verify`, jiraVerifyBody);
   document("put", `${base}/integrations/jira`, jiraSettingsBody);

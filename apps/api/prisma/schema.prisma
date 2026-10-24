@@ -104,6 +104,7 @@ model ReleaseGate {
 }
 
 model Defect {
+  jiraExport JiraDefectExport?
   id String @id @default(cuid())
   projectId String
   resultId String
@@ -119,6 +120,21 @@ model Defect {
   events DefectEvent[]
   @@unique([projectId, resultId])
   @@index([projectId, id])
+}
+
+model JiraDefectExport {
+  defectId String @id
+  site String
+  jiraProjectKey String
+  integrationRevision Int
+  createdBy String
+  state String @default("PENDING")
+  issueKey String?
+  issueUrl String?
+  errorCode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  defect Defect @relation(fields: [defectId], references: [id], onDelete: Cascade)
 }
 
 model DefectEvent {

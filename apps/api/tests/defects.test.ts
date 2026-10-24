@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, expect, it, vi } from "vitest";
 import request from "supertest";
 import { PrismaClient } from "../generated/client/index.js";
 import { createApp } from "../src/app.js";
 import { readConfig } from "../src/config.js";
+import { encryptIntegrationSecret } from "../src/integration-secrets.js";
 
 const url = process.env.TEST_API_DATABASE_URL;
 if (
@@ -20,6 +21,7 @@ const app = createApp(
     DATABASE_URL: url,
     JWT_SECRET: "test-only-secret-".repeat(5),
     API_CORS_ORIGINS: "http://127.0.0.1:3100",
+    INTEGRATION_ENCRYPTION_KEY: "ab".repeat(32),
   }),
 );
 const users: Record<string, { id: string; token: string }> = {};
@@ -29,6 +31,7 @@ let passId: string;
 let foreignId: string;
 const auth = (role = "ADMIN") => ({ Authorization: `Bearer ${users[role]!.token}` });
 const path = (project = projects[0]) => `/api/v1/projects/${project}/defects`;
+afterEach(() => vi.unstubAllGlobals());
 beforeAll(async () => {
   for (const role of ["ADMIN", "QA", "DEVELOPER", "APPROVER", "OUTSIDER"]) {
     const response = await request(app)
@@ -206,6 +209,93 @@ it("snapshots reproduction once and enforces audited, revision-protected workflo
         .set(auth())
     ).status,
   ).toBe(400);
+});
+
+it("exports once under concurrent requests and preserves links across settings changes", async () => {
+  const projectId = projects[0]!;
+  await db.jiraIntegration.create({
+    data: {
+      projectId,
+      site: "https://example.atlassian.net",
+      jiraProjectKey: "KAN",
+      issueTypeId: "10011",
+      encryptedCredentials: encryptIntegrationSecret(
+        JSON.stringify({ email: "demo@example.com", token: "demo-only-token" }),
+        "ab".repeat(32),
+        projectId,
+        "jira",
+      ),
+    },
+  });
+  const defect = await db.defect.create({
+    data: {
+      projectId,
+      resultId: "demo-export",
+      title: "Demo defect",
+      severity: "S2",
+      createdBy: users.ADMIN!.id,
+      reproduction: { actual: "Demo mismatch" },
+    },
+  });
+  const endpoint = `${path()}/${defect.id}/jira`;
+  const send = vi.fn<typeof fetch>().mockImplementation(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    return Response.json({ id: "123", key: "KAN-1" });
+  });
+  vi.stubGlobal("fetch", send);
+  expect((await request(app).post(endpoint).send({ revision: 0 })).status).toBe(401);
+  expect((await request(app).post(endpoint).set(auth("QA")).send({ revision: 0 })).status).toBe(
+    403,
+  );
+  expect(
+    (await request(app).post(endpoint).set(auth("OUTSIDER")).send({ revision: 0 })).status,
+  ).toBe(404);
+  expect((await request(app).post(endpoint).set(auth()).send({ revision: 1 })).status).toBe(409);
+  expect(send).not.toHaveBeenCalled();
+  const replies = await Promise.all(
+    [0, 1].map(() => request(app).post(endpoint).set(auth()).send({ revision: 0 })),
+  );
+  expect(replies.every((reply) => reply.status === 200)).toBe(true);
+  expect(send).toHaveBeenCalledTimes(1);
+  const saved = (await request(app).get(endpoint).set(auth("QA"))).body.data;
+  expect(saved).toMatchObject({
+    state: "LINKED",
+    issueKey: "KAN-1",
+    issueUrl: "https://example.atlassian.net/browse/KAN-1",
+  });
+  expect(JSON.stringify(saved)).not.toContain("demo-only-token");
+  await db.jiraIntegration.update({
+    where: { projectId },
+    data: { site: "https://other.atlassian.net", revision: { increment: 1 } },
+  });
+  expect(
+    (await request(app).post(endpoint).set(auth()).send({ revision: 0 })).body.data.issueUrl,
+  ).toBe(saved.issueUrl);
+  expect(send).toHaveBeenCalledTimes(1);
+});
+it("keeps ambiguous exports for review instead of retrying creation", async () => {
+  const defect = await db.defect.create({
+    data: {
+      projectId: projects[0]!,
+      resultId: "demo-ambiguous",
+      title: "Demo ambiguous response",
+      severity: "S2",
+      createdBy: users.ADMIN!.id,
+      reproduction: {},
+    },
+  });
+  const endpoint = `${path()}/${defect.id}/jira`;
+  const send = vi.fn<typeof fetch>().mockRejectedValue(new Error("secret-token"));
+  vi.stubGlobal("fetch", send);
+  const failed = await request(app).post(endpoint).set(auth()).send({ revision: 0 });
+  expect(failed.status).toBe(202);
+  expect(failed.body.data).toMatchObject({ state: "REVIEW_REQUIRED", errorCode: "UNAVAILABLE" });
+  expect(JSON.stringify(failed.body)).not.toContain("secret-token");
+  expect(
+    (await request(app).post(endpoint).set(auth()).send({ revision: 0 })).body.data.state,
+  ).toBe("REVIEW_REQUIRED");
+  expect(send).toHaveBeenCalledTimes(1);
+  expect((await request(app).get(endpoint).set(auth("OUTSIDER"))).status).toBe(404);
 });
 
 it("aggregates project-wide aging and latest closure without counting reopened defects", async () => {
