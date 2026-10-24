@@ -9,6 +9,10 @@ const schema = z.object({
     .url()
     .refine((s) => /^postgres(ql)?:/.test(s)),
   JWT_SECRET: z.string().min(48),
+  JIRA_POLLING_ENABLED: z
+    .enum(["0", "1"])
+    .default("0")
+    .transform((v) => v === "1"),
   INTEGRATION_ENCRYPTION_KEY: z
     .string()
     .regex(/^[a-fA-F0-9]{64}$/)

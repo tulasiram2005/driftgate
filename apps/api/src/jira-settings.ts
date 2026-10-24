@@ -33,6 +33,7 @@ export const jiraSettingsBody = z
   .strict();
 
 const publicFields = {
+  connected: true,
   projectId: true,
   site: true,
   jiraProjectKey: true,
@@ -49,6 +50,29 @@ export function mountJiraSettings(
   fail: (status: number, code: string, message: string) => never,
 ) {
   const path = "/api/v1/projects/:projectId/integrations/jira";
+  app.post(`${path}/disconnect`, guard(false, true), async (req, res) => {
+    const input = jiraVerifyBody.safeParse(req.body);
+    if (!input.success) return fail(400, "INVALID_INPUT", "Invalid disconnect request");
+    const projectId = z.string().min(1).max(100).parse(req.params.projectId);
+    const data = await db.$transaction(async (tx) => {
+      const changed = await tx.jiraIntegration.updateMany({
+        where: { projectId, revision: input.data.revision, connected: true },
+        data: { encryptedCredentials: "", connected: false, revision: { increment: 1 } },
+      });
+      if (!changed.count)
+        return fail(409, "CONFLICT", "Jira settings changed; reload before disconnecting");
+      await tx.jiraIntegrationEvent.create({
+        data: {
+          projectId,
+          actorId: res.locals.userId as string,
+          revision: input.data.revision + 1,
+          action: "DISCONNECTED",
+        },
+      });
+      return tx.jiraIntegration.findUniqueOrThrow({ where: { projectId }, select: publicFields });
+    });
+    res.json({ data });
+  });
   app.post(`${path}/verify`, guard(false, true), async (req, res) => {
     const key = config.INTEGRATION_ENCRYPTION_KEY;
     if (!key) return fail(503, "NOT_CONFIGURED", "Integration encryption is not configured");
@@ -56,7 +80,8 @@ export function mountJiraSettings(
     if (!input.success) return fail(400, "INVALID_INPUT", "Invalid verification request");
     const projectId = z.string().min(1).max(100).parse(req.params.projectId);
     const saved = await db.jiraIntegration.findUnique({ where: { projectId } });
-    if (!saved) return fail(404, "NOT_FOUND", "Save Jira settings before checking access");
+    if (!saved || !saved.connected)
+      return fail(404, "NOT_FOUND", "Save Jira settings before checking access");
     if (saved.revision !== input.data.revision)
       return fail(409, "CONFLICT", "Jira settings changed; reload before checking access");
     try {
@@ -126,7 +151,12 @@ export function mountJiraSettings(
       "jira",
     );
     const data = await db.$transaction(async (tx) => {
-      const values = { ...settings, site: jiraSiteOrigin(site), encryptedCredentials };
+      const values = {
+        ...settings,
+        site: jiraSiteOrigin(site),
+        encryptedCredentials,
+        connected: true,
+      };
       if (revision === 0) {
         await tx.jiraIntegration.create({ data: { projectId, ...values } });
       } else {

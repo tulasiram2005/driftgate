@@ -63,6 +63,7 @@ model JiraIntegration {
   jiraProjectKey String
   issueTypeId String
   encryptedCredentials String
+  connected Boolean @default(true)
   revision Int @default(1)
   updatedAt DateTime @updatedAt
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -137,9 +138,15 @@ model JiraDefectExport {
   jiraStatusCategory String?
   statusSyncedAt DateTime?
   syncRevision Int @default(0)
+  nextPollAt DateTime @default(now())
+  pollLease String?
+  pollLeaseUntil DateTime?
+  pollFailures Int @default(0)
+  pollError String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   defect Defect @relation(fields: [defectId], references: [id], onDelete: Cascade)
+  @@index([state, nextPollAt])
 }
 
 model DefectEvent {

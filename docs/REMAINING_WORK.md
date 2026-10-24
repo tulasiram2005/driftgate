@@ -1,6 +1,7 @@
 # Remaining delivery work
 
-Current checkpoint: bd44616, 2026-10-23. This is the consolidated roadmap;
+Current verification checkpoint: 2026-10-24, following code revision 6730f9d.
+This is the consolidated roadmap;
 older entries in STATUS.md are historical, not a current pending-work list.
 
 ## Phase count
@@ -17,15 +18,23 @@ The MVP is an intermediate milestone, not the final delivery.
   filters, aging and mean-time-to-closure metrics, reproduction snapshots,
   role-restricted transitions and event history are built. Hosted browser checks
   passed in Quality Gates 39998074072; final product polish remains Phase 6 work.
-- Jira Cloud: server-side encrypted token configuration, issue creation with
-  reproduction/evidence references, issue link-back, bounded status polling and
-  failure/retry handling. A connected assistant plugin is not application integration.
+- Jira Cloud: encrypted settings, access checks, duplicate-resistant export,
+  saved ticket links and manual status sync are implemented. Live local export
+  and sync passed with synthetic ticket KAN-1. Bounded opt-in scheduled polling is
+  implemented and locally tested. Remaining: live scheduled-polling verification,
+  reconciliation/disconnect browser verification, hosted migration and
+  hosted verification. Evidence files are not uploaded to Jira. A connected
+  assistant plugin is not application integration.
+  REVIEW_REQUIRED and stale PENDING reconciliation have an admin-only tested API and recovery dialog
+  with exact defect reference validation and a transactional audit event; browser
+  and live recovery are unverified.
 - Releases: saved-release UI and environment gate run selection are built,
   including persistence and same-project/environment validation. New browser
   checks and screenshot review remain pending.
-- Readiness: collect authoritative project records, preserve actual source dates,
-  handle missing/deleted/changed evidence and expose results through API/UI. The
-  versioned evaluator is built but is not yet connected to release gates.
+- Readiness: API/UI now collect selected runs, high-priority case versions and
+  project defects, preserving source dates and rejecting missing/changed runs.
+  Drift, visual-review and accessibility collectors remain pending. The partial
+  collector cannot pass a gate. Browser verification remains pending.
 - Gates: enforce exit criteria and environment sequence. Saving a run binding
   is not equivalent to passing or approving a gate.
 - Sign-off: named Approver authorization, required comment/timestamp, evidence
@@ -70,7 +79,7 @@ Basic accessibility and correct error handling remain requirements in every phas
 
 ## User input
 
-No action is required for local implementation now. Before live Jira verification,
-confirm the intended Jira site/project and authorize secure configuration; never
-paste tokens into chat. Before final deployment, agree on a free-only worker
+No action is required for local implementation now. The user has configured Jira
+privately and the local happy path is verified; never paste tokens into chat.
+Before final deployment, agree on a free-only worker
 operating model and any account-level consent that tools cannot complete.

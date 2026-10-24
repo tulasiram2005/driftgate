@@ -173,5 +173,34 @@ export function createJiraClient(
       if (data.key !== key) throw new JiraRequestError("INVALID_RESPONSE");
       return { key: data.key, ...data.fields.status };
     },
+    async verifyExport(key: string, defectId: string) {
+      issueKey.parse(key);
+      assertProject(key);
+      const data = checked(
+        status.extend({
+          fields: status.shape.fields.extend({
+            description: z.object({
+              type: z.literal("doc"),
+              content: z
+                .array(
+                  z.object({
+                    type: z.literal("paragraph"),
+                    content: z.array(z.object({ type: z.literal("text"), text: z.string() })),
+                  }),
+                )
+                .min(1),
+            }),
+          }),
+        }),
+        await request(`issue/${encodeURIComponent(key)}?fields=status,description`, "GET"),
+      );
+      // Match the complete first line emitted by createIssue, not a substring in user content.
+      const firstLine = data.fields.description.content[0]!.content.map((node) => node.text)
+        .join("")
+        .split("\n")[0];
+      if (data.key !== key || firstLine !== `DriftGate defect: ${defectId}`)
+        throw new JiraRequestError("INVALID_RESPONSE");
+      return { key: data.key, ...data.fields.status };
+    },
   };
 }

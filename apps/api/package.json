@@ -14,6 +14,7 @@
     "test": "prisma generate && vitest run",
     "test:storage": "tsx integration/storage.ts",
     "check:sql": "tsx src/sql-check-cli.ts",
+    "jira:rotate-key": "tsx --env-file-if-exists=.env src/jira-key-rotation-cli.ts",
     "db:migrate": "prisma migrate deploy"
   },
   "dependencies": {

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, RefreshCw, Search, X } from "lucide-react";
+import { ArrowLeft, ExternalLink, Link2, RefreshCw, Search, X } from "lucide-react";
 import { api, page, projectPath } from "../../lib/qa-api";
 import {
   Empty,
@@ -357,6 +357,9 @@ function DefectDetail({
 }
 
 type JiraExportRecord = {
+  canReconcile?: boolean;
+  site: string;
+  jiraProjectKey: string;
   state: "PENDING" | "LINKED" | "REVIEW_REQUIRED";
   issueKey: string | null;
   issueUrl: string | null;
@@ -442,6 +445,16 @@ function JiraExport({
             >
               Refresh status
             </button>
+            {(record.state === "REVIEW_REQUIRED" || record.canReconcile === true) &&
+              role === "ADMIN" && (
+                <JiraRecovery
+                  key={`${defect.id}-${record.syncRevision}`}
+                  projectId={projectId}
+                  path={path}
+                  record={record}
+                  refresh={() => void query.refetch()}
+                />
+              )}
           </>
         )
       ) : !query.isError && role === "ADMIN" ? (
@@ -475,6 +488,72 @@ function JiraExport({
         </Modal>
       )}
     </section>
+  );
+}
+
+function JiraRecovery({
+  projectId,
+  path,
+  record,
+  refresh,
+}: {
+  projectId: string;
+  path: string;
+  record: JiraExportRecord;
+  refresh: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const recover = useWrite<JiraExportRecord>(projectId, () => setOpen(false));
+  return (
+    <>
+      <button
+        type="button"
+        className="qa-button"
+        onClick={() => {
+          recover.reset();
+          setOpen(true);
+        }}
+      >
+        <Link2 size={16} aria-hidden="true" />
+        Link existing Jira ticket
+      </button>
+      {open && (
+        <Modal title="Recover Jira link" busy={recover.isPending} onClose={() => setOpen(false)}>
+          <p style={{ overflowWrap: "anywhere" }}>
+            {record.site} · {record.jiraProjectKey}
+          </p>
+          <ErrorNotice error={recover.error} retry={refresh} />
+          <form
+            className="qa-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (recover.isPending) return;
+              const fields = new FormData(event.currentTarget);
+              recover.mutate({
+                path: `${path}/reconcile`,
+                body: {
+                  revision: record.syncRevision,
+                  issueKey: String(fields.get("issueKey")).trim(),
+                },
+              });
+            }}
+          >
+            <Field label="Existing Jira ticket key">
+              <input
+                name="issueKey"
+                required
+                pattern="[A-Z][A-Z0-9_]{1,19}-[1-9][0-9]*"
+                maxLength={64}
+                autoComplete="off"
+                spellCheck={false}
+                disabled={recover.isPending}
+              />
+            </Field>
+            <Submit pending={recover.isPending}>Verify and link ticket</Submit>
+          </form>
+        </Modal>
+      )}
+    </>
   );
 }
 

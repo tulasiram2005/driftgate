@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Express, RequestHandler } from "express";
 import type { PrismaClient } from "../generated/client/index.js";
+import { collectReleaseReadiness } from "./release-readiness.js";
 
 const id = z.string().min(1).max(100);
 const environments = ["STAGING", "UAT", "PREPROD", "PROD"] as const;
@@ -23,6 +24,17 @@ export function mountReleases(
 ) {
   const base = "/api/v1/projects/:projectId/releases";
   const include = { gates: { orderBy: { position: "asc" as const } } };
+  app.get(`${base}/:releaseId/gates/:environment/readiness`, guard(), async (req, res) => {
+    const projectId = id.parse(req.params.projectId);
+    const releaseId = id.parse(req.params.releaseId);
+    const environment = z.enum(environments).parse(req.params.environment);
+    const data = await db.$transaction(
+      (tx) => collectReleaseReadiness(tx, projectId, releaseId, environment),
+      { isolationLevel: "RepeatableRead" },
+    );
+    if (!data) return fail(404, "NOT_FOUND", "Release gate not found");
+    res.json({ data });
+  });
   app.post(base, guard(true), async (req, res) => {
     const body = releaseBody.parse(req.body);
     const data = await db.release.create({

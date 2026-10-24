@@ -181,6 +181,7 @@ function ReleaseDetail({
                 >
                   <h2>{item.environment}</h2>
                   <p>{item.runIds.length} linked runs</p>
+                  <GateReadiness projectId={projectId} releaseId={id} gate={item} />
                   {item.runIds.length > 0 && (
                     <ul>
                       {item.runIds.map((runId) => (
@@ -216,6 +217,84 @@ function ReleaseDetail({
         )
       )}
     </>
+  );
+}
+
+function GateReadiness({
+  projectId,
+  releaseId,
+  gate,
+}: {
+  projectId: string;
+  releaseId: string;
+  gate: Gate;
+}) {
+  const query = useQuery({
+    queryKey: ["project", projectId, "readiness", releaseId, gate.environment, gate.revision],
+    queryFn: () =>
+      api<{
+        assessedAt: string;
+        score: number | null;
+        eligible: boolean;
+        components: {
+          name: string;
+          points: number | null;
+          weight: number;
+          reason: string | null;
+        }[];
+        sourceProblems: string[];
+      }>(projectPath(projectId, `/releases/${releaseId}/gates/${gate.environment}/readiness`)),
+    enabled: false,
+  });
+  const labels: Record<string, string> = {
+    criticalTests: "High-priority tests",
+    defects: "Defects",
+    drift: "Environment differences",
+    visual: "Visual reviews",
+    accessibility: "Accessibility",
+  };
+  return (
+    <div>
+      <button
+        className="qa-button"
+        type="button"
+        disabled={query.isFetching}
+        onClick={() => void query.refetch()}
+      >
+        {query.isFetching ? "Checking readiness..." : "Check readiness"}
+        <span className="sr-only"> for {gate.environment}</span>
+      </button>
+      <ErrorNotice error={query.error} />
+      {query.data && !query.isFetching && (
+        <>
+          <p role="status">
+            {query.data.score === null
+              ? "Incomplete evidence"
+              : `Readiness: ${query.data.score}/100`}{" "}
+            · {query.data.eligible ? "Criteria met" : "Not ready for sign-off"}
+          </p>
+          <p>
+            Checked {new Date(query.data.assessedAt).toLocaleString()}. This is not an approval.
+          </p>
+          <ul>
+            {query.data.components.map((part) => (
+              <li key={part.name}>
+                {labels[part.name] ?? part.name}:{" "}
+                {part.reason
+                  ? part.reason.toLowerCase().replaceAll("_", " ")
+                  : `${part.points}/${part.weight}`}
+              </li>
+            ))}
+          </ul>
+          {query.data.sourceProblems.length > 0 && (
+            <p>
+              Some linked evidence is unavailable or exceeds supported limits. Review the run
+              selection.
+            </p>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 

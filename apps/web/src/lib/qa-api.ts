@@ -157,6 +157,7 @@ export async function api<T>(
 }
 
 export type JiraSettings = {
+  connected: boolean;
   projectId: string;
   site: string;
   jiraProjectKey: string;

@@ -1,5 +1,118 @@
 # Phase status
 
+## Release readiness collection, first increment (2026-10-25)
+
+Readiness API and per-gate Check readiness control now read selected runs, current
+high-priority cases and project defects in a repeatable-read transaction. Missing
+runs, changed environments, old case versions, flaky/failing results and source
+limits fail closed. Source dates are preserved conservatively; evaluation does
+not refresh old evidence. The hash includes release/gate revision and result data.
+
+Drift, visual and accessibility collectors are still missing and explicitly
+returned as unavailable. No release can pass this partial collector. Sign-off,
+gate sequencing and PDF remain pending. Browser appearance is NOT VERIFIED.
+
+## Jira encryption-key rotation (2026-10-25)
+
+Offline dry-run/apply utility and operator runbook added. Connected credentials
+and audit events rotate atomically, disconnected rows are skipped, and settings
+revisions increase. Invalid keys, corrupt envelopes and unconfirmed maintenance
+prevent application. Synthetic local tests cover dry-run immutability, successful
+rotation, deliberate reversal and rollback. No real key or cloud secret changed.
+
+191 API tests passed; API typecheck and lint passed. Full build, CI and real
+maintenance rotation remain NOT VERIFIED. See JIRA_KEY_ROTATION.md. Phase 5
+release gates, sign-off/PDF and remaining verification are still pending.
+
+## Jira disconnect (2026-10-25)
+
+Admin-only disconnect now erases saved encrypted credentials, retains metadata,
+ticket links and audit history, and increments the settings revision. Reconnection
+requires fresh credentials with the current revision. Verification, export, manual
+sync and scheduled polling reject disconnected settings. The UI offers an explicit
+confirmation and explains that already-sent requests may finish and the Atlassian
+token is not revoked. No real connection was disconnected during verification.
+
+187 API tests and 41 web unit tests passed, plus API/web typecheck and lint.
+Migration 22 applied to local test and demo databases. Chromium verification was
+blocked before assertions by macOS MachPortRendezvous permission error 1100.
+Cloud migration, browser screenshots and CI for these changes remain NOT VERIFIED.
+
+## Optional Jira polling (2026-10-25)
+
+Implemented bounded status polling in the existing worker, disabled by default.
+Durable leases prevent overlapping workers; revision checks protect manual sync
+and settings replacement. Linked tickets only, GET requests only, no QA state
+changes. Failures back off from 30 minutes to six hours. Successful checks recur
+after 15 minutes, in batches of five per worker tick.
+
+185 API tests passed; API TypeScript and lint passed. Migration 21 applied to the
+isolated test database and local demo database. Cloud migration, live scheduled
+Jira polling, latest browser recovery checks and CI remain NOT VERIFIED. No
+worker was started and no cloud settings or paid services were changed.
+
+## Interrupted Jira export recovery (2026-10-24)
+
+- PENDING exports become eligible for verified existing-ticket recovery after five
+  minutes, measured server-side. GET exposes canReconcile; refreshing the defect
+  updates UI eligibility. Recent pending exports remain protected.
+- Recovery still verifies the original site/project and exact defect reference.
+  Original export success/failure writes now compare state and revision, so late
+  completion cannot overwrite a recovered link or reopen its review state.
+- Full API suite: 176 tests passed, including late success and late failure races.
+  API/web TypeScript and lint passed. Browser coverage added for stale pending
+  eligibility; execution and screenshots remain NOT VERIFIED.
+- No real Jira ticket, credentials or cloud service changed. Scheduled polling,
+  integration lifecycle, release gates/sign-off/reports and Phase 5 exit checks remain.
+
+## Jira recovery screen (2026-10-24)
+
+- Defects now offer Link existing Jira ticket to project administrators only for
+  REVIEW_REQUIRED exports. The dialog displays the original target and submits
+  the candidate key and saved revision to the recovery API. Failures retain the
+  dialog; success refreshes the saved link/status. PENDING remains read-only.
+- Web TypeScript, lint and 41 unit tests passed. Added isolated browser fixtures
+  for failure then success, role/state restrictions, accessibility and four widths
+  in both themes. All three attempted Chromium cases were blocked at launch by
+  macOS MachPort permissions; new screenshots and browser assertions NOT VERIFIED.
+- No live Jira ticket was changed. PENDING recovery, scheduled polling and the
+  remaining Phase 5 work are still pending.
+
+## Jira uncertain-export recovery API (2026-10-24)
+
+- Added admin-only reconciliation of REVIEW_REQUIRED exports to an existing Jira
+  ticket. Checks original site/project, exact defect reference, saved revision and
+  current configuration. Uses GET only; never retries external issue creation.
+- Saves recovered link/status and actor audit event transactionally. Concurrent
+  recovery has one winner, and QA state/history are unchanged.
+- API TypeScript/lint and 174 tests passed. Jira requests in these regression
+  tests are mocked; no real ticket or credential was changed for recovery testing.
+- Reconciliation UI, interrupted PENDING recovery, polling and remaining Phase 5
+  release/sign-off/report work are still pending. No cloud migration was needed.
+
+## Jira saved-settings clarity (2026-10-24)
+
+- Saved integrations now display non-secret target details instead of an empty
+  credential replacement form. Edit Jira settings opens the form explicitly;
+  cancel unmounts draft credentials, and successful saves return to the summary.
+- Browser regression coverage includes cancel/reopen and revision-conflict recovery.
+  Web TypeScript, lint and 41 unit tests passed. Browser checks remain NOT VERIFIED:
+  in-app control reported disabled and Chromium was denied macOS MachPort registration.
+- This does not invalidate the earlier live Jira export/sync evidence. Scheduled
+  polling, reconciliation and the remaining Phase 5 features are still pending.
+
+## Live Jira happy-path verification (2026-10-24)
+
+- The user configured credentials privately in the local app. Browser access now
+  works through the in-app browser, superseding the earlier disabled-browser note.
+- Created a clearly labelled synthetic case, suite, failed manual result and S4
+  defect in DriftGate Demo. Export through the app created Jira ticket KAN-1.
+- Manual status sync returned To Do at 19:41:21 IST. The defect stayed NEW and
+  its QA history was unchanged. Reopening the defect retained the link and status.
+- This verifies the local API against real Jira, not cloud deployment, scheduled
+  polling, uncertain-export recovery or complete cross-browser coverage.
+- Phase 5 remains in progress. See REMAINING_WORK.md for current outstanding scope.
+
 ## Local browser blocker investigation (2026-10-24)
 
 - Webpack production build passed, including TypeScript and static page generation.
@@ -619,8 +732,8 @@ CI startup diagnosis (2026-10-20): GitHub Actions supplies `GITHUB_WORKFLOW=Qual
 | 3     | Runner, storage, live results, Actions execution            | Local flow and hosted happy path verified              |
 | 4     | Drift, visual regression, contract/SQL/accessibility checks | Complete within approved MVP scope; see PHASE4_EXIT.md |
 | 5     | Defects, Jira, gates, sign-off, PDF                         | In progress; see REMAINING_WORK.md                     |
-| 6     | Dashboard and motion polish                                 | Outside MVP                                            |
-| 7     | Deployment and measured demo                                | Separate follow-up after MVP                           |
+| 6     | Dashboard and motion polish                                 | Required after Phase 5; not started                    |
+| 7     | Deployment and measured demo                                | Required; final deployment/verification pending        |
 
 Optional AI, notifications and performance budgets are deferred for MVP. Public repository: https://github.com/tulasiram2005/driftgate. Some cloud infrastructure and private storage have been verified; full deployment and final-version verification remain Phase 7 work.
 

@@ -27,6 +27,63 @@ const projects: string[] = [];
 const runs: string[] = [];
 const auth = (role = "ADMIN") => ({ Authorization: `Bearer ${users[role]!.token}` });
 const path = (project = projects[0]) => `/api/v1/projects/${project}/releases`;
+
+it("collects authoritative readiness and blocks missing, stale or changed evidence", async () => {
+  const release = (await request(app).post(path()).set(auth()).send({ name: "Demo readiness" }))
+    .body.data;
+  const target = `${path()}/${release.id}/gates/STAGING/readiness`;
+  expect((await request(app).get(target)).status).toBe(401);
+  expect((await request(app).get(target).set(auth("OUTSIDER"))).status).toBe(404);
+  const empty = (await request(app).get(target).set(auth("APPROVER"))).body.data;
+  expect(empty).toMatchObject({ eligible: false, score: null, gateRevision: 0 });
+  const testCase = await db.testCase.create({
+    data: {
+      projectId: projects[0]!,
+      title: "Demo critical",
+      priority: "HIGH",
+      type: "FUNCTIONAL",
+      tags: [],
+    },
+  });
+  await db.result.create({
+    data: {
+      runId: runs[0]!,
+      caseId: testCase.id,
+      title: "Demo critical",
+      version: 1,
+      steps: [],
+      status: "PASS",
+    },
+  });
+  await request(app)
+    .put(`${path()}/${release.id}/gates/STAGING/runs`)
+    .set(auth())
+    .send({ revision: 0, runIds: [runs[0]] });
+  const read = async () => (await request(app).get(target).set(auth())).body.data;
+  const passed = await read();
+  expect(passed.evidence.criticalTests).toMatchObject({ passed: 1, total: 1 });
+  expect(passed).toMatchObject({
+    eligible: false,
+    score: null,
+    notCollected: ["drift", "visual", "accessibility"],
+  });
+  await db.testCase.update({ where: { id: testCase.id }, data: { version: 2 } });
+  const changed = await read();
+  expect(changed.evidence.criticalTests.passed).toBe(0);
+  expect(changed.evidenceHash).not.toBe(passed.evidenceHash);
+  const original = await db.run.findUniqueOrThrow({ where: { id: runs[0] } });
+  await db.run.update({
+    where: { id: runs[0] },
+    data: { createdAt: new Date(Date.now() - 86400001) },
+  });
+  expect((await read()).components[0].reason).toBe("STALE_EVIDENCE");
+  await db.run.update({ where: { id: runs[0] }, data: { environment: "UAT" } });
+  expect((await read()).sourceProblems).toContain("RUN_MISSING_OR_ENVIRONMENT_CHANGED");
+  await db.run.update({
+    where: { id: runs[0] },
+    data: { environment: original.environment, createdAt: original.createdAt },
+  });
+});
 beforeAll(async () => {
   for (const role of ["ADMIN", "QA", "DEVELOPER", "APPROVER", "OUTSIDER"]) {
     const response = await request(app)
@@ -114,7 +171,9 @@ it("creates four ordered gates atomically, with strict role and project isolatio
     ).status,
   ).toBe(404);
   expect((await request(app).get(path()).set(auth("OUTSIDER"))).status).toBe(404);
-  expect((await request(app).get(path()).set(auth())).body.data).toHaveLength(1);
+  expect((await request(app).get(path()).set(auth())).body.data).toEqual(
+    expect.arrayContaining([expect.objectContaining({ id: release.id })]),
+  );
 });
 it("binds only same-project/environment runs and rejects stale concurrent edits", async () => {
   const release = (await request(app).post(path()).set(auth()).send({ name: "Demo gate binding" }))

@@ -63,6 +63,7 @@ afterAll(async () => {
   await db.$disconnect();
 });
 it("requires authentication and project admin for reads and writes", async () => {
+  expect((await request(app).post(`${path()}/disconnect`).send({ revision: 1 })).status).toBe(401);
   expect((await request(app).get(path())).status).toBe(401);
   for (const [index, code] of [
     [1, 403],
@@ -72,6 +73,10 @@ it("requires authentication and project admin for reads and writes", async () =>
   ]) {
     expect((await request(app).get(path()).set(auth(index))).status).toBe(code);
     expect((await request(app).put(path()).set(auth(index)).send(body)).status).toBe(code);
+    expect(
+      (await request(app).post(`${path()}/disconnect`).set(auth(index)).send({ revision: 1 }))
+        .status,
+    ).toBe(code);
     expect(
       (await request(app).post(`${path()}/verify`).set(auth(index)).send({ revision: 1 })).status,
     ).toBe(code);
@@ -212,4 +217,55 @@ it("sanitizes verification failures and rejects configurations changed during a 
     .set(auth())
     .send({ revision: current.revision });
   expect(changed.status).toBe(409);
+});
+
+it("disconnects once, erases credentials, retains audit, and reconnects with a fresh revision", async () => {
+  const current = await db.jiraIntegration.findUniqueOrThrow({ where: { projectId } });
+  const fetch = vi.fn();
+  vi.stubGlobal("fetch", fetch);
+  expect(
+    (
+      await request(app)
+        .post(`${path()}/disconnect`)
+        .set(auth())
+        .send({ revision: current.revision - 1 })
+    ).status,
+  ).toBe(409);
+  const results = await Promise.all(
+    [0, 1].map(() =>
+      request(app).post(`${path()}/disconnect`).set(auth()).send({ revision: current.revision }),
+    ),
+  );
+  expect(results.map((res) => res.status).sort()).toEqual([200, 409]);
+  const saved = await db.jiraIntegration.findUniqueOrThrow({ where: { projectId } });
+  expect(saved).toMatchObject({
+    connected: false,
+    encryptedCredentials: "",
+    revision: current.revision + 1,
+  });
+  expect(
+    await db.jiraIntegrationEvent.count({ where: { projectId, action: "DISCONNECTED" } }),
+  ).toBe(1);
+  const read = await request(app).get(path()).set(auth());
+  expect(read.body.data.connected).toBe(false);
+  expect(read.body.data).not.toHaveProperty("encryptedCredentials");
+  expect(
+    (await request(app).post(`${path()}/verify`).set(auth()).send({ revision: saved.revision }))
+      .status,
+  ).toBe(404);
+  expect(
+    (
+      await request(app)
+        .put(path())
+        .set(auth())
+        .send({ ...body, revision: current.revision })
+    ).status,
+  ).toBe(409);
+  const reconnected = await request(app)
+    .put(path())
+    .set(auth())
+    .send({ ...body, revision: saved.revision });
+  expect(reconnected.status).toBe(200);
+  expect(reconnected.body.data).toMatchObject({ connected: true, revision: saved.revision + 1 });
+  expect(fetch).not.toHaveBeenCalled();
 });

@@ -152,6 +152,8 @@ describe("Jira client", () => {
     const client = createJiraClient(config, send);
     await expect(client.getIssueStatus("../myself")).rejects.toThrow();
     await expect(client.getIssueStatus("OTHER-1")).rejects.toThrow();
+    await expect(client.verifyExport("../myself", "demo-id")).rejects.toThrow();
+    await expect(client.verifyExport("OTHER-1", "demo-id")).rejects.toThrow();
     expect(send).not.toHaveBeenCalled();
   });
   it.each([{ id: "123", key: "OTHER-1" }, { id: "123", key: "KAN-1/evil" }, {}])(
@@ -169,6 +171,40 @@ describe("Jira client", () => {
       "INVALID_RESPONSE",
     );
   });
+  it.each(["demo-id", "other-id", "demo-id-extra"])(
+    "checks exact reconciliation marker %s",
+    async (marker) => {
+      const send = vi.fn<typeof fetch>().mockResolvedValue(
+        response({
+          id: "123",
+          key: "KAN-1",
+          fields: {
+            status: { id: "1", name: "To Do", statusCategory: { key: "new" } },
+            description: {
+              type: "doc",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: `DriftGate defect: ${marker}\nSeverity: S4`,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        }),
+      );
+      const result = createJiraClient(config, send).verifyExport("KAN-1", "demo-id");
+      if (marker === "demo-id")
+        await expect(result).resolves.toMatchObject({ key: "KAN-1", name: "To Do" });
+      else await expect(result).rejects.toThrow("INVALID_RESPONSE");
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(send.mock.calls[0]![1]?.method).toBe("GET");
+    },
+  );
   it("validates input before sending", async () => {
     const send = vi.fn<typeof fetch>();
     await expect(

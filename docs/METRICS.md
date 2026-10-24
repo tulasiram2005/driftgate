@@ -1,5 +1,107 @@
 # Measured evidence
 
+## Release readiness collection (2026-10-25)
+
+- 192 API tests across 21 files passed in 14.34 seconds against isolated local
+  PostgreSQL. Readiness checks cover authorization, missing samples, current case
+  versions, source age, environment changes and evidence hash changes.
+- API/web typecheck and lint passed. An initial suite run exposed an older test's
+  assumption of exactly one release; it now checks the created release is listed.
+- No cloud changes or migrations required. Browser rendering, screenshots, full
+  production build and CI are NOT VERIFIED for this increment.
+
+## Jira key rotation (2026-10-25)
+
+- 191 API tests across 21 files passed in 14.81 seconds using the isolated local
+  test database. Four new rotation tests cover validation, dry runs, disconnected
+  rows, transactional rollback, audit revisions and reverse rotation.
+- API lint passed. API typecheck passed when rerun sequentially after an initial
+  conflict from running two Prisma generation commands concurrently.
+- No real credential rotation, cloud change, browser check or production build
+  performed for this backend maintenance increment.
+
+## Jira disconnect (2026-10-25)
+
+- API: 187 tests / 20 files passed in 14.82 seconds. New checks cover role and
+  tenant restrictions, concurrent disconnects, credential erasure, audit retention,
+  stale-revision rejection, reconnection and polling exclusion.
+- Web: 41 unit tests passed in 216ms. API/web TypeScript and lint passed.
+- Migration 20261025020000_jira_disconnect applied to isolated driftgate_test
+  and the local demo database. No cloud changes or actual Jira disconnect.
+- New confirmation/reconnection browser test could not run: Chromium exited
+  before assertions with MachPortRendezvous permission denied (1100). Browser
+  screenshots, production build and CI not verified for this increment.
+
+## Jira polling (2026-10-25)
+
+- API suite: 185 tests across 20 files passed in 14.04 seconds, isolated local
+  PostgreSQL with mocked Jira HTTP. Includes overlapping claims, active/expired
+  leases, rate-limit backoff, changed project, settings/manual-sync races,
+  disabled polling and exclusion of uncertain exports.
+- API typecheck and lint passed. Migration 20261025010000_jira_polling applied
+  successfully to driftgate_test and the local driftgate demo database.
+- These are local checks, not proof of live scheduled Jira or cloud deployment.
+  Browser checks, full build and CI were not run for this increment.
+
+## Interrupted Jira export races (2026-10-24)
+
+- API: 176 tests across 19 files passed in 14.97 seconds with configured coverage
+  thresholds, using isolated driftgate_test and mocked Jira responses.
+- New races keep the original create request in flight, reject immediate recovery,
+  age the reservation, recover an existing matching ticket, then release either a
+  successful or failed original response. Both preserve the recovered link/revision
+  and NEW QA status; exactly one remote create was attempted in each fixture.
+- API/web TypeScript and lint passed. New stale-pending UI browser assertion is
+  added but NOT VERIFIED; no browser screenshots or live recovery claimed.
+
+## Jira recovery UI (2026-10-24)
+
+- Web TypeScript and lint passed; 41 existing unit tests passed in 222 ms.
+- Added three mocked browser cases for admin recovery with a failed verification,
+  no issue-creation requests, QA access restriction and PENDING restriction.
+  Accessibility and dark/light screenshots at 360/768/1280/1920 are included.
+- All three Chromium cases were blocked before assertions by macOS MachPort
+  registration permission denied (1100). In-app browser control reported disabled.
+  Browser behavior and screenshot review remain NOT VERIFIED, not passing evidence.
+
+## Jira recovery API (2026-10-24)
+
+- Full API regression: 174 tests across 19 files passed in 14.19 seconds against
+  isolated local driftgate_test. Configured coverage thresholds passed.
+- API TypeScript and lint passed after correcting a union-narrowing type error.
+- Recovery tests cover admin/project isolation, original-target mismatch, stale
+  revisions, malformed provenance, exact marker matching, pending-state refusal,
+  concurrent single-winner recovery, actor audit and unchanged QA state/history.
+- Remote Jira requests were mocked and asserted GET-only. No real recovery,
+  recovery browser UI, hosted migration or deployment is claimed verified.
+
+## Saved Jira settings summary (2026-10-24)
+
+- Web TypeScript and lint: PASS. Web unit suite: 41 tests passed in 200 ms.
+- Updated browser regression for saved-summary display, explicit editing, cancel
+  clearing draft credentials, and revision-conflict recovery.
+- Chromium integrations suite: all three cases blocked at browser launch by macOS
+  MachPort permission denied (1100), before application assertions. In-app browser
+  control also reported disabled. New UI screenshots and browser checks NOT VERIFIED.
+
+## Live Jira and regression checkpoint (2026-10-24)
+
+- Local in-app browser flow: created a labelled synthetic case/suite/manual FAIL
+  and S4 defect, exported once through DriftGate to Jira KAN-1, then synced To Do
+  at 19:41:21 IST. QA state remained NEW with its single original history entry.
+  Reopening the defect retained the ticket link and saved status.
+- Screenshot captured at /tmp/driftgate-jira-verification.jpg. This temporary
+  local artifact is not a durable CI artifact or multi-viewport verification.
+- Full isolated API suite: 170 tests / 19 files passed in 14.47 seconds. Coverage
+  thresholds passed: statements 92.02%, branches 71.66%, functions 86.66%,
+  lines 93.78% for the configured coverage scope, not the entire application.
+- Web suite: 41 tests / 3 files passed in 198 ms, including coverage thresholds.
+- An earlier focused client/encryption invocation passed 42 assertions but exited
+  nonzero because whole-API coverage thresholds were unmet by that subset. The
+  subsequent full API suite above passed without weakening coverage thresholds.
+- No new cloud deployment, worker start, paid resource or credential change.
+  Scheduled polling, reconciliation and cloud Jira verification remain pending.
+
 ## Local compatibility build (2026-10-24)
 
 - next build --webpack: PASS, compiled in 2.5 seconds; TypeScript and all static
