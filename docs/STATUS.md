@@ -1,5 +1,19 @@
 # Phase status
 
+## Local browser blocker investigation (2026-10-24)
+
+- Webpack production build passed, including TypeScript and static page generation.
+  Added build:compat and dev:compat scripts without changing the default CI build.
+- Webpack development initially hit EMFILE file-watcher limits. With
+  WATCHPACK_POLLING=true, the homepage served HTTP 200. Test servers were stopped
+  after verification; no production settings or security protections changed.
+- Installed the pinned Playwright Chromium, Firefox and WebKit binaries in
+  /tmp/driftgate-playwright. Chromium still cannot launch in this tool session:
+  macOS MachPortRendezvous bootstrap_check_in permission denied (1100).
+- In-app browser also reports local browser use disabled. Local rendered UI,
+  screenshots and browser assertions remain NOT VERIFIED. Use GitHub Quality Gates
+  for browser verification; do not disable macOS protections to bypass the restriction.
+
 ## Phase 5 manual Jira status sync (2026-10-24)
 
 - Added admin-triggered status sync with persisted Jira status and last-checked time.

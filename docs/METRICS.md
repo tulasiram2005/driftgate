@@ -1,5 +1,18 @@
 # Measured evidence
 
+## Local compatibility build (2026-10-24)
+
+- next build --webpack: PASS, compiled in 2.5 seconds; TypeScript and all static
+  pages completed successfully. Default Turbopack CI configuration unchanged.
+- next dev --webpack with WATCHPACK_POLLING=true: homepage HTTP 200. Without
+  polling, development produced EMFILE file-watcher errors.
+- Web TypeScript check: PASS.
+- Initial 12 browser cases could not start because browser binaries were missing.
+  Installed all three pinned engines in /tmp/driftgate-playwright. Chromium retry:
+  4 cases blocked before assertions by macOS bootstrap_check_in permission denied.
+  This is not passing UI evidence. No screenshots verified in this session.
+- GitHub run 40080698457 was still running when inspected. No CI success claimed.
+
 ## Manual Jira status sync verification (2026-10-24)
 
 - Isolated local database: all 20 migrations applied successfully.

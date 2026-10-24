@@ -14,6 +14,14 @@ Phase 1 includes a PostgreSQL schema, migrations, seed data, catalogue, cart, si
 
 ## Local development
 
+If Turbopack fails locally with an FSEvent stream or port-binding error, use
+`WATCHPACK_POLLING=true pnpm --filter @driftgate/web dev:compat --port 3100`
+for Webpack development on macOS/Linux without native file watchers,
+or `pnpm --filter @driftgate/web build:compat` followed by
+`pnpm --filter @driftgate/web start --port 3100` for a production preview.
+These use Next.js's supported alternative bundler; no macOS security changes
+are required. The default deployment build remains unchanged.
+
 Follow [Phase 2 setup](docs/PHASE2.md) for the app and API. It documents the separate application and test databases, migrations, JWT secret and the two terminals needed for the API and web app. API tests deliberately refuse to run without TEST_API_DATABASE_URL pointing at the isolated local driftgate_test database. For the standalone design preview, use `/design` after starting the web app.
 
 Requires Node 22.19 or newer within Node 22. For the standalone design preview only, no database is needed:
