@@ -1,5 +1,16 @@
 # Measured evidence
 
+## Hosted Jira UI checks (2026-10-24)
+
+- GitHub quality run 40039791436 for 7389b30 reached browser tests after build.
+  Web: 48 passed, 3 failed. All three failures were the encryption-unavailable
+  test matching both the application alert and Next.js's hidden route announcer.
+- Jira save/access-check/conflict-reset flow passed on Chromium, Firefox and
+  WebKit, including its axe checks and four-width light/dark screenshots.
+  Screenshot files were generated in CI; manual visual review remains pending.
+- Scoped the encryption-warning assertion to the application's warning text.
+  The corrected browser assertion still requires a new hosted run.
+
 ## Jira access-check verification (2026-10-24)
 
 - Full API suite: 19 files, 167 tests passed in 15.38 seconds with isolated local

@@ -118,7 +118,9 @@ test("Jira form is unavailable without server encryption", async ({ page }) => {
   await page.goto("/");
   await page.getByLabel("Current project").selectOption("demo-project");
   await page.getByRole("button", { name: "Integrations", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("server encryption");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Jira settings are unavailable" }),
+  ).toContainText("server encryption");
   await expect(page.getByLabel("API token")).toHaveCount(0);
 });
 

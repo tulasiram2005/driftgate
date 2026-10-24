@@ -1,5 +1,14 @@
 # Phase status
 
+## Phase 5 hosted browser follow-up (2026-10-24)
+
+- Inspected hosted quality run 40039791436: 48 web browser checks passed; three
+  failed on an ambiguous alert selector in the Jira encryption-unavailable test.
+- Narrowed that assertion to the Jira warning without removing the check or
+  weakening the expected message. Hosted rerun pending.
+- Jira configuration, access-check and revision-reset browser flows passed in
+  all three browser engines. This is mocked Jira transport, not live verification.
+
 ## Phase 5 Jira access check (2026-10-24)
 
 - Added admin-only POST verification of saved credentials: authenticated active
