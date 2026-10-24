@@ -1,5 +1,18 @@
 # Phase status
 
+## Visual and accessibility readiness (2026-10-25)
+
+Collectors now use saved automated accessibility matrix results and screenshot
+comparisons. Accessibility requires coverage in every recorded cell and rejects
+unfinished, failed or flaky runs. Visual evidence requires ready screenshots and
+approved active baselines matching check/browser/device/environment, with current
+ignore revisions. Zero differences count as reviewed; changed pixels do not.
+Policy mvp-2 explicitly blocks unreviewed visual differences even at score 90.
+
+194 API tests passed; typecheck and lint passed. Explicit visual-difference review,
+sign-off, sequencing, PDF, defect board and browser/cloud verification remain.
+This increment does not establish Phase 5 completion or authorize a release.
+
 ## Drift evidence collection (2026-10-25)
 
 Release readiness now reads the latest saved comparison for each snapshot of

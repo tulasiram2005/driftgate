@@ -1,5 +1,13 @@
 # Measured evidence
 
+## Visual and accessibility collectors (2026-10-25)
+
+194 API tests / 21 files passed in 14.65 seconds. Added matrix coverage,
+unfinished/flaky/failed checks, approved-baseline comparison, changed ignore rules
+and score-90 visual-blocker assertions. Fixed test baseline activation metadata
+to satisfy the database constraint. API typecheck and lint passed. Browser,
+full build, CI and cloud verification were not run for this increment.
+
 ## Drift readiness collector (2026-10-25)
 
 192 API tests passed across 21 files in 14.53 seconds. Extended release checks

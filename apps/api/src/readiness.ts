@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 
-export const READINESS_POLICY = "mvp-1";
+export const READINESS_POLICY = "mvp-2";
 const maxAgeMs = 24 * 60 * 60 * 1000;
 const count = z.number().int().min(0).max(1000000);
 const reference = z.string().min(1).max(100);
@@ -94,6 +94,7 @@ export function evaluateReadiness(input: unknown, now = new Date()) {
   );
   add("drift", 15, evidence.drift, evidence.drift?.unresolved === 0 ? 1 : 0);
   const visual = evidence.visual;
+  if (visual && visual.reviewed < visual.total) blocks.push("UNREVIEWED_VISUAL_DIFFERENCES");
   // An executed comparison with no differences is reviewed by definition, not missing.
   add("visual", 10, visual, visual ? (visual.total ? visual.reviewed / visual.total : 1) : null);
   const accessibility = evidence.accessibility;

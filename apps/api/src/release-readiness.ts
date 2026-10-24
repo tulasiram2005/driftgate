@@ -156,6 +156,107 @@ export async function collectReleaseReadiness(
       };
     else sourceProblems.push("DRIFT_SOURCE_MISSING_OR_CHANGED");
   }
+  const automated = runs.filter((run) => run.mode === "AUTOMATED");
+  if (complete && validRuns && automated.length) {
+    const samples = results.filter(
+      (result) =>
+        result.caseId === "accessibility" && automated.some((run) => run.id === result.runId),
+    );
+    const covered = automated.every((run) => {
+      const cells = results.filter((result) => result.runId === run.id);
+      return (
+        cells.length > 0 &&
+        cells.every((cell) =>
+          samples.some(
+            (sample) =>
+              sample.runId === run.id &&
+              sample.browser === cell.browser &&
+              sample.device === cell.device,
+          ),
+        )
+      );
+    });
+    if (covered && samples.length <= 1000) {
+      evidence.accessibility = {
+        sourceIds: samples.map((sample) => sample.id),
+        observedAt: new Date(
+          Math.min(...automated.map((run) => run.createdAt.getTime())),
+        ).toISOString(),
+        total: samples.length,
+        passed: samples.filter(
+          (sample) =>
+            sample.status === "PASS" &&
+            !sample.flaky &&
+            automated.find((run) => run.id === sample.runId)?.status === "PASS",
+        ).length,
+      };
+    } else sourceProblems.push("ACCESSIBILITY_MATRIX_INCOMPLETE");
+  }
+  const screenshots = await db.evidence.findMany({
+    where: { kind: "screenshot", result: { runId: { in: runs.map((run) => run.id) } } },
+    orderBy: { id: "asc" },
+    take: 301,
+  });
+  const visualComparisons = await db.visualComparison.findMany({
+    where: { projectId, evidenceId: { in: screenshots.map((image) => image.id) } },
+    include: { baseline: { include: { evidence: true } } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 1001,
+  });
+  const visualSources: unknown[] = [];
+  if (
+    complete &&
+    validRuns &&
+    runs.length &&
+    screenshots.length > 0 &&
+    screenshots.length <= 300 &&
+    visualComparisons.length <= 1000 &&
+    runs.every((run) =>
+      screenshots.some((image) =>
+        results.some((result) => result.id === image.resultId && result.runId === run.id),
+      ),
+    )
+  ) {
+    let valid = true,
+      reviewed = 0;
+    const dates: number[] = [],
+      sourceIds: string[] = [];
+    for (const image of screenshots) {
+      const comparison = visualComparisons.find((item) => item.evidenceId === image.id);
+      const result = results.find((item) => item.id === image.resultId);
+      if (
+        !image.ready ||
+        !comparison ||
+        !comparison.baseline.evidence.ready ||
+        comparison.baseline.checkId !== result?.caseId ||
+        comparison.baseline.browser !== result?.browser ||
+        comparison.baseline.device !== result?.device ||
+        !comparison.baseline.active ||
+        comparison.baseline.status !== "APPROVED" ||
+        comparison.baseline.environment.toUpperCase() !== environment ||
+        comparison.ignoreRevision !== comparison.baseline.ignoreRevision
+      ) {
+        valid = false;
+        break;
+      }
+      // Changed pixels are not silently accepted as reviewed. Explicit review is separate work.
+      if (comparison.changedPixels === 0) reviewed++;
+      dates.push(image.createdAt.getTime(), comparison.createdAt.getTime());
+      sourceIds.push(comparison.id);
+      visualSources.push({
+        image: { id: image.id, ready: image.ready, createdAt: image.createdAt },
+        comparison,
+      });
+    }
+    if (valid)
+      evidence.visual = {
+        sourceIds,
+        observedAt: new Date(Math.min(...dates)).toISOString(),
+        reviewed,
+        total: screenshots.length,
+      };
+    else sourceProblems.push("VISUAL_SOURCE_MISSING_OR_CHANGED");
+  }
   const assessment = evaluateReadiness(evidence, now);
   return {
     gateId: gate.id,
@@ -171,6 +272,7 @@ export async function collectReleaseReadiness(
           gateId: gate.id,
           revision: gate.revision,
           driftSources,
+          visualSources,
           runIds: [...gate.runIds].sort(),
           results: results.map(
             ({ id, runId, caseId, version, status, flaky, browser, device }) => ({
@@ -194,6 +296,6 @@ export async function collectReleaseReadiness(
         }),
       )
       .digest("hex"),
-    notCollected: ["visual", "accessibility"],
+    notCollected: [],
   };
 }

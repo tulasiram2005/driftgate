@@ -108,7 +108,7 @@ it("collects authoritative readiness and blocks missing, stale or changed eviden
   expect(passed).toMatchObject({
     eligible: false,
     score: null,
-    notCollected: ["visual", "accessibility"],
+    notCollected: [],
   });
   await db.testCase.update({ where: { id: testCase.id }, data: { version: 2 } });
   const changed = await read();
@@ -127,6 +127,115 @@ it("collects authoritative readiness and blocks missing, stale or changed eviden
     data: { environment: original.environment, createdAt: original.createdAt },
   });
 });
+it("requires complete automated accessibility coverage and rejects flaky, unfinished and failed samples", async () => {
+  const release = (
+    await request(app).post(path()).set(auth()).send({ name: "Demo accessibility gate" })
+  ).body.data;
+  const run = await db.run.create({
+    data: {
+      projectId: projects[0]!,
+      mode: "AUTOMATED",
+      status: "PASS",
+      environment: "STAGING",
+      browser: "chromium",
+      device: "desktop",
+    },
+  });
+  const sample = await db.result.create({
+    data: {
+      runId: run.id,
+      caseId: "accessibility",
+      title: "Demo accessibility",
+      version: 1,
+      steps: [],
+      status: "PASS",
+      browser: "chromium",
+      device: "desktop",
+    },
+  });
+  await request(app)
+    .put(`${path()}/${release.id}/gates/STAGING/runs`)
+    .set(auth())
+    .send({ revision: 0, runIds: [run.id] });
+  const read = async () =>
+    (await request(app).get(`${path()}/${release.id}/gates/STAGING/readiness`).set(auth())).body
+      .data;
+  expect((await read()).evidence.accessibility).toMatchObject({ passed: 1, total: 1 });
+  await db.result.update({ where: { id: sample.id }, data: { flaky: true } });
+  expect((await read()).blockers).toContain("ACCESSIBILITY_FAILURE");
+  await db.result.update({ where: { id: sample.id }, data: { flaky: false, status: "FAIL" } });
+  expect((await read()).evidence.accessibility.passed).toBe(0);
+  await db.result.update({ where: { id: sample.id }, data: { status: "PASS" } });
+  await db.run.update({ where: { id: run.id }, data: { status: "RUNNING" } });
+  expect((await read()).evidence.accessibility.passed).toBe(0);
+  await db.run.update({ where: { id: run.id }, data: { status: "PASS" } });
+  await db.result.create({
+    data: {
+      runId: run.id,
+      caseId: "catalogue",
+      title: "Demo second browser",
+      version: 1,
+      steps: [],
+      status: "PASS",
+      browser: "firefox",
+      device: "desktop",
+    },
+  });
+  expect((await read()).evidence.accessibility).toBeNull();
+  expect((await read()).sourceProblems).toContain("ACCESSIBILITY_MATRIX_INCOMPLETE");
+  const image = await db.evidence.create({
+    data: {
+      resultId: sample.id,
+      key: randomUUID(),
+      kind: "screenshot",
+      contentType: "image/png",
+      sizeBytes: 100,
+      ready: true,
+    },
+  });
+  const baseline = await db.visualBaseline.create({
+    data: {
+      projectId: projects[0]!,
+      evidenceId: image.id,
+      label: "Demo visual baseline",
+      environment: "staging",
+      browser: "chromium",
+      device: "desktop",
+      checkId: "accessibility",
+      viewportWidth: 10,
+      viewportHeight: 10,
+      createdBy: users.ADMIN!.id,
+      status: "APPROVED",
+      active: true,
+      activatedBy: users.ADMIN!.id,
+      activatedAt: new Date(),
+      reviewedBy: users.ADMIN!.id,
+      reviewedAt: new Date(),
+      reviewComment: "Demo approved",
+    },
+  });
+  const comparison = await db.visualComparison.create({
+    data: {
+      projectId: projects[0]!,
+      baselineId: baseline.id,
+      evidenceId: image.id,
+      createdBy: users.ADMIN!.id,
+      width: 10,
+      height: 10,
+      changedPixels: 0,
+      comparedPixels: 100,
+      diffKey: randomUUID(),
+    },
+  });
+  expect((await read()).evidence.visual).toMatchObject({ reviewed: 1, total: 1 });
+  await db.visualComparison.update({ where: { id: comparison.id }, data: { changedPixels: 1 } });
+  expect((await read()).blockers).toContain("UNREVIEWED_VISUAL_DIFFERENCES");
+  await db.visualBaseline.update({ where: { id: baseline.id }, data: { ignoreRevision: 1 } });
+  expect((await read()).evidence.visual).toBeNull();
+  await db.visualComparison.delete({ where: { id: comparison.id } });
+  await db.visualBaseline.delete({ where: { id: baseline.id } });
+});
+
 beforeAll(async () => {
   for (const role of ["ADMIN", "QA", "DEVELOPER", "APPROVER", "OUTSIDER"]) {
     const response = await request(app)
