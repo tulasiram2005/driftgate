@@ -1,5 +1,15 @@
 # Phase status
 
+## Drift evidence collection (2026-10-25)
+
+Release readiness now reads the latest saved comparison for each snapshot of
+selected runs. Every selected run needs snapshot coverage. Missing baseline
+snapshots, changed expected-rule revisions and malformed finding counts leave
+drift unavailable. Unexpected findings reduce the drift score. Freshness uses
+the oldest source timestamp, and the evidence hash includes comparison inputs.
+Visual-review and accessibility collection remain pending; gates still cannot
+pass this partial collector. No cloud deployment or browser verification yet.
+
 ## Release readiness collection, first increment (2026-10-25)
 
 Readiness API and per-gate Check readiness control now read selected runs, current

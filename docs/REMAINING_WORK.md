@@ -33,7 +33,7 @@ The MVP is an intermediate milestone, not the final delivery.
   checks and screenshot review remain pending.
 - Readiness: API/UI now collect selected runs, high-priority case versions and
   project defects, preserving source dates and rejecting missing/changed runs.
-  Drift, visual-review and accessibility collectors remain pending. The partial
+  Drift comparison collection is implemented. Visual-review and accessibility collectors remain pending. The partial
   collector cannot pass a gate. Browser verification remains pending.
 - Gates: enforce exit criteria and environment sequence. Saving a run binding
   is not equivalent to passing or approving a gate.

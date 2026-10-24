@@ -1,5 +1,13 @@
 # Measured evidence
 
+## Drift readiness collector (2026-10-25)
+
+192 API tests passed across 21 files in 14.53 seconds. Extended release checks
+cover unexpected/expected findings, changed rule revisions and deleted baseline
+snapshots. Initial fixture environment/source constraint failures were corrected
+to match the database contract. API typecheck and lint passed. Browser checks,
+cloud rollout and full build were not run for this increment.
+
 ## Release readiness collection (2026-10-25)
 
 - 192 API tests across 21 files passed in 14.34 seconds against isolated local

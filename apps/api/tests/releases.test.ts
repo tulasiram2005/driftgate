@@ -61,11 +61,54 @@ it("collects authoritative readiness and blocks missing, stale or changed eviden
     .send({ revision: 0, runIds: [runs[0]] });
   const read = async () => (await request(app).get(target).set(auth())).body.data;
   const passed = await read();
+  const baseline = await db.environmentSnapshot.create({
+    data: {
+      projectId: projects[0]!,
+      label: "Demo baseline",
+      environment: "uat",
+      createdBy: users.ADMIN!.id,
+      snapshot: {},
+    },
+  });
+  const snapshot = await db.environmentSnapshot.create({
+    data: {
+      projectId: projects[0]!,
+      label: "Demo current",
+      source: "RUNNER",
+      browser: "chromium",
+      device: "desktop",
+      environment: "staging",
+      runId: runs[0],
+      createdBy: users.ADMIN!.id,
+      snapshot: {},
+    },
+  });
+  const comparison = await db.environmentComparison.create({
+    data: {
+      projectId: projects[0]!,
+      beforeId: baseline.id,
+      afterId: snapshot.id,
+      createdBy: users.ADMIN!.id,
+      findingCount: 1,
+      findings: [{ expected: false }],
+    },
+  });
+  expect((await read()).evidence.drift.unresolved).toBe(1);
+  await db.environmentComparison.update({
+    where: { id: comparison.id },
+    data: { findings: [{ expected: true }] },
+  });
+  expect((await read()).evidence.drift.unresolved).toBe(0);
+  await db.project.update({ where: { id: projects[0] }, data: { expectedRulesRevision: 1 } });
+  expect((await read()).evidence.drift).toBeNull();
+  await db.project.update({ where: { id: projects[0] }, data: { expectedRulesRevision: 0 } });
+  await db.environmentSnapshot.delete({ where: { id: baseline.id } });
+  expect((await read()).evidence.drift).toBeNull();
   expect(passed.evidence.criticalTests).toMatchObject({ passed: 1, total: 1 });
   expect(passed).toMatchObject({
     eligible: false,
     score: null,
-    notCollected: ["drift", "visual", "accessibility"],
+    notCollected: ["visual", "accessibility"],
   });
   await db.testCase.update({ where: { id: testCase.id }, data: { version: 2 } });
   const changed = await read();
