@@ -1,5 +1,19 @@
 # Phase status
 
+## Phase 5 manual Jira status sync (2026-10-24)
+
+- Added admin-triggered status sync with persisted Jira status and last-checked time.
+  Project members can read the saved snapshot. Jira Done never changes QA state.
+- Concurrent updates use revision checks; failed requests preserve the last snapshot.
+  Changed target sites/projects are rejected before sending credentials.
+- Migration 20261024020000_jira_status_sync applied to isolated local test DB only.
+- API: 170 tests passed. Web: 41 unit tests passed. Both typechecks and lints passed.
+- Browser scenario extended for sync, but NOT VERIFIED locally: production build
+  failed on port-binding EPERM and dev server failed starting an FSEvent stream.
+- Remaining Jira scope: scheduled polling, uncertain-export reconciliation,
+  disconnect/key rotation, live credentials and cloud migration/verification.
+  Phase 5 is still in progress; phases 6 and 7 are not skipped.
+
 ## Phase 5 initial Jira defect export (2026-10-24)
 
 - Added admin-confirmed defect export, persisted ticket links and immutable target

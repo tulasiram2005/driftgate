@@ -1,5 +1,18 @@
 # Measured evidence
 
+## Manual Jira status sync verification (2026-10-24)
+
+- Isolated local database: all 20 migrations applied successfully.
+- API suite: 170 tests across 19 files passed in 13.67 seconds. The first run
+  exposed an incomplete mocked Jira response (missing issue ID); fixture corrected
+  before the successful rerun. Tests use mocked Jira transport, not live Jira.
+- Web unit suite: 41 tests across 3 files passed in 219 ms.
+- API/web typechecks and lints passed.
+- Added concurrent-sync, permissions, target mismatch, sanitized failure,
+  configuration-change and unchanged QA state/history assertions.
+- Web production build blocked by Turbopack port-binding EPERM; development server
+  exited with FSEvent stream error. New browser scenario/screenshots NOT VERIFIED.
+
 ## Initial Jira export verification (2026-10-24)
 
 - Restarted only driftgate-driftgate-test-db-1 after finding the local test DB stopped.

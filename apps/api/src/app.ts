@@ -399,6 +399,7 @@ export function createApp(
   mountJiraExport(app, db, config, guard, fail);
   document("get", `${base}/defects/:defectId/jira`);
   document("post", `${base}/defects/:defectId/jira`, jiraExportBody);
+  document("post", `${base}/defects/:defectId/jira/sync`, jiraExportBody);
   document("get", `${base}/integrations/jira`);
   document("post", `${base}/integrations/jira/verify`, jiraVerifyBody);
   document("put", `${base}/integrations/jira`, jiraSettingsBody);

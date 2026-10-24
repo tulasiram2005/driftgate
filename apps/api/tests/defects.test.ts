@@ -298,6 +298,68 @@ it("keeps ambiguous exports for review instead of retrying creation", async () =
   expect((await request(app).get(endpoint).set(auth("OUTSIDER"))).status).toBe(404);
 });
 
+it("syncs Jira status without changing QA state and protects snapshots from errors and races", async () => {
+  const projectId = projects[0]!;
+  const defect = await db.defect.findFirstOrThrow({
+    where: { projectId, resultId: "demo-export" },
+  });
+  const endpoint = `${path()}/${defect.id}/jira/sync`;
+  const send = vi.fn<typeof fetch>().mockImplementation(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    return Response.json({
+      id: "123",
+      key: "KAN-1",
+      fields: { status: { id: "3", name: "Done", statusCategory: { key: "done" } } },
+    });
+  });
+  vi.stubGlobal("fetch", send);
+  const sync = (revision = 0, role = "ADMIN") =>
+    request(app).post(endpoint).set(auth(role)).send({ revision });
+  expect((await request(app).post(endpoint).send({ revision: 0 })).status).toBe(401);
+  expect((await sync(0, "QA")).status).toBe(403);
+  expect((await sync(0, "OUTSIDER")).status).toBe(404);
+  expect((await sync()).body.error.code).toBe("TARGET_CHANGED");
+  expect(send).not.toHaveBeenCalled();
+  await db.jiraIntegration.update({
+    where: { projectId },
+    data: { site: "https://example.atlassian.net", revision: { increment: 1 } },
+  });
+  const responses = await Promise.all([sync(), sync()]);
+  expect(responses.map((r) => r.status).sort()).toEqual([200, 409]);
+  const saved = responses.find((r) => r.status === 200)!.body.data;
+  expect(saved).toMatchObject({
+    jiraStatusName: "Done",
+    jiraStatusCategory: "done",
+    syncRevision: 1,
+  });
+  expect(saved.statusSyncedAt).toBeTruthy();
+  expect(await db.defect.findUniqueOrThrow({ where: { id: defect.id } })).toMatchObject({
+    status: "NEW",
+    revision: 0,
+  });
+  expect(await db.defectEvent.count({ where: { defectId: defect.id } })).toBe(0);
+  expect((await sync()).status).toBe(409);
+  send.mockRejectedValueOnce(new Error("secret-token"));
+  const failed = await sync(1);
+  expect(failed.status).toBe(502);
+  expect(JSON.stringify(failed.body)).not.toContain("secret-token");
+  const read = await request(app).get(`${path()}/${defect.id}/jira`).set(auth("QA"));
+  expect(read.body.data).toEqual(saved);
+  send.mockImplementationOnce(async () => {
+    await db.jiraIntegration.update({ where: { projectId }, data: { revision: { increment: 1 } } });
+    return Response.json({
+      id: "123",
+      key: "KAN-1",
+      fields: { status: { id: "1", name: "Open", statusCategory: { key: "new" } } },
+    });
+  });
+  expect((await sync(1)).status).toBe(409);
+  expect(
+    (await db.jiraDefectExport.findUniqueOrThrow({ where: { defectId: defect.id } }))
+      .jiraStatusName,
+  ).toBe("Done");
+});
+
 it("aggregates project-wide aging and latest closure without counting reopened defects", async () => {
   const projectId = projects[1]!;
   const createdAt = new Date("2026-01-01T00:00:00Z");

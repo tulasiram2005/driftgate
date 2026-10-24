@@ -132,6 +132,11 @@ model JiraDefectExport {
   issueKey String?
   issueUrl String?
   errorCode String?
+  jiraStatusId String?
+  jiraStatusName String?
+  jiraStatusCategory String?
+  statusSyncedAt DateTime?
+  syncRevision Int @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   defect Defect @relation(fields: [defectId], references: [id], onDelete: Cascade)

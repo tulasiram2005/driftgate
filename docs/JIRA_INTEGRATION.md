@@ -5,6 +5,13 @@ https://ramtulasi062005.atlassian.net/jira/software/projects/KAN/boards/2
 
 ## Implemented locally
 
+- Admin-only `POST /api/v1/projects/:projectId/defects/:defectId/jira/sync`
+  accepts `{ "revision": 0 }`, using the export record's `syncRevision` (not the
+  defect revision). Requires a confirmed link and matching configured Jira target.
+  Saves Jira status ID/name/category and statusSyncedAt. Concurrent saves reject
+  stale revisions. Network errors leave the previous snapshot unchanged.
+  This is manual sync, not automatic polling, and never changes QA approval.
+
 - Admin-only `POST /api/v1/projects/:projectId/defects/:defectId/jira` takes the
   defect revision. Member-readable GET returns the export record. A unique durable
   reservation precedes the external create, so repeats never create again. The

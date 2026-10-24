@@ -13,8 +13,21 @@ test("real API defect history with mocked Jira export confirmation", async ({ pa
         state: "LINKED",
         issueKey: "KAN-1",
         issueUrl: "https://example.atlassian.net/browse/KAN-1",
+        syncRevision: 0,
+        jiraStatusName: null,
+        statusSyncedAt: null,
       };
     }
+    await route.fulfill({ json: { data: jira } });
+  });
+  await page.route("**/defects/*/jira/sync", async (route) => {
+    expect(route.request().postDataJSON()).toEqual({ revision: 0 });
+    jira = {
+      ...jira,
+      syncRevision: 1,
+      jiraStatusName: "Done",
+      statusSyncedAt: new Date().toISOString(),
+    };
     await route.fulfill({ json: { data: jira } });
   });
   const registered = await page.request.post("/api/v1/auth/register", {
@@ -98,6 +111,9 @@ test("real API defect history with mocked Jira export confirmation", async ({ pa
     "https://example.atlassian.net/browse/KAN-1",
   );
   expect(exports).toBe(1);
+  await expect(page.getByText("Jira status: Not synced", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Sync Jira status", exact: true }).click();
+  await expect(page.getByText("Jira status: Done", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Export to Jira", exact: true })).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of [360, 768, 1280, 1920]) {

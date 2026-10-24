@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, Search, X } from "lucide-react";
+import { ArrowLeft, ExternalLink, RefreshCw, Search, X } from "lucide-react";
 import { api, page, projectPath } from "../../lib/qa-api";
 import {
   Empty,
@@ -360,6 +360,9 @@ type JiraExportRecord = {
   state: "PENDING" | "LINKED" | "REVIEW_REQUIRED";
   issueKey: string | null;
   issueUrl: string | null;
+  jiraStatusName: string | null;
+  statusSyncedAt: string | null;
+  syncRevision: number;
 };
 
 function JiraExport({
@@ -378,6 +381,7 @@ function JiraExport({
     queryFn: () => api<JiraExportRecord | null>(path),
   });
   const write = useWrite<JiraExportRecord>(projectId, () => setConfirm(false));
+  const sync = useWrite<JiraExportRecord>(projectId);
   const record = query.data;
   return (
     <section aria-label="Jira ticket">
@@ -387,10 +391,42 @@ function JiraExport({
         <Loading label="Loading Jira ticket" />
       ) : record ? (
         record.state === "LINKED" && record.issueUrl ? (
-          <a className="qa-button" href={record.issueUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink size={16} aria-hidden="true" />
-            {record.issueKey}
-          </a>
+          <>
+            <a
+              className="qa-button"
+              href={record.issueUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink size={16} aria-hidden="true" />
+              {record.issueKey}
+            </a>
+            <p style={{ overflowWrap: "anywhere" }}>
+              Jira status: {record.jiraStatusName ?? "Not synced"}
+            </p>
+            {record.statusSyncedAt && (
+              <p>
+                Last checked:{" "}
+                <time dateTime={record.statusSyncedAt}>
+                  {new Date(record.statusSyncedAt).toLocaleString()}
+                </time>
+              </p>
+            )}
+            <ErrorNotice error={sync.error} retry={() => void query.refetch()} />
+            {role === "ADMIN" && (
+              <button
+                type="button"
+                className="qa-button"
+                disabled={sync.isPending || query.isFetching}
+                onClick={() =>
+                  sync.mutate({ path: `${path}/sync`, body: { revision: record.syncRevision } })
+                }
+              >
+                <RefreshCw size={16} aria-hidden="true" />
+                {sync.isPending ? "Syncing Jira status" : "Sync Jira status"}
+              </button>
+            )}
+          </>
         ) : (
           <>
             <p role="status">
