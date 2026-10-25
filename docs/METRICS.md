@@ -1,5 +1,14 @@
 # Measured evidence
 
+## PDF download coverage (2026-10-25)
+
+- Web: 43 tests / 3 files PASS; statements 99.25%, branches 94.25%, functions
+  96.42%, lines 100%. Web lint PASS.
+- Added authenticated PDF bytes, encoded identifiers, filename, delayed object
+  URL cleanup and report-limit rejection checks.
+- Initial isolated CI run 40190815496 failed web function coverage; browser
+  steps did not run. Coverage threshold retained at 90%.
+
 ## PDF release report (2026-10-25)
 
 - 195 API tests / 21 files PASS in 17.24 seconds, including report authentication,

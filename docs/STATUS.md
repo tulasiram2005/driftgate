@@ -1,5 +1,13 @@
 # Phase status
 
+## Isolated CI verification (2026-10-25)
+
+Saved Phase 5 changes are backed up on `codex/phase5-verification`, without
+deploying main. First run 40190815496 passed typecheck, lint and migrations but
+stopped at web function coverage (89.28%, required 90%). Added PDF download
+success and failure tests; local web suite now passes 43 tests with 96.42%
+function coverage. Browser and remaining CI gates still await a passing run.
+
 ## Release PDF export (2026-10-25)
 
 Authenticated release report endpoint and download control are implemented.

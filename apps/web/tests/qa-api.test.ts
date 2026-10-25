@@ -410,6 +410,53 @@ describe("cursor pagination", () => {
 });
 
 describe("CSV downloads and project paths", () => {
+  it("downloads an authenticated release PDF with encoded IDs and delayed cleanup", async () => {
+    vi.useFakeTimers();
+    const { acceptSession, exportRelease, fetchMock } = await setup();
+    acceptSession(session);
+    const link = { href: "", download: "", click: vi.fn() };
+    vi.stubGlobal("document", { createElement: vi.fn(() => link) });
+    const createURL = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:release");
+    const revokeURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce(
+      new Response("%PDF-1.3", {
+        headers: { "Content-Type": "application/pdf" },
+      }),
+    );
+    await exportRelease("project/id", "release/id");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/projects/project%2Fid/releases/release%2Fid/report.pdf",
+      expect.objectContaining({ headers: { Authorization: "Bearer access-original" } }),
+    );
+    const blob = createURL.mock.calls[0][0] as Blob;
+    expect(blob.type).toBe("application/pdf");
+    expect(await blob.text()).toBe("%PDF-1.3");
+    expect(link.href).toBe("blob:release");
+    expect(link.download).toBe("driftgate-release.pdf");
+    expect(link.click).toHaveBeenCalledTimes(1);
+    expect(revokeURL).not.toHaveBeenCalled();
+    await vi.runAllTimersAsync();
+    expect(revokeURL).toHaveBeenCalledWith("blob:release");
+  });
+
+  it("reports release export limits without downloading an error response", async () => {
+    const { exportRelease, fetchMock } = await setup();
+    const createURL = vi.spyOn(URL, "createObjectURL");
+    fetchMock.mockResolvedValueOnce(
+      Response.json(
+        {
+          error: { code: "REPORT_LIMIT", message: "Release report exceeds the limit" },
+        },
+        { status: 422 },
+      ),
+    );
+    await expect(exportRelease("project-1", "release-1")).rejects.toMatchObject({
+      status: 422,
+      code: "REPORT_LIMIT",
+    });
+    expect(createURL).not.toHaveBeenCalled();
+  });
+
   it("downloads an authorized CSV and releases its object URL", async () => {
     vi.useFakeTimers();
     const { acceptSession, exportCases, fetchMock } = await setup();
