@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Express, RequestHandler } from "express";
 import type { PrismaClient } from "../generated/client/index.js";
 import { collectReleaseReadiness } from "./release-readiness.js";
+import { mountReleaseSignoffs } from "./release-signoffs.js";
 
 const id = z.string().min(1).max(100);
 const environments = ["STAGING", "UAT", "PREPROD", "PROD"] as const;
@@ -22,6 +23,7 @@ export function mountReleases(
   guard: (write?: boolean) => RequestHandler,
   fail: (status: number, code: string, message: string) => never,
 ) {
+  mountReleaseSignoffs(app, db, guard, fail);
   const base = "/api/v1/projects/:projectId/releases";
   const include = { gates: { orderBy: { position: "asc" as const } } };
   app.get(`${base}/:releaseId/gates/:environment/readiness`, guard(), async (req, res) => {

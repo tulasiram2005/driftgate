@@ -1,5 +1,22 @@
 # Phase status
 
+## Release sign-off and gate sequencing (2026-10-25)
+
+Named project Approvers can sign eligible gates in STAGING, UAT, PREPROD, PROD
+order. Required comments, server timestamps, evidence hashes and gate revisions
+are persisted in a hash chain. Replaced or expired evidence invalidates current
+approval; reapproving an earlier gate requires downstream approval again.
+Serializable transactions reject conflicting approvals. The release screen
+provides chain verification, current/stale states and historical reviewer details.
+
+195 API tests, 41 web unit tests, API/web typecheck and lint, and API build passed.
+Migration 24 applied to isolated test and explicitly approved demo databases.
+Chromium still fails to launch with macOS MachPortRendezvous permission denial;
+browser assertions and screenshots are NOT VERIFIED. The defect status board is
+also implemented, with shared filters and existing audited transition controls;
+rendered board verification is pending. Phase 5 remains open for PDF report and
+browser/cloud/CI verification. Phases 6 and 7 follow.
+
 ## Visual difference review (2026-10-25)
 
 Admin/Approver review now records ACCEPTED or REJECTED, a required reason,

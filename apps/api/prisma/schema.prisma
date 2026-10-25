@@ -89,7 +89,28 @@ model Release {
   createdAt DateTime @default(now())
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   gates ReleaseGate[]
+  signoffs ReleaseSignoff[]
+  approvalRevision Int @default(0)
   @@index([projectId, id])
+}
+
+model ReleaseSignoff {
+  id String @id
+  releaseId String
+  sequence Int
+  environment String
+  gateRevision Int
+  evidenceHash String
+  policyVersion String
+  approverId String
+  approverName String
+  comment String
+  createdAt DateTime
+  precedingGateSignoffId String?
+  previousHash String?
+  hash String
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  @@unique([releaseId, sequence])
 }
 
 model ReleaseGate {

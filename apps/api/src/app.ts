@@ -31,6 +31,7 @@ import { mountDefects, defectBody, defectTransitionBody } from "./defects.js";
 import { mountJiraSettings, jiraSettingsBody, jiraVerifyBody } from "./jira-settings.js";
 import { mountJiraExport, jiraExportBody, jiraReconcileBody } from "./jira-export.js";
 import { mountReleases, releaseBody, gateRunsBody } from "./releases.js";
+import { signoffBody } from "./release-signoffs.js";
 import { mountCallback, mountExecution, publicRun } from "./execution.js";
 import { automatedRunBody, callbackBody, screenshotBody } from "./execution-contracts.js";
 import type { EvidenceStorage } from "./storage.js";
@@ -415,6 +416,8 @@ export function createApp(
   document("get", `${base}/releases/:releaseId`);
   document("put", `${base}/releases/:releaseId/gates/:environment/runs`, gateRunsBody);
   document("get", `${base}/releases/:releaseId/gates/:environment/readiness`);
+  document("get", `${base}/releases/:releaseId/signoffs`);
+  document("post", `${base}/releases/:releaseId/gates/:environment/signoff`, signoffBody);
   document("post", `${base}/defects`, defectBody);
   document("get", `${base}/defects`);
   document("get", `${base}/defects/metrics`);

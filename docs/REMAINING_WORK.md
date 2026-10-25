@@ -1,6 +1,6 @@
 # Remaining delivery work
 
-Current verification checkpoint: 2026-10-24, following code revision 6730f9d.
+Current verification checkpoint: 2026-10-25, local release sign-off implementation.
 This is the consolidated roadmap;
 older entries in STATUS.md are historical, not a current pending-work list.
 
@@ -14,7 +14,9 @@ The MVP is an intermediate milestone, not the final delivery.
 
 ## Phase 5: remaining implementation and verification
 
-- Defects: board remains pending. Creation, list/detail, project-wide search and
+- Defects: status board is implemented with list/board switching, shared filters,
+  loaded-result counts and accessible card navigation to the existing transition
+  form. New browser verification is pending. Creation, list/detail, project-wide search and
   filters, aging and mean-time-to-closure metrics, reproduction snapshots,
   role-restricted transitions and event history are built. Hosted browser checks
   passed in Quality Gates 39998074072; final product polish remains Phase 6 work.
@@ -36,11 +38,14 @@ The MVP is an intermediate milestone, not the final delivery.
   Drift, visual comparison and automated accessibility collectors are implemented.
   Admin/Approver acceptance of visual differences is implemented; zero-difference
   comparisons require approved active baselines. Browser verification remains pending.
-- Gates: enforce exit criteria and environment sequence. Saving a run binding
-  is not equivalent to passing or approving a gate.
+- Gates: exit criteria and environment sequence are implemented and tested.
+  Saving a run binding is not equivalent to passing or approving a gate.
 - Sign-off: named Approver authorization, required comment/timestamp, evidence
   binding, stale-approval detection, concurrent-write protection, hash-chained
-  audit persistence and chain-verification API/screen.
+  history and chain-verification API/screen are implemented. Local test and demo
+  migration applied. Browser screenshots, hosted migration and CI verification
+  remain pending. Audit hashes detect altered/deleted records against the stored
+  count; they do not protect against an administrator rewriting the entire database.
 - Reports: export the release PDF with readiness, evidence, defects, exclusions
   and sign-off/audit details, using the established design tokens.
 - Verification: tests for these workflows and failure cases, browser screenshots

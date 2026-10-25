@@ -26,7 +26,15 @@ type Candidate = {
   device?: string;
 };
 
-export function ReleasesView({ projectId, canWrite }: { projectId: string; canWrite: boolean }) {
+export function ReleasesView({
+  projectId,
+  canWrite,
+  canApprove = false,
+}: {
+  projectId: string;
+  canWrite: boolean;
+  canApprove?: boolean;
+}) {
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const query = useInfiniteQuery({
@@ -41,6 +49,7 @@ export function ReleasesView({ projectId, canWrite }: { projectId: string; canWr
         projectId={projectId}
         id={selected}
         canWrite={canWrite}
+        canApprove={canApprove}
         onBack={() => setSelected(null)}
       />
     );
@@ -145,11 +154,13 @@ function ReleaseDetail({
   projectId,
   id,
   canWrite,
+  canApprove,
   onBack,
 }: {
   projectId: string;
   id: string;
   canWrite: boolean;
+  canApprove: boolean;
   onBack: () => void;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
@@ -171,7 +182,13 @@ function ReleaseDetail({
         query.data && (
           <>
             <SectionHeading title={query.data.name} />
-            <p className="muted">Readiness not evaluated · No sign-off recorded</p>
+            <p className="muted">Review evidence and approve each environment in order.</p>
+            <ReleaseApprovals
+              key={query.data.gates.map((item) => `${item.id}:${item.revision}`).join(",")}
+              projectId={projectId}
+              releaseId={id}
+              canApprove={canApprove}
+            />
             <div className="qa-record-list">
               {query.data.gates.map((item) => (
                 <section
@@ -217,6 +234,189 @@ function ReleaseDetail({
         )
       )}
     </>
+  );
+}
+
+type Signoff = {
+  id: string;
+  environment: string;
+  approverName: string;
+  approverId: string;
+  createdAt: string;
+  comment: string;
+  sequence: number;
+  hash: string;
+};
+type ApprovalState = {
+  verification: { valid: boolean; count: number; firstInvalidSequence: number | null };
+  records: Signoff[];
+  gates: {
+    environment: string;
+    current: boolean;
+    precedingValid: boolean;
+    signoff: Signoff | null;
+    readiness: { eligible: boolean; gateRevision: number; evidenceHash: string } | null;
+  }[];
+};
+
+function ReleaseApprovals({
+  projectId,
+  releaseId,
+  canApprove,
+}: {
+  projectId: string;
+  releaseId: string;
+  canApprove: boolean;
+}) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [comment, setComment] = useState("");
+  const query = useQuery({
+    queryKey: ["project", projectId, "release-approvals", releaseId],
+    queryFn: () => api<ApprovalState>(projectPath(projectId, `/releases/${releaseId}/signoffs`)),
+    enabled: false,
+  });
+  const write = useWrite(projectId, () => {
+    setSelected(null);
+    setComment("");
+    void query.refetch();
+  });
+  const gate = query.data?.gates.find((item) => item.environment === selected);
+  return (
+    <section aria-label="Release approvals" className="qa-release-gate">
+      <h2>Approvals and audit trail</h2>
+      <p>
+        Staging, UAT, Pre-Production, then Production. Changed or expired evidence requires a new
+        approval.
+      </p>
+      <button
+        className="qa-button"
+        type="button"
+        disabled={query.isFetching || write.isPending}
+        onClick={() => {
+          setSelected(null);
+          void query.refetch();
+        }}
+      >
+        {query.isFetching ? "Verifying..." : "Verify chain and approvals"}
+      </button>
+      <ErrorNotice error={query.error} />
+      {query.data && !query.isFetching && !query.isError && (
+        <>
+          <p role="status">
+            {query.data.verification.valid
+              ? `Audit chain verified: ${query.data.verification.count} recorded approvals`
+              : "Audit verification failed. Sign-off is blocked."}
+          </p>
+          <p>
+            Checked {new Date(query.dataUpdatedAt).toLocaleString()}. Verify again after changing
+            evidence.
+          </p>
+          <p className="muted">
+            Verification checks stored records and current evidence. It cannot prove integrity
+            against an administrator who rewrites the entire database.
+          </p>
+          <div className="qa-record-list">
+            {query.data.gates.map((item) => (
+              <article key={item.environment}>
+                <h3>{item.environment}</h3>
+                <p>
+                  {item.current
+                    ? "Current approval"
+                    : item.signoff
+                      ? "Approval no longer current"
+                      : "No approval recorded"}
+                </p>
+                {!item.precedingValid && <p>Waiting for current approval of earlier gates.</p>}
+                {!item.readiness?.eligible && (
+                  <p>Exit criteria are not met. Check readiness below for details.</p>
+                )}
+                {item.signoff && (
+                  <p>
+                    Last signed by {item.signoff.approverName} at{" "}
+                    {new Date(item.signoff.createdAt).toLocaleString()}
+                  </p>
+                )}
+                {canApprove &&
+                  query.data!.verification.valid &&
+                  item.precedingValid &&
+                  item.readiness?.eligible &&
+                  !item.current && (
+                    <button
+                      type="button"
+                      className="qa-button"
+                      onClick={() => {
+                        write.reset();
+                        setComment("");
+                        setSelected(item.environment);
+                      }}
+                    >
+                      Sign off {item.environment}
+                    </button>
+                  )}
+              </article>
+            ))}
+          </div>
+          {!canApprove && <p>A project member with the Approver role must sign off.</p>}
+          {query.data.records.length > 0 && (
+            <details>
+              <summary>Approval history ({query.data.records.length})</summary>
+              <ol>
+                {query.data.records.map((record) => (
+                  <li key={record.id}>
+                    <p>
+                      {record.environment} · {record.approverName} ·{" "}
+                      {new Date(record.createdAt).toLocaleString()}
+                    </p>
+                    <p>{record.comment}</p>
+                    <p>Reviewer: {record.approverId}</p>
+                    <p style={{ overflowWrap: "anywhere" }}>Record hash: {record.hash}</p>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
+        </>
+      )}
+      {gate?.readiness && selected && (
+        <Modal
+          title={`Sign off ${selected}`}
+          onClose={() => setSelected(null)}
+          busy={write.isPending}
+        >
+          <form
+            className="qa-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!write.isPending && comment.trim() && gate.readiness)
+                write.mutate({
+                  path: projectPath(projectId, `/releases/${releaseId}/gates/${selected}/signoff`),
+                  body: {
+                    comment: comment.trim(),
+                    gateRevision: gate.readiness.gateRevision,
+                    evidenceHash: gate.readiness.evidenceHash,
+                  },
+                });
+            }}
+          >
+            <p>
+              This records your name, time and reviewed evidence permanently in the release history.
+              Evidence is checked again when you submit.
+            </p>
+            <Field label="Approval comment">
+              <textarea
+                required
+                maxLength={2000}
+                value={comment}
+                disabled={write.isPending}
+                onChange={(event) => setComment(event.target.value)}
+              />
+            </Field>
+            <ErrorNotice error={write.error} />
+            <Submit pending={write.isPending}>Record approval</Submit>
+          </form>
+        </Modal>
+      )}
+    </section>
   );
 }
 

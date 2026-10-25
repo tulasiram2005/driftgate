@@ -4,6 +4,7 @@ import request from "supertest";
 import { PrismaClient } from "../generated/client/index.js";
 import { createApp } from "../src/app.js";
 import { readConfig } from "../src/config.js";
+import { signoffHash, verifySignoffs } from "../src/release-signoffs.js";
 
 const url = process.env.TEST_API_DATABASE_URL;
 if (
@@ -27,6 +28,237 @@ const projects: string[] = [];
 const runs: string[] = [];
 const auth = (role = "ADMIN") => ({ Authorization: `Bearer ${users[role]!.token}` });
 const path = (project = projects[0]) => `/api/v1/projects/${project}/releases`;
+
+it("signs exact evidence in order, detects tampering and invalidates downstream approvals", async () => {
+  const project = (
+    await request(app).post("/api/v1/projects").set(auth()).send({ name: "Demo signoff" })
+  ).body.data;
+  projects.push(project.id);
+  await db.member.create({
+    data: { projectId: project.id, userId: users.APPROVER!.id, role: "APPROVER" },
+  });
+  const critical = await db.testCase.create({
+    data: {
+      projectId: project.id,
+      title: "Demo critical",
+      priority: "HIGH",
+      type: "FUNCTIONAL",
+      tags: [],
+    },
+  });
+  const release = (
+    await request(app).post(path(project.id)).set(auth()).send({ name: "Demo signoff release" })
+  ).body.data;
+  const root = `${path(project.id)}/${release.id}`;
+  const images: string[] = [];
+  for (const environment of ["STAGING", "UAT", "PREPROD", "PROD"]) {
+    const run = await db.run.create({
+      data: {
+        projectId: project.id,
+        mode: "AUTOMATED",
+        status: "PASS",
+        environment,
+        browser: "chromium",
+        device: "desktop",
+      },
+    });
+    const sample = await db.result.create({
+      data: {
+        runId: run.id,
+        caseId: "accessibility",
+        title: "Demo accessibility",
+        version: 1,
+        steps: [],
+        status: "PASS",
+        browser: "chromium",
+        device: "desktop",
+      },
+    });
+    await db.result.create({
+      data: {
+        runId: run.id,
+        caseId: critical.id,
+        title: "Demo critical",
+        version: 1,
+        steps: [],
+        status: "PASS",
+        browser: "chromium",
+        device: "desktop",
+      },
+    });
+    const before = await db.environmentSnapshot.create({
+      data: {
+        projectId: project.id,
+        label: "Demo reference",
+        environment: environment === "STAGING" ? "uat" : "staging",
+        createdBy: users.ADMIN!.id,
+        snapshot: {},
+      },
+    });
+    const after = await db.environmentSnapshot.create({
+      data: {
+        projectId: project.id,
+        runId: run.id,
+        source: "RUNNER",
+        browser: "chromium",
+        device: "desktop",
+        label: "Demo current",
+        environment: environment.toLowerCase(),
+        createdBy: users.ADMIN!.id,
+        snapshot: {},
+      },
+    });
+    await db.environmentComparison.create({
+      data: {
+        projectId: project.id,
+        beforeId: before.id,
+        afterId: after.id,
+        createdBy: users.ADMIN!.id,
+        findingCount: 0,
+        findings: [],
+      },
+    });
+    const image = await db.evidence.create({
+      data: {
+        resultId: sample.id,
+        key: randomUUID(),
+        kind: "screenshot",
+        contentType: "image/png",
+        sizeBytes: 100,
+        ready: true,
+      },
+    });
+    const reference = await db.evidence.create({
+      data: {
+        resultId: sample.id,
+        key: randomUUID(),
+        kind: "baseline-fixture",
+        contentType: "image/png",
+        sizeBytes: 100,
+        ready: true,
+      },
+    });
+    const baseline = await db.visualBaseline.create({
+      data: {
+        projectId: project.id,
+        evidenceId: reference.id,
+        label: "Demo reference",
+        environment: environment.toLowerCase(),
+        browser: "chromium",
+        device: "desktop",
+        checkId: "accessibility",
+        viewportWidth: 10,
+        viewportHeight: 10,
+        createdBy: users.ADMIN!.id,
+        status: "APPROVED",
+        active: true,
+        activatedBy: users.ADMIN!.id,
+        activatedAt: new Date(),
+        reviewedBy: users.APPROVER!.id,
+        reviewedAt: new Date(),
+        reviewComment: "Demo reference",
+      },
+    });
+    images.push(baseline.id);
+    await db.visualComparison.create({
+      data: {
+        projectId: project.id,
+        baselineId: baseline.id,
+        evidenceId: image.id,
+        createdBy: users.ADMIN!.id,
+        width: 10,
+        height: 10,
+        changedPixels: 0,
+        comparedPixels: 100,
+        diffKey: randomUUID(),
+      },
+    });
+    expect(
+      (
+        await request(app)
+          .put(`${root}/gates/${environment}/runs`)
+          .set(auth())
+          .send({ revision: 0, runIds: [run.id] })
+      ).status,
+    ).toBe(200);
+  }
+  const read = async () =>
+    (await request(app).get(`${root}/signoffs`).set(auth("APPROVER"))).body.data;
+  const state = await read();
+  expect(state.verification).toMatchObject({ valid: true, count: 0 });
+  expect(
+    state.gates.every((gate: { readiness: { eligible: boolean } }) => gate.readiness.eligible),
+  ).toBe(true);
+  const body = (index: number) => ({
+    gateRevision: state.gates[index].readiness.gateRevision,
+    evidenceHash: state.gates[index].readiness.evidenceHash,
+    comment: "Demo evidence reviewed",
+  });
+  const sign = (environment: string, data: object, role = "APPROVER") =>
+    request(app).post(`${root}/gates/${environment}/signoff`).set(auth(role)).send(data);
+  expect((await sign("STAGING", body(0), "ADMIN")).status).toBe(403);
+  expect((await sign("STAGING", body(0), "OUTSIDER")).status).toBe(404);
+  expect((await request(app).post(`${root}/gates/STAGING/signoff`).send(body(0))).status).toBe(401);
+  expect((await sign("UAT", body(1))).body.error.code).toBe("PREVIOUS_GATE");
+  expect((await sign("STAGING", { ...body(0), comment: " " })).status).toBe(400);
+  expect(
+    (await sign("STAGING", { ...body(0), evidenceHash: "0".repeat(64) })).body.error.code,
+  ).toBe("STALE_EVIDENCE");
+  const concurrent = await Promise.all([sign("STAGING", body(0)), sign("STAGING", body(0))]);
+  expect(concurrent.map((response) => response.status).sort()).toEqual([200, 409]);
+  expect((await sign("UAT", body(1))).status).toBe(200);
+  expect((await read()).gates.slice(0, 2).every((gate: { current: boolean }) => gate.current)).toBe(
+    true,
+  );
+  const records = await db.releaseSignoff.findMany({
+    where: { releaseId: release.id },
+    orderBy: { sequence: "asc" },
+  });
+  expect(verifySignoffs(records, 2).valid).toBe(true);
+  expect(verifySignoffs(records.slice(0, 1), 2).valid).toBe(false);
+  expect(signoffHash(records[0]!)).toBe(records[0]!.hash);
+  await db.releaseSignoff.update({
+    where: { id: records[0]!.id },
+    data: { comment: "Tampered demo" },
+  });
+  expect((await read()).verification.valid).toBe(false);
+  expect((await sign("PREPROD", body(2))).body.error.code).toBe("INVALID_CHAIN");
+  await db.releaseSignoff.update({
+    where: { id: records[0]!.id },
+    data: { comment: records[0]!.comment },
+  });
+  const gate = release.gates[0];
+  const savedGate = await db.releaseGate.findUniqueOrThrow({ where: { id: gate.id } });
+  await request(app)
+    .put(`${root}/gates/STAGING/runs`)
+    .set(auth())
+    .send({ revision: 1, runIds: savedGate.runIds });
+  const changed = await read();
+  expect(changed.gates[0].current).toBe(false);
+  expect(changed.gates[1].current).toBe(false);
+  expect((await sign("PREPROD", body(2))).body.error.code).toBe("PREVIOUS_GATE");
+  expect(
+    (
+      await sign("STAGING", {
+        ...body(0),
+        ...{
+          gateRevision: changed.gates[0].readiness.gateRevision,
+          evidenceHash: changed.gates[0].readiness.evidenceHash,
+        },
+      })
+    ).status,
+  ).toBe(200);
+  expect((await read()).gates[1].current).toBe(false);
+  expect((await sign("UAT", body(1))).status).toBe(200);
+  expect((await sign("PREPROD", body(2))).status).toBe(200);
+  expect((await sign("PROD", body(3))).status).toBe(200);
+  expect((await read()).gates.every((item: { current: boolean }) => item.current)).toBe(true);
+  await db.testCase.update({ where: { id: critical.id }, data: { version: 2 } });
+  expect((await read()).gates.every((item: { current: boolean }) => !item.current)).toBe(true);
+  expect((await sign("STAGING", body(0))).body.error.code).toBe("NOT_READY");
+  await db.visualComparison.deleteMany({ where: { projectId: project.id } });
+  await db.visualBaseline.deleteMany({ where: { id: { in: images } } });
+});
 
 it("collects authoritative readiness and blocks missing, stale or changed evidence", async () => {
   const release = (await request(app).post(path()).set(auth()).send({ name: "Demo readiness" }))

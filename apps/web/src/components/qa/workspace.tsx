@@ -491,7 +491,11 @@ function SignedIn({ user }: { user: User }) {
                 ) : view === "integrations" ? (
                   <IntegrationsView projectId={projectId} isAdmin={selected.role === "ADMIN"} />
                 ) : view === "releases" ? (
-                  <ReleasesView projectId={projectId} canWrite={canWrite} />
+                  <ReleasesView
+                    projectId={projectId}
+                    canWrite={canWrite}
+                    canApprove={selected.role === "APPROVER"}
+                  />
                 ) : view === "comparisons" ? (
                   <ComparisonsView key={projectId} projectId={projectId} canWrite={canWrite} />
                 ) : (

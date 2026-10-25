@@ -68,6 +68,12 @@ test("real API: release gates persist environment-specific run selection", async
     page.getByRole("region", { name: "UAT gate" }).getByText(run.id, { exact: true }),
   ).toBeVisible();
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.getByRole("button", { name: "Verify chain and approvals" }).click();
+  await expect(page.getByText("Audit chain verified: 0 recorded approvals")).toBeVisible();
+  await expect(
+    page.getByText("A project member with the Approver role must sign off."),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Sign off / })).toHaveCount(0);
   for (const width of [360, 768, 1280, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

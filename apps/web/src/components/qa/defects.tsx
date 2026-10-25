@@ -88,6 +88,7 @@ export function CreateDefect({ projectId, resultId }: { projectId: string; resul
 }
 
 export function DefectsView({ projectId, role }: { projectId: string; role: string }) {
+  const [view, setView] = useState<"list" | "board">("list");
   const [selected, setSelected] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({ search: "", status: "", severity: "" });
@@ -125,7 +126,21 @@ export function DefectsView({ projectId, role }: { projectId: string; role: stri
   const rows = query.data?.pages.flatMap((part) => part.data) ?? [];
   return (
     <>
-      <SectionHeading title="Defects" />
+      <SectionHeading title="Defects">
+        <div className="qa-actions" role="group" aria-label="Defect view">
+          {(["list", "board"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              className="qa-button"
+              aria-pressed={view === mode}
+              onClick={() => setView(mode)}
+            >
+              {mode === "list" ? "List view" : "Board view"}
+            </button>
+          ))}
+        </div>
+      </SectionHeading>
       <ErrorNotice error={metrics.error} retry={() => void metrics.refetch()} />
       {metrics.data && (
         <section aria-label="Project-wide defect metrics">
@@ -233,23 +248,71 @@ export function DefectsView({ projectId, role }: { projectId: string; role: stri
               title={Object.values(filters).some(Boolean) ? "No matching defects" : "No defects"}
             />
           )}
-          <div className="qa-record-list">
-            {rows.map((row) => (
-              <article key={row.id}>
-                <h2>
-                  <OpenButton onClick={() => setSelected(row.id)}>{row.title}</OpenButton>
-                </h2>
-                <p>
-                  {row.severity} · {label(row.status)} ·{" "}
-                  {row.reproduction.environment.toUpperCase()}
-                </p>
-                <p>
-                  {row.reproduction.browser} · {row.reproduction.device} ·{" "}
-                  {new Date(row.createdAt).toLocaleString()}
-                </p>
-              </article>
-            ))}
-          </div>
+          {view === "board" ? (
+            <>
+              <p role="status">
+                {rows.length} loaded matching defects
+                {query.hasNextPage ? "; more available below" : ""}. Column counts reflect loaded
+                results.
+              </p>
+              <p>Open a card to review evidence and change its status with a comment.</p>
+              <div className="qa-defect-board" aria-label="Defect status board">
+                {Object.keys(transitions)
+                  .filter((status) => !filters.status || status === filters.status)
+                  .map((status) => {
+                    const cards = rows.filter((row) => row.status === status);
+                    return (
+                      <section
+                        key={status}
+                        aria-label={`${label(status)} defects`}
+                        className="qa-defect-column"
+                      >
+                        <h2>
+                          {label(status)} <span className="muted">({cards.length})</span>
+                        </h2>
+                        {!cards.length && <p className="muted">No loaded defects</p>}
+                        {cards.map((row) => (
+                          <article key={row.id} className="qa-defect-card">
+                            <p>
+                              {row.severity} · {row.reproduction.environment.toUpperCase()}
+                            </p>
+                            <h3>
+                              <OpenButton onClick={() => setSelected(row.id)}>
+                                {row.title}
+                              </OpenButton>
+                            </h3>
+                            <p>
+                              {row.reproduction.browser} · {row.reproduction.device}
+                            </p>
+                            <time dateTime={row.createdAt}>
+                              {new Date(row.createdAt).toLocaleDateString()}
+                            </time>
+                          </article>
+                        ))}
+                      </section>
+                    );
+                  })}
+              </div>
+            </>
+          ) : (
+            <div className="qa-record-list">
+              {rows.map((row) => (
+                <article key={row.id}>
+                  <h2>
+                    <OpenButton onClick={() => setSelected(row.id)}>{row.title}</OpenButton>
+                  </h2>
+                  <p>
+                    {row.severity} · {label(row.status)} ·{" "}
+                    {row.reproduction.environment.toUpperCase()}
+                  </p>
+                  <p>
+                    {row.reproduction.browser} · {row.reproduction.device} ·{" "}
+                    {new Date(row.createdAt).toLocaleString()}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
           {query.hasNextPage && (
             <button
               type="button"

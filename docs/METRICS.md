@@ -1,5 +1,26 @@
 # Measured evidence
 
+## Release sign-off checkpoint (2026-10-25)
+
+- API: 195 tests / 21 files PASS in 15.42 seconds. Integration scenario covers
+  all four gates with synthetic passing evidence, role restrictions, required
+  comments, stale hashes, concurrent sign-off, tampering, count mismatch,
+  reapproval sequencing and case-version invalidation.
+- Web: 41 unit tests / 3 files PASS in 238 ms. These are existing utility tests,
+  not rendered approval-screen verification.
+- API/web typecheck and lint PASS; API production build PASS.
+- Release sign-off migration 20261025040000_release_signoffs applied to local
+  test database and, after explicit approval, local demo database.
+- Chromium release E2E attempted, FAILED before assertions: macOS
+  MachPortRendezvous bootstrap_check_in permission denied (1100). Screenshots,
+  keyboard/contrast checks, other browsers, hosted CI and cloud rollout NOT VERIFIED.
+- Initial synthetic snapshot fixture failed its source constraint; corrected to
+  RUNNER with browser/device metadata before the passing full API rerun.
+- Web production build (`build:compat`, webpack) PASS for approval screens.
+  Defect board added afterward; web typecheck, lint and webpack production build
+  also PASS with that follow-up. Its browser scenario now asserts card movement after an audited
+  status change, but remains unexecuted due to the same browser-launch failure.
+
 ## Visual review persistence (2026-10-25)
 
 194 API tests / 21 files passed in 15.46 seconds. Extended tests exercise
