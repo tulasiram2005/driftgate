@@ -1,5 +1,13 @@
 # Measured evidence
 
+## Phase 6 state clarity (2026-10-26)
+
+- Overview and shared empty-state changes: web typecheck and lint PASS.
+- Added browser coverage for unavailable metrics, independent empty releases,
+  retry recovery, read-only role navigation and reduced-motion accessibility.
+  This new scenario has not yet executed; CI verification remains pending.
+- Shared empty state now uses an inbox icon instead of a loading-like ring.
+
 ## Phase 5 final checkpoint (2026-10-25)
 
 - Quality Gates 40217298526, revision 0ef5409: all steps PASS, including final

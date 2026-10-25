@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ArrowRight, Check, Circle, Moon, RefreshCw, Sun, X } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, Inbox, Moon, RefreshCw, Sun, X } from "lucide-react";
 import type { FieldValues, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
@@ -77,7 +77,7 @@ export function Loading({ label = "Loading workspace" }: { label?: string }) {
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="qa-empty">
-      <Circle size={28} aria-hidden="true" />
+      <Inbox size={28} aria-hidden="true" />
       <h3>{title}</h3>
       {children && <p className="muted">{children}</p>}
     </div>
