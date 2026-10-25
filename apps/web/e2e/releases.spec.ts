@@ -107,6 +107,14 @@ test("real API: release gates persist environment-specific run selection", async
   await expect(
     page.getByText("No open S1 defects. Other release checks may still block approval."),
   ).toBeVisible();
+  await page.getByText("Inspect readiness for Demo October release", { exact: true }).click();
+  const overviewGate = page.getByRole("region", {
+    name: "Demo October release STAGING readiness",
+    exact: true,
+  });
+  await overviewGate.getByRole("button", { name: "Check readiness for STAGING" }).click();
+  await expect(overviewGate.getByRole("status")).toContainText("Not ready for sign-off");
+  await expect(overviewGate.getByText(/This is not an approval/)).toBeVisible();
   for (const width of [360, 768, 1280, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

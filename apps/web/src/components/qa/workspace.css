@@ -1030,6 +1030,19 @@
   padding-top: 24px;
   border-top: 1px solid var(--border);
 }
+.qa-overview-gates summary {
+  cursor: pointer;
+  padding-block: 12px;
+  font-weight: 600;
+}
+.qa-overview-gates summary:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+}
+.qa-overview-gates section {
+  padding-block: 16px;
+  border-top: 1px solid var(--border);
+}
 .qa-defect-metrics dd {
   margin: 6px 0 0;
   font-size: 20px;

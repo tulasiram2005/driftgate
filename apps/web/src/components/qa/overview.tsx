@@ -3,9 +3,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { api, page, projectPath } from "../../lib/qa-api";
 import { Empty, ErrorNotice, Loading, SectionHeading } from "./ui";
+import { GateReadiness } from "./releases";
 
 type Metrics = { open: number; closed: number; openS1: number; oldestOpenHours: number | null };
-type Release = { id: string; name: string; createdAt: string; gates: { runIds: string[] }[] };
+type Release = {
+  id: string;
+  name: string;
+  createdAt: string;
+  gates: { id: string; environment: string; revision: number; runIds: string[] }[];
+};
 
 export function Overview({
   projectId,
@@ -101,7 +107,22 @@ export function Overview({
                     Created {new Date(release.createdAt).toLocaleDateString()} ·{" "}
                     {release.gates.reduce((n, gate) => n + gate.runIds.length, 0)} linked runs
                   </p>
-                  <p>Readiness not evaluated in this overview.</p>
+                  <details className="qa-overview-gates">
+                    <summary>Inspect readiness for {release.name}</summary>
+                    <p>
+                      Check each environment against its current evidence. Checks do not approve a
+                      release.
+                    </p>
+                    {release.gates.map((gate) => (
+                      <section
+                        key={gate.id}
+                        aria-label={`${release.name} ${gate.environment} readiness`}
+                      >
+                        <h4>{gate.environment}</h4>
+                        <GateReadiness projectId={projectId} releaseId={release.id} gate={gate} />
+                      </section>
+                    ))}
+                  </details>
                 </article>
               ))}
             </div>

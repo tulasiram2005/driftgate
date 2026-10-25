@@ -1,5 +1,12 @@
 # Phase status
 
+## Phase 6 readiness overview (2026-10-26)
+
+Overview releases now expose keyboard-accessible expandable environment checks.
+Scores and blockers come from the existing readiness API on demand; these checks
+do not create approvals. Refresh failures hide stale readiness results. Local
+web typecheck/lint pass; browser validation is pending on this revision.
+
 ## Phase 6 overview implementation (2026-10-26)
 
 Added an Overview navigation entry with authenticated project-wide defect

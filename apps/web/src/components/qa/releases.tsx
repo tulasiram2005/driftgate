@@ -444,7 +444,7 @@ function ReleaseApprovals({
   );
 }
 
-function GateReadiness({
+export function GateReadiness({
   projectId,
   releaseId,
   gate,
@@ -489,7 +489,7 @@ function GateReadiness({
         <span className="sr-only"> for {gate.environment}</span>
       </button>
       <ErrorNotice error={query.error} />
-      {query.data && !query.isFetching && (
+      {query.data && !query.isFetching && !query.isError && (
         <>
           <p role="status">
             {query.data.score === null

@@ -1,5 +1,14 @@
 # Measured evidence
 
+## Phase 6 overview readiness (2026-10-26)
+
+- Added on-demand environment readiness checks inside each overview release,
+  reusing the authenticated Releases component and its evidence assessment.
+- Fixed stale readiness rendering after a failed refresh. Old success data is
+  not shown while the current query is in error.
+- Web typecheck and lint PASS. Real API browser test extended to assess an
+  incomplete STAGING gate in the overview; execution remains pending.
+
 ## Phase 6 state clarity (2026-10-26)
 
 - Overview and shared empty-state changes: web typecheck and lint PASS.
