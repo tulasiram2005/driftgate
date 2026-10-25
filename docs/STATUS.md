@@ -1,5 +1,18 @@
 # Phase status
 
+## Release PDF export (2026-10-25)
+
+Authenticated release report endpoint and download control are implemented.
+Reports capture readiness, source references, defects and approval history in a
+consistent database snapshot, excluding tokens and private download URLs. Export
+limits reject oversized reports instead of silently omitting records. Synthetic
+populated report rendered and inspected across eight pages. API tests: 195 PASS;
+API/web typecheck, lint and production builds PASS. Browser connection briefly
+worked for reading the workspace, then reported disabled before demo creation.
+Download interaction, responsive screenshots, hosted migration and CI remain
+NOT VERIFIED. Phase 5 implementation is substantially complete, but its exit
+verification is not complete; Phase 6 has not started.
+
 ## Release sign-off and gate sequencing (2026-10-25)
 
 Named project Approvers can sign eligible gates in STAGING, UAT, PREPROD, PROD

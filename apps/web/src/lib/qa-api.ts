@@ -211,6 +211,19 @@ export async function exportCases(projectId: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+export async function exportRelease(projectId: string, releaseId: string) {
+  const response = await authorizedFetch(
+    projectPath(projectId, `/releases/${encodeURIComponent(releaseId)}/report.pdf`),
+  );
+  if (!response.ok) await readData(response);
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "driftgate-release.pdf";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export function projectPath(projectId: string, suffix = "") {
   return `/projects/${encodeURIComponent(projectId)}${suffix}`;
 }

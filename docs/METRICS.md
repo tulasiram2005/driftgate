@@ -1,5 +1,18 @@
 # Measured evidence
 
+## PDF release report (2026-10-25)
+
+- 195 API tests / 21 files PASS in 17.24 seconds, including report authentication,
+  outsider isolation, PDF response headers, no-store policy, unsigned and fully
+  approved synthetic report export, and page-count regression coverage.
+- API/web typecheck, lint, API build and webpack web production build PASS.
+- Poppler rendered the populated synthetic report to eight pages; inspected the
+  complete contact sheet. Fixed footer overflow that initially created extra pages.
+- In-app browser read workspace and Releases successfully, but became disabled
+  at demo form submission. No new demo release was confirmed in the user's DB.
+- Browser download scenario added, NOT VERIFIED. CLI Chromium remains restricted;
+  cloud migration and CI for this change remain NOT VERIFIED.
+
 ## Release sign-off checkpoint (2026-10-25)
 
 - API: 195 tests / 21 files PASS in 15.42 seconds. Integration scenario covers

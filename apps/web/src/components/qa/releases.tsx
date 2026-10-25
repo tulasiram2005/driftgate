@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
-import { api, list, page, projectPath } from "../../lib/qa-api";
+import { api, list, page, projectPath, exportRelease } from "../../lib/qa-api";
 import {
   Empty,
   ErrorNotice,
@@ -164,6 +164,8 @@ function ReleaseDetail({
   onBack: () => void;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<Error | null>(null);
   const query = useQuery({
     queryKey: ["project", projectId, "release", id],
     queryFn: () => api<Release>(projectPath(projectId, `/releases/${id}`)),
@@ -181,7 +183,29 @@ function ReleaseDetail({
       ) : (
         query.data && (
           <>
-            <SectionHeading title={query.data.name} />
+            <SectionHeading title={query.data.name}>
+              <button
+                type="button"
+                className="qa-button"
+                disabled={exporting}
+                onClick={async () => {
+                  setExporting(true);
+                  setExportError(null);
+                  try {
+                    await exportRelease(projectId, id);
+                  } catch (error) {
+                    setExportError(
+                      error instanceof Error ? error : new Error("Report export failed"),
+                    );
+                  } finally {
+                    setExporting(false);
+                  }
+                }}
+              >
+                {exporting ? "Preparing PDF..." : "Export release PDF"}
+              </button>
+            </SectionHeading>
+            <ErrorNotice error={exportError} />
             <p className="muted">Review evidence and approve each environment in order.</p>
             <ReleaseApprovals
               key={query.data.gates.map((item) => `${item.id}:${item.revision}`).join(",")}

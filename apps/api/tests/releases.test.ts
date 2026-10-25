@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { writeFileSync } from "node:fs";
 import { beforeAll, afterAll, expect, it } from "vitest";
 import request from "supertest";
 import { PrismaClient } from "../generated/client/index.js";
@@ -50,6 +51,14 @@ it("signs exact evidence in order, detects tampering and invalidates downstream 
     await request(app).post(path(project.id)).set(auth()).send({ name: "Demo signoff release" })
   ).body.data;
   const root = `${path(project.id)}/${release.id}`;
+  expect((await request(app).get(`${root}/report.pdf`)).status).toBe(401);
+  expect((await request(app).get(`${root}/report.pdf`).set(auth("OUTSIDER"))).status).toBe(404);
+  const report = await request(app).get(`${root}/report.pdf`).set(auth());
+  expect(report.status).toBe(200);
+  expect(report.headers["content-type"]).toContain("application/pdf");
+  expect(report.headers["cache-control"]).toBe("no-store");
+  expect(Buffer.isBuffer(report.body)).toBe(true);
+  expect(report.body.subarray(0, 5).toString()).toBe("%PDF-");
   const images: string[] = [];
   for (const environment of ["STAGING", "UAT", "PREPROD", "PROD"]) {
     const run = await db.run.create({
@@ -253,6 +262,14 @@ it("signs exact evidence in order, detects tampering and invalidates downstream 
   expect((await sign("PREPROD", body(2))).status).toBe(200);
   expect((await sign("PROD", body(3))).status).toBe(200);
   expect((await read()).gates.every((item: { current: boolean }) => item.current)).toBe(true);
+  const signedReport = await request(app).get(`${root}/report.pdf`).set(auth("APPROVER"));
+  expect(signedReport.status).toBe(200);
+  expect(signedReport.body.subarray(0, 5).toString()).toBe("%PDF-");
+  const pages = signedReport.body.toString("latin1").match(/\/Type \/Page\b/g) ?? [];
+  expect(pages.length).toBeGreaterThanOrEqual(7);
+  expect(pages.length).toBeLessThan(14);
+  if (process.env.PDF_VERIFICATION_PATH)
+    writeFileSync(process.env.PDF_VERIFICATION_PATH, signedReport.body);
   await db.testCase.update({ where: { id: critical.id }, data: { version: 2 } });
   expect((await read()).gates.every((item: { current: boolean }) => !item.current)).toBe(true);
   expect((await sign("STAGING", body(0))).body.error.code).toBe("NOT_READY");

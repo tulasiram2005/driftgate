@@ -51,6 +51,9 @@ test("real API: release gates persist environment-specific run selection", async
   await page.getByLabel("Release name").fill("Demo October release");
   await page.getByRole("button", { name: "Create release", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Demo October release" })).toBeVisible();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export release PDF", exact: true }).click();
+  expect((await download).suggestedFilename()).toBe("driftgate-release.pdf");
   await page.getByRole("button", { name: "Select runs for UAT" }).click();
   const dialog = page.getByRole("dialog", { name: "UAT runs" });
   await expect(dialog.getByText(other.id, { exact: true })).toHaveCount(0);

@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Express, RequestHandler } from "express";
 import type { Prisma, PrismaClient, ReleaseSignoff } from "../generated/client/index.js";
 import { collectReleaseReadiness } from "./release-readiness.js";
+import { renderReleaseReport } from "./release-report.js";
 
 const environments = ["STAGING", "UAT", "PREPROD", "PROD"] as const;
 const id = z.string().min(1).max(100);
@@ -56,7 +57,7 @@ export function verifySignoffs(records: ReleaseSignoff[], expectedCount: number)
   };
 }
 
-async function collectApprovals(
+export async function collectApprovals(
   tx: Prisma.TransactionClient,
   projectId: string,
   releaseId: string,
@@ -99,6 +100,63 @@ export function mountReleaseSignoffs(
   fail: (status: number, code: string, message: string) => never,
 ) {
   const base = "/api/v1/projects/:projectId/releases/:releaseId";
+  app.get(`${base}/report.pdf`, guard(), async (req, res) => {
+    const projectId = id.parse(req.params.projectId);
+    const releaseId = id.parse(req.params.releaseId);
+    const input = await db.$transaction(
+      async (tx) => {
+        const release = await tx.release.findFirst({
+          where: { id: releaseId, projectId },
+          include: { project: { select: { name: true } } },
+        });
+        if (!release) return fail(404, "NOT_FOUND", "Release not found");
+        const approvals = await collectApprovals(tx, projectId, releaseId);
+        if (!approvals) return fail(404, "NOT_FOUND", "Release not found");
+        const defects = await tx.defect.findMany({
+          where: { projectId },
+          orderBy: { id: "asc" },
+          take: 1001,
+          select: { id: true, title: true, severity: true, status: true },
+        });
+        const references = approvals.gates.reduce(
+          (total, gate) =>
+            total +
+            Object.values(gate.readiness?.evidence ?? {}).reduce(
+              (count, source) =>
+                count +
+                (source && typeof source === "object" && "sourceIds" in source
+                  ? source.sourceIds.length
+                  : 0),
+              0,
+            ),
+          0,
+        );
+        if (defects.length > 1000 || approvals.records.length > 200 || references > 4000)
+          return fail(
+            422,
+            "REPORT_LIMIT",
+            "Release exceeds PDF export limits; use the in-app evidence and audit views",
+          );
+        return {
+          name: release.name,
+          projectName: release.project.name,
+          releaseId,
+          generatedAt: new Date(),
+          approvals,
+          defects,
+        };
+      },
+      { isolationLevel: "RepeatableRead", timeout: 15000 },
+    );
+    const pdf = await renderReleaseReport(input);
+    res
+      .set({
+        "Content-Type": "application/pdf",
+        "Content-Disposition": 'attachment; filename="driftgate-release.pdf"',
+        "Cache-Control": "no-store",
+      })
+      .send(pdf);
+  });
   app.get(`${base}/signoffs`, guard(), async (req, res) => {
     const data = await db.$transaction(
       (tx) => collectApprovals(tx, id.parse(req.params.projectId), id.parse(req.params.releaseId)),

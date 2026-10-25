@@ -46,8 +46,12 @@ The MVP is an intermediate milestone, not the final delivery.
   migration applied. Browser screenshots, hosted migration and CI verification
   remain pending. Audit hashes detect altered/deleted records against the stored
   count; they do not protect against an administrator rewriting the entire database.
-- Reports: export the release PDF with readiness, evidence, defects, exclusions
-  and sign-off/audit details, using the established design tokens.
+- Reports: authenticated PDF export is implemented with readiness, evidence
+  references, project defects, exclusions and sign-off/audit details from one
+  database snapshot. Synthetic populated report rendered and inspected locally.
+  Browser download and hosted verification remain pending. Non-ASCII text is
+  preserved as explicit Unicode escapes with portable fonts; native multilingual
+  typography remains a Phase 6 polish item.
 - Verification: tests for these workflows and failure cases, browser screenshots
   at all four widths, accessibility/role checks, CI and documentation. Review the
   existing defect-screen screenshots from successful hosted CI.

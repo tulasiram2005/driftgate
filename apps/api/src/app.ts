@@ -417,6 +417,7 @@ export function createApp(
   document("put", `${base}/releases/:releaseId/gates/:environment/runs`, gateRunsBody);
   document("get", `${base}/releases/:releaseId/gates/:environment/readiness`);
   document("get", `${base}/releases/:releaseId/signoffs`);
+  document("get", `${base}/releases/:releaseId/report.pdf`);
   document("post", `${base}/releases/:releaseId/gates/:environment/signoff`, signoffBody);
   document("post", `${base}/defects`, defectBody);
   document("get", `${base}/defects`);
