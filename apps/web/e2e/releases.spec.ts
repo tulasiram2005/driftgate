@@ -97,4 +97,27 @@ test("real API: release gates persist environment-specific run selection", async
   await expect(
     page.getByRole("region", { name: "UAT gate" }).getByText("0 linked runs", { exact: true }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Overview", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Saved releases" })
+      .getByText("Demo October release", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("No open S1 defects. Other release checks may still block approval."),
+  ).toBeVisible();
+  for (const width of [360, 768, 1280, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    expect(
+      (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+        .violations,
+    ).toEqual([]);
+    await page.screenshot({ path: info.outputPath(`overview-${width}.png`), fullPage: true });
+  }
+  await page.getByRole("button", { name: "Review releases", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Releases", exact: true })).toBeVisible();
 });

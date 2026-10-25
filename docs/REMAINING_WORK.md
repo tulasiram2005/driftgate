@@ -1,5 +1,14 @@
 # Remaining delivery work
 
+## Current state: 2026-10-26
+
+Phase 5 MVP is closed: see PHASE5_EXIT.md. Phase 6 is active, starting with a
+real-data overview using project-wide defect metrics and a bounded release list.
+Its browser scenarios are added; execution and screenshot review remain pending.
+Two phases remain: Phase 6 product polish and Phase 7 deployment/demo. The older
+Phase 5 implementation checklist below is retained as history; hosted migrations,
+continuous worker operation and live recovery/disconnect checks belong to Phase 7.
+
 Current verification checkpoint: 2026-10-25, local release sign-off implementation.
 Update: run 40215957794 passed all browser/fixture steps (66 web and 24 demo
 tests), including release creation/download and defect-board interaction. Its

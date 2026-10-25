@@ -61,6 +61,7 @@ import { SqlChecksView } from "./sql-checks";
 import { DefectsView } from "./defects";
 import { ReleasesView } from "./releases";
 import { IntegrationsView } from "./integrations";
+import { Overview } from "./overview";
 import "./workspace.css";
 
 const sessionKey = ["session"] as const;
@@ -262,6 +263,7 @@ function AuthScreen() {
 }
 
 type View =
+  | "overview"
   | "projects"
   | "requirements"
   | "cases"
@@ -275,6 +277,7 @@ type View =
   | "releases"
   | "integrations";
 const navigation = [
+  { id: "overview", title: "Overview", icon: ShieldCheck },
   { id: "requirements", title: "Requirements", icon: BookOpen },
   { id: "cases", title: "Test cases", icon: ClipboardList },
   { id: "suites", title: "Suites", icon: Layers3 },
@@ -470,7 +473,9 @@ function SignedIn({ user }: { user: User }) {
                 )}
               </div>
               <div key={projectId}>
-                {view === "requirements" ? (
+                {view === "overview" ? (
+                  <Overview projectId={projectId} onNavigate={setView} />
+                ) : view === "requirements" ? (
                   <RequirementsView projectId={projectId} canWrite={canWrite} />
                 ) : view === "cases" ? (
                   <CasesView projectId={projectId} canWrite={canWrite} />

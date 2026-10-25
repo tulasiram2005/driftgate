@@ -1,5 +1,13 @@
 # Phase status
 
+## Phase 6 overview implementation (2026-10-26)
+
+Added an Overview navigation entry with authenticated project-wide defect
+metrics, bounded saved releases, refresh/retry states and links into defects,
+releases and cases. Readiness is explicitly unevaluated rather than inferred
+from run counts. Web typecheck and lint PASS. Browser scenarios added for real
+release visibility, navigation, accessibility and four widths; not yet executed.
+
 ## Phase 5 MVP closed; Phase 6 started (2026-10-25)
 
 Final Quality Gates run 40217298526 passed every step on `0ef5409`. Live Jira
