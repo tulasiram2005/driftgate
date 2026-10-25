@@ -34,7 +34,7 @@ The MVP is an intermediate milestone, not the final delivery.
 - Readiness: API/UI now collect selected runs, high-priority case versions and
   project defects, preserving source dates and rejecting missing/changed runs.
   Drift, visual comparison and automated accessibility collectors are implemented.
-  Explicit acceptance of visual differences remains pending; zero-difference
+  Admin/Approver acceptance of visual differences is implemented; zero-difference
   comparisons require approved active baselines. Browser verification remains pending.
 - Gates: enforce exit criteria and environment sequence. Saving a run binding
   is not equivalent to passing or approving a gate.

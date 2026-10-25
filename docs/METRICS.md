@@ -1,5 +1,14 @@
 # Measured evidence
 
+## Visual review persistence (2026-10-25)
+
+194 API tests / 21 files passed in 15.46 seconds. Extended tests exercise
+authentication, QA/developer restrictions, outsider isolation, required reasons,
+concurrent Approver decisions, recorded identity and accepted-difference readiness.
+API/web typecheck and lint passed. Migration 20261025030000_visual_review applied
+to test and explicitly approved local demo databases. Browser screenshots, full
+build, CI and cloud migration remain NOT VERIFIED for this increment.
+
 ## Visual and accessibility collectors (2026-10-25)
 
 194 API tests / 21 files passed in 14.65 seconds. Added matrix coverage,

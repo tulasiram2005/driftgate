@@ -240,7 +240,11 @@ export async function collectReleaseReadiness(
         break;
       }
       // Changed pixels are not silently accepted as reviewed. Explicit review is separate work.
-      if (comparison.changedPixels === 0) reviewed++;
+      if (
+        comparison.reviewDecision !== "REJECTED" &&
+        (comparison.changedPixels === 0 || comparison.reviewDecision === "ACCEPTED")
+      )
+        reviewed++;
       dates.push(image.createdAt.getTime(), comparison.createdAt.getTime());
       sourceIds.push(comparison.id);
       visualSources.push({

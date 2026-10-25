@@ -230,6 +230,34 @@ it("requires complete automated accessibility coverage and rejects flaky, unfini
   expect((await read()).evidence.visual).toMatchObject({ reviewed: 1, total: 1 });
   await db.visualComparison.update({ where: { id: comparison.id }, data: { changedPixels: 1 } });
   expect((await read()).blockers).toContain("UNREVIEWED_VISUAL_DIFFERENCES");
+  const reviewPath = `/api/v1/projects/${projects[0]}/visual-comparisons/${comparison.id}/review`;
+  const review = { decision: "ACCEPTED", comment: "Demo intentional change reviewed" };
+  expect((await request(app).post(reviewPath).send(review)).status).toBe(401);
+  expect((await request(app).post(reviewPath).set(auth("QA")).send(review)).status).toBe(403);
+  expect((await request(app).post(reviewPath).set(auth("DEVELOPER")).send(review)).status).toBe(
+    403,
+  );
+  expect((await request(app).post(reviewPath).set(auth("OUTSIDER")).send(review)).status).toBe(404);
+  expect(
+    (
+      await request(app)
+        .post(reviewPath)
+        .set(auth("APPROVER"))
+        .send({ ...review, comment: " " })
+    ).status,
+  ).toBe(400);
+  const reviews = await Promise.all(
+    [0, 1].map(() => request(app).post(reviewPath).set(auth("APPROVER")).send(review)),
+  );
+  expect(reviews.map((response) => response.status).sort()).toEqual([200, 409]);
+  expect((await read()).evidence.visual.reviewed).toBe(1);
+  const savedReview = await db.visualComparison.findUniqueOrThrow({ where: { id: comparison.id } });
+  expect(savedReview).toMatchObject({
+    reviewDecision: "ACCEPTED",
+    reviewedBy: users.APPROVER!.id,
+    reviewComment: review.comment,
+  });
+  expect(savedReview.reviewedAt).not.toBeNull();
   await db.visualBaseline.update({ where: { id: baseline.id }, data: { ignoreRevision: 1 } });
   expect((await read()).evidence.visual).toBeNull();
   await db.visualComparison.delete({ where: { id: comparison.id } });

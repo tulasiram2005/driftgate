@@ -20,7 +20,11 @@ import type { Config } from "./config.js";
 import { mountSnapshots, snapshotBody } from "./snapshots.js";
 import { mountComparisons, comparisonBody, savedRulesBody } from "./comparisons.js";
 import { mountVisualBaselines, ignoreRegionsBody } from "./visual-baselines.js";
-import { mountVisualComparisons, visualComparisonBody } from "./visual-comparisons.js";
+import {
+  mountVisualComparisons,
+  visualComparisonBody,
+  visualReviewBody,
+} from "./visual-comparisons.js";
 import { storage } from "./storage.js";
 import { mountSqlResults, sqlRunBody, type SqlExecutor } from "./sql-results.js";
 import { mountDefects, defectBody, defectTransitionBody } from "./defects.js";
@@ -421,6 +425,7 @@ export function createApp(
   document("put", `${base}/visual-baselines/:baselineId/ignore-regions`, ignoreRegionsBody);
   mountVisualComparisons(app, db, guard, fail, evidenceStorage ?? storage(config));
   document("post", `${base}/visual-comparisons`, visualComparisonBody);
+  document("post", `${base}/visual-comparisons/:comparisonId/review`, visualReviewBody);
   document("get", `${base}/visual-comparisons`);
   document("get", `${base}/visual-comparisons/:comparisonId/url`);
   document("post", `${base}/comparisons`, comparisonBody);

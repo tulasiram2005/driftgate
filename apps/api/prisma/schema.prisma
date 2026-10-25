@@ -176,6 +176,10 @@ model SqlCheckRun {
 }
 
 model VisualComparison {
+  reviewDecision String?
+  reviewedBy String?
+  reviewedAt DateTime?
+  reviewComment String?
   ignoreRegions Json @default("[]")
   ignoreRevision Int @default(0)
   ignoredPixels Int @default(0)

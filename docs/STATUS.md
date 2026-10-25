@@ -1,5 +1,18 @@
 # Phase status
 
+## Visual difference review (2026-10-25)
+
+Admin/Approver review now records ACCEPTED or REJECTED, a required reason,
+reviewer identity and server timestamp. Each comparison accepts one decision;
+concurrent or repeated reviews conflict. Changed baseline settings require a new
+comparison. The UI exposes a review form and saved decision. Accepted differences
+count toward readiness only while source/baseline validation still passes.
+
+194 API tests passed, including permissions, concurrent reviews and readiness
+updates; API/web typecheck and lint passed. Migration 23 applied to test and,
+with explicit user approval, local demo databases. Browser review, cloud rollout,
+sign-off, gate sequencing, PDF and defect board remain pending.
+
 ## Visual and accessibility readiness (2026-10-25)
 
 Collectors now use saved automated accessibility matrix results and screenshot

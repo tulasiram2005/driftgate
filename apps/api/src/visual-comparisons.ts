@@ -8,6 +8,12 @@ import { ignoreRegionsSchema } from "./visual-baselines.js";
 
 const id = z.string().min(1).max(100);
 export const visualComparisonBody = z.object({ evidenceId: id }).strict();
+export const visualReviewBody = z
+  .object({
+    decision: z.enum(["ACCEPTED", "REJECTED"]),
+    comment: z.string().trim().min(1).max(2000),
+  })
+  .strict();
 export function mountVisualComparisons(
   app: Express,
   db: PrismaClient,
@@ -16,6 +22,50 @@ export function mountVisualComparisons(
   storage?: EvidenceStorage,
 ) {
   const base = "/api/v1/projects/:projectId/visual-comparisons";
+  app.post(`${base}/:comparisonId/review`, guard(), async (req, res) => {
+    if (!["ADMIN", "APPROVER"].includes(res.locals.role as string))
+      return fail(403, "FORBIDDEN", "An Admin or Approver must review visual differences");
+    const projectId = id.parse(req.params.projectId);
+    const comparisonId = id.parse(req.params.comparisonId);
+    const body = visualReviewBody.parse(req.body);
+    const data = await db.$transaction(async (tx) => {
+      const found = await tx.visualComparison.findFirst({
+        where: { id: comparisonId, projectId },
+        include: { baseline: true },
+      });
+      if (!found) return fail(404, "NOT_FOUND", "Comparison not found");
+      if (
+        !found.baseline.active ||
+        found.baseline.status !== "APPROVED" ||
+        found.ignoreRevision !== found.baseline.ignoreRevision
+      )
+        return fail(
+          409,
+          "STALE_COMPARISON",
+          "Baseline settings changed; compare again before reviewing",
+        );
+      const changed = await tx.visualComparison.updateMany({
+        where: { id: comparisonId, projectId, reviewDecision: null },
+        data: {
+          reviewDecision: body.decision,
+          reviewComment: body.comment,
+          reviewedBy: res.locals.userId as string,
+          reviewedAt: new Date(),
+        },
+      });
+      if (changed.count !== 1)
+        return fail(
+          409,
+          "CONFLICT",
+          "Comparison already reviewed; create a new comparison for another decision",
+        );
+      return tx.visualComparison.findUniqueOrThrow({
+        where: { id: comparisonId },
+        omit: { diffKey: true },
+      });
+    });
+    res.json({ data });
+  });
   // Bound memory-heavy decoding to one in-flight comparison per API process.
   let busy = false;
   app.post(base, guard(true), async (req, res) => {
