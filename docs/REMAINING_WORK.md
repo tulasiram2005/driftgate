@@ -1,6 +1,11 @@
 # Remaining delivery work
 
 Current verification checkpoint: 2026-10-25, local release sign-off implementation.
+Update: run 40215957794 passed all browser/fixture steps (66 web and 24 demo
+tests), including release creation/download and defect-board interaction. Its
+final dependency audit failed; patched dependencies pass local API/web tests,
+typecheck and audit, with a full CI rerun required. Browser-pending notes below
+remain applicable to untested live integrations and the new dependency revision.
 This is the consolidated roadmap;
 older entries in STATUS.md are historical, not a current pending-work list.
 

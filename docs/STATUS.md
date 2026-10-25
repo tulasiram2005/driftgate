@@ -1,5 +1,19 @@
 # Phase status
 
+## Cross-browser Phase 5 verification (2026-10-25)
+
+Quality Gates run 40215957794 passed 66 web browser tests and 24 demo browser
+tests across Chromium, Firefox and WebKit. Release creation, run binding
+persistence, PDF download, admin approval restrictions and empty audit-chain
+verification passed. Release screenshots reviewed at 360/768/1280/1920 pixels.
+Unit tests, SQL integration, production builds and runner fixtures passed.
+The final dependency audit failed on Zod and body-parser advisories. Updated
+Zod and its OpenAPI adapter, migrated record/resolver types, and refreshed
+body-parser. Local typecheck, 195 API tests, 43 web tests and dependency audit
+pass after the update. Full CI must pass again on this dependency revision.
+Live scheduled Jira polling/recovery and hosted migrations remain unverified;
+Phase 5 is not yet closed and Phase 6 has not started.
+
 ## Isolated CI verification (2026-10-25)
 
 Saved Phase 5 changes are backed up on `codex/phase5-verification`, without

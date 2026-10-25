@@ -17,7 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { api, type ResultStatus } from "../../lib/qa-api";
 
-export function schemaResolver<T extends FieldValues>(schema: z.ZodType<T>): Resolver<T> {
+export function schemaResolver<T extends FieldValues>(schema: z.ZodType<T, T>): Resolver<T> {
   return zodResolver(schema);
 }
 

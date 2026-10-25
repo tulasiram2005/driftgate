@@ -1,5 +1,17 @@
 # Measured evidence
 
+## Cross-browser release verification (2026-10-25)
+
+- GitHub run 40215957794: 66 web browser tests PASS (5.2 minutes), 24 demo
+  browser tests PASS. Chromium, Firefox and WebKit; emulation, not real devices.
+- Typecheck, lint, unit coverage, restricted SQL checks, builds and three runner
+  fixture steps PASS. Audit failed on GHSA-mrhx-c7xc-m3w5 and GHSA-27r3-jxmh-p828.
+- Artifact 12607607215 contains browser evidence. Reviewed Chromium release
+  screenshots at 360/768/1280/1920: no visible overlap or clipped controls.
+- After patched validation/parser dependencies: local typecheck, 195 API tests
+  and 43 web tests PASS; audit reports no known vulnerabilities. Browser results
+  above predate this dependency update and must be repeated.
+
 ## PDF download coverage (2026-10-25)
 
 - Web: 43 tests / 3 files PASS; statements 99.25%, branches 94.25%, functions

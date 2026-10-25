@@ -63,7 +63,7 @@ export const savedRulesBody = z
   })
   .strict();
 const pairKey = (a: string, b: string) => [a, b].sort().join(":");
-const ruleSets = z.record(z.array(expectedRule).max(100));
+const ruleSets = z.record(z.string(), z.array(expectedRule).max(100));
 export function mountComparisons(
   app: Express,
   db: PrismaClient,
