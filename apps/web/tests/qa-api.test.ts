@@ -428,7 +428,7 @@ describe("CSV downloads and project paths", () => {
       "/api/v1/projects/project%2Fid/releases/release%2Fid/report.pdf",
       expect.objectContaining({ headers: { Authorization: "Bearer access-original" } }),
     );
-    const blob = createURL.mock.calls[0][0] as Blob;
+    const blob = createURL.mock.calls[0]?.[0] as Blob;
     expect(blob.type).toBe("application/pdf");
     expect(await blob.text()).toBe("%PDF-1.3");
     expect(link.href).toBe("blob:release");
