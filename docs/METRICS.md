@@ -1,5 +1,14 @@
 # Measured evidence
 
+## Phase 5 final checkpoint (2026-10-25)
+
+- Quality Gates 40217298526, revision 0ef5409: all steps PASS, including final
+  security audit and browser/accessibility checks after dependency upgrades.
+- Live polling at 18:29:24 UTC: KAN-1 sync revision advanced to 2, status To Do,
+  error null, lease null, next poll 18:44:24 UTC. Immediate repeat left revision
+  unchanged. Existing encrypted local credentials used without printing them.
+- No continuous worker was started; hosted/operational checks remain Phase 7.
+
 ## Cross-browser release verification (2026-10-25)
 
 - GitHub run 40215957794: 66 web browser tests PASS (5.2 minutes), 24 demo

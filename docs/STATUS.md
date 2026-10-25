@@ -1,5 +1,14 @@
 # Phase status
 
+## Phase 5 MVP closed; Phase 6 started (2026-10-25)
+
+Final Quality Gates run 40217298526 passed every step on `0ef5409`. Live Jira
+polling refreshed demo ticket KAN-1 and respected its next-poll interval.
+See PHASE5_EXIT.md for evidence and limits. Hosted deployment and sustained
+worker verification belong to Phase 7 under the delivery contract. The user
+authorized continuing directly to Phase 6; product dashboard/polish is now active.
+Older checkpoints below describe earlier states and are historical.
+
 ## Cross-browser Phase 5 verification (2026-10-25)
 
 Quality Gates run 40215957794 passed 66 web browser tests and 24 demo browser
