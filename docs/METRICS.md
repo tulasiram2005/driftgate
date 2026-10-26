@@ -1,5 +1,17 @@
 # Measured evidence
 
+## Phase 6 overview CI checkpoint (2026-10-26)
+
+- Run 40223355251 / e9d18de: all quality steps PASS. Web browser suite:
+  69 tests in 6.7 minutes; demo browser suite: 24 tests in 1.4 minutes.
+- Includes Chromium, Firefox and WebKit, overview error/retry and permission
+  behavior, real API release readiness, responsive and accessibility checks.
+- Artifact 12610144440 retains screenshots and reports. These results do not
+  establish completion of the entire Phase 6 visual-review checklist.
+- Expanded recovery test adds keyboard activation, light/dark accessibility and
+  screenshots at 360/768/1280/1920. Its execution remains pending.
+- Loading motion is enabled only when reduced motion is not requested.
+
 ## Phase 6 overview readiness (2026-10-26)
 
 - Added on-demand environment readiness checks inside each overview release,

@@ -1049,6 +1049,23 @@
   font-weight: 600;
   overflow-wrap: anywhere;
 }
+@media (prefers-reduced-motion: no-preference) {
+  .qa-loading > svg {
+    animation: qa-loading-turn 1.4s linear infinite;
+  }
+  .qa-button,
+  .qa-nav-button {
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease,
+      color 140ms ease;
+  }
+}
+@keyframes qa-loading-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .qa-root *,
   .qa-root *::before,

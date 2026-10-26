@@ -3,7 +3,8 @@ import AxeBuilder from "@axe-core/playwright";
 
 test("overview distinguishes unavailable metrics from zero and recovers independently", async ({
   page,
-}) => {
+}, info) => {
+  test.setTimeout(120_000);
   const project = { id: "demo-overview", name: "Demo overview", role: "DEVELOPER" };
   let metricsCalls = 0;
   await page.route("**/api/v1/**", async (route) => {
@@ -48,16 +49,36 @@ test("overview distinguishes unavailable metrics from zero and recovers independ
   await expect(signals.getByRole("alert")).toContainText("Demo metrics unavailable");
   await expect(signals.getByText("Open S1 blockers", { exact: true })).toHaveCount(0);
   await expect(page.getByText("No releases yet", { exact: true })).toBeVisible();
-  await signals.getByRole("button", { name: "Retry", exact: true }).click();
+  const retry = signals.getByRole("button", { name: "Retry", exact: true });
+  await retry.focus();
+  await expect(retry).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(signals.getByRole("alert")).toHaveCount(0);
   await expect(
     signals.getByText("Open S1 defects block release approval. Review these first."),
   ).toBeVisible();
   await page.emulateMedia({ reducedMotion: "reduce" });
-  expect(
-    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
-      .violations,
-  ).toEqual([]);
+  for (const theme of ["dark", "light"]) {
+    if (theme === "light")
+      await page.getByRole("button", { name: "Switch to light theme" }).click();
+    for (const width of [360, 768, 1280, 1920]) {
+      await page.setViewportSize({ width, height: 1000 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+      await expect
+        .poll(
+          async () =>
+            (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+              .violations,
+        )
+        .toEqual([]);
+      await page.screenshot({
+        path: info.outputPath(`overview-recovery-${theme}-${width}.png`),
+        fullPage: true,
+      });
+    }
+  }
   await page.getByRole("button", { name: "Review defects", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Defects", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "New defect", exact: true })).toHaveCount(0);
