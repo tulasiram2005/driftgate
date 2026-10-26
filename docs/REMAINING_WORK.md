@@ -4,12 +4,16 @@
 
 Phase 5 MVP is closed: see PHASE5_EXIT.md. Phase 6 is active, starting with a
 real-data overview using project-wide defect metrics and a bounded release list.
-Its browser scenarios are added; execution and screenshot review remain pending.
+Overview browser checks passed in runs 40223355251 and 40255495102, including
+light/dark accessibility and keyboard recovery. Dark overview screenshots were
+reviewed at four widths. Later readiness layout/recovery changes await CI.
 Two phases remain: Phase 6 product polish and Phase 7 deployment/demo. The older
 Phase 5 implementation checklist below is retained as history; hosted migrations,
 continuous worker operation and live recovery/disconnect checks belong to Phase 7.
 
-Current verification checkpoint: 2026-10-25, local release sign-off implementation.
+### Historical checkpoint before Phase 5 closure
+
+Verification checkpoint: 2026-10-25, local release sign-off implementation.
 Update: run 40215957794 passed all browser/fixture steps (66 web and 24 demo
 tests), including release creation/download and defect-board interaction. Its
 final dependency audit failed; patched dependencies pass local API/web tests,
@@ -21,12 +25,12 @@ older entries in STATUS.md are historical, not a current pending-work list.
 ## Phase count
 
 There are eight phases, numbered 0 through 7. Phases 0-4 are recorded complete
-within the approved MVP scope. Phase 5 is in progress. The user has explicitly
+within the approved MVP scope. Phase 5 MVP is closed. The user has explicitly
 requested every phase and a highly polished result: Phase 6 must not be skipped.
-Three phases remain unfinished: finish 5, complete 6, then complete 7.
+Two phases remain unfinished: complete 6, then complete 7.
 The MVP is an intermediate milestone, not the final delivery.
 
-## Phase 5: remaining implementation and verification
+## Historical Phase 5 checklist (superseded by PHASE5_EXIT.md)
 
 - Defects: status board is implemented with list/board switching, shared filters,
   loaded-result counts and accessible card navigation to the existing transition
@@ -71,14 +75,26 @@ The MVP is an intermediate milestone, not the final delivery.
   existing defect-screen screenshots from successful hosted CI.
 
 Notifications, AI assistance and performance budgets remain excluded from MVP.
-No complete Phase 5 or production-readiness claim is justified yet.
+The above list records pre-closure gaps. PHASE5_EXIT.md records the completed MVP
+verification and the operational work explicitly assigned to Phase 7.
 
 ## Phase 6: required product polish
 
-- Dashboard summaries connected to actual project/release data.
-- Motion and reduced-motion polish.
-- Application-wide accessibility, keyboard navigation, responsive layout and
-  empty/loading/error/recovery-state review.
+1. Finish dashboard scope: recent activity is still missing. Defect summaries,
+   saved releases and on-demand readiness are implemented and tested.
+2. Complete application-wide light/dark screenshot and keyboard review across
+   projects/cases, runs, comparisons/baselines, SQL, defects, releases and Jira.
+   Existing browser coverage is substantial but not a completed manual review.
+   Validate the latest readiness layout and refresh-recovery regression.
+3. Finish workflow and report polish: review context preservation, lost edits,
+   duplicate submissions and failure recovery; resolve native multilingual PDF
+   typography instead of treating Unicode escape output as finished polish.
+4. Measure core workflow response times, record remaining limitations, and run
+   the final quality gates on one fixed revision before closing Phase 6.
+
+Phase 7 starts after these four acceptance groups are complete and evidenced.
+No elapsed-time estimate has been validated; CI duration alone is not the time
+needed to finish the implementation and review work.
 
 Phase 6 is required by the latest user instruction. See POLISH_CHECKLIST.md.
 Basic accessibility and correct error handling remain requirements in every phase.
