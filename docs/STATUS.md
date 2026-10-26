@@ -1,5 +1,15 @@
 # Phase status
 
+## Phase 6 activity verified and report fonts improved (2026-10-26)
+
+Activity revision fe23f5e passed every gate in run 40257270679, including browser
+and accessibility checks. Reports now embed licensed Noto Sans Regular/Bold and
+render supported international text natively. Unsupported glyphs retain explicit
+escapes; universal script coverage is not claimed. All 197 API tests pass, as do
+API typecheck/lint. An eight-page synthetic report was rendered and visually
+reviewed. Full CI on the font revision remains pending. Broader workflow/theme
+review and response-time measurements still prevent Phase 6 closure.
+
 ## Phase 6 recent activity implemented (2026-10-26)
 
 Overview now shows the latest ten run creations, release creations and defect

@@ -48,7 +48,10 @@ it("signs exact evidence in order, detects tampering and invalidates downstream 
     },
   });
   const release = (
-    await request(app).post(path(project.id)).set(auth()).send({ name: "Demo signoff release" })
+    await request(app)
+      .post(path(project.id))
+      .set(auth())
+      .send({ name: "Demo café / Ελληνικά / Кириллица" })
   ).body.data;
   const root = `${path(project.id)}/${release.id}`;
   expect((await request(app).get(`${root}/report.pdf`)).status).toBe(401);

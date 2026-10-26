@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import { reportFonts, reportText as printable } from "./report-fonts.js";
 import type { collectApprovals } from "./release-signoffs.js";
 
 export type ReportInput = {
@@ -9,18 +10,6 @@ export type ReportInput = {
   approvals: NonNullable<Awaited<ReturnType<typeof collectApprovals>>>;
   defects: { id: string; title: string; severity: string; status: string }[];
 };
-
-// Standard PDF fonts use Latin-1. Preserve other characters as explicit Unicode
-// escapes instead of silently producing missing or misleading glyphs.
-function printable(value: string): string {
-  return Array.from(value)
-    .map((char) => {
-      const code = char.codePointAt(0)!;
-      if (char === "\n") return char;
-      return code >= 32 && code <= 126 ? char : `\\u{${code.toString(16)}}`;
-    })
-    .join("");
-}
 
 export async function renderReleaseReport(input: ReportInput): Promise<Buffer> {
   const doc = new PDFDocument({
@@ -34,6 +23,8 @@ export async function renderReleaseReport(input: ReportInput): Promise<Buffer> {
     },
   });
   const chunks: Buffer[] = [];
+  doc.registerFont("Report-Regular", reportFonts.regular);
+  doc.registerFont("Report-Bold", reportFonts.bold);
   const finished = new Promise<Buffer>((resolve, reject) => {
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
@@ -43,7 +34,7 @@ export async function renderReleaseReport(input: ReportInput): Promise<Buffer> {
   const ink = "#14171D";
   function line(text: string, size = 10, bold = false) {
     doc
-      .font(bold ? "Helvetica-Bold" : "Helvetica")
+      .font(bold ? "Report-Bold" : "Report-Regular")
       .fontSize(size)
       .fillColor(ink);
     doc.text(printable(text), 48, doc.y, { width, lineGap: 4 });
@@ -90,7 +81,7 @@ export async function renderReleaseReport(input: ReportInput): Promise<Buffer> {
     "Performance budgets, optional AI and notifications are excluded from the MVP. Evidence IDs identify stored sources; private files and expiring download URLs are not embedded.",
   );
   line(
-    "Text outside ASCII is represented by explicit Unicode escapes to preserve exact values with portable PDF fonts.",
+    "Embedded Noto Sans fonts preserve supported international text. Characters outside the font coverage are shown as explicit Unicode escapes rather than missing glyphs.",
   );
   for (const gate of input.approvals.gates) {
     newSection(`${gate.environment} / evidence and decision`);
@@ -156,7 +147,7 @@ export async function renderReleaseReport(input: ReportInput): Promise<Buffer> {
     const bottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
     doc
-      .font("Helvetica")
+      .font("Report-Regular")
       .fontSize(8)
       .fillColor("#525866")
       .text(`DriftGate | ${index + 1} / ${range.count}`, 48, 805, { width, lineBreak: false });

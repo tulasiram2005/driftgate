@@ -80,16 +80,16 @@ verification and the operational work explicitly assigned to Phase 7.
 
 ## Phase 6: required product polish
 
-1. Finish dashboard verification: recent activity is implemented with 196 passing
-   API tests; its browser scenarios remain pending. Defect summaries, saved
+1. Finish dashboard visual review: recent activity passed all CI checks in 40257270679. Its latest screenshots still need review. Defect summaries, saved
    releases and on-demand readiness are implemented and browser-tested.
 2. Complete application-wide light/dark screenshot and keyboard review across
    projects/cases, runs, comparisons/baselines, SQL, defects, releases and Jira.
    Existing browser coverage is substantial but not a completed manual review.
    Validate the latest readiness layout and refresh-recovery regression.
 3. Finish workflow and report polish: review context preservation, lost edits,
-   duplicate submissions and failure recovery; resolve native multilingual PDF
-   typography instead of treating Unicode escape output as finished polish.
+   duplicate submissions and failure recovery. PDF typography now embeds Noto
+   Sans and has an inspected eight-page sample; font-revision CI is pending.
+   Unsupported scripts/emoji still use explicit escapes, with that limit disclosed.
 4. Measure core workflow response times, record remaining limitations, and run
    the final quality gates on one fixed revision before closing Phase 6.
 

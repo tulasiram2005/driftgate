@@ -1,5 +1,17 @@
 # Measured evidence
 
+## Report typography verification (2026-10-26)
+
+- fe23f5e activity CI run 40257270679: all quality steps PASS.
+- Embedded Noto Sans Regular/Bold, with SIL OFL license retained. Fontkit checks
+  actual glyph coverage before rendering; unsupported characters remain escaped.
+- API typecheck/lint PASS; API suite 197 tests in 22 files PASS. International
+  text/glyph fallback test added. Release-export fixture repeated: 5 tests PASS.
+- Rendered and inspected all eight synthetic PDF pages: accented Latin, Greek,
+  Cyrillic, source references, audit records and footers readable without overlap.
+- Poppler rendering succeeded; pdftotext is unavailable in this runtime. Visual
+  inspection and glyph tests provide evidence, not a text-extraction claim.
+
 ## Recent activity implementation (2026-10-26)
 
 - API: 196 tests / 21 files PASS against the isolated local driftgate_test
