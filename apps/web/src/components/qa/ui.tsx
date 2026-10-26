@@ -7,6 +7,7 @@ import {
   useEffect,
   useId,
   useRef,
+  useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -39,6 +40,18 @@ export function useWrite<T = unknown>(projectId: string, onSuccess?: (data: T) =
       onSuccess?.(data);
     },
   });
+}
+
+/** Keep non-sensitive view choices in this signed-in session, scoped by project. */
+export function useProjectViewState<T>(projectId: string, name: string, initial: T) {
+  const client = useQueryClient();
+  const key = ["view-state", projectId, name];
+  const [value, setValue] = useState<T>(() => client.getQueryData<T>(key) ?? initial);
+  const update = (next: T) => {
+    client.setQueryData(key, next);
+    setValue(next);
+  };
+  return [value, update] as const;
 }
 
 export function ErrorNotice({
@@ -124,14 +137,28 @@ export function Modal({
   onClose,
   children,
   busy = false,
+  dirty = false,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   busy?: boolean;
+  dirty?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const requestClose = () => {
+    if (!busy && (!dirty || window.confirm("Discard your unsaved changes?"))) onClose();
+  };
+  useEffect(() => {
+    if (!dirty && !busy) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty, busy]);
   useEffect(() => {
     const dialog = ref.current;
     const opener = document.activeElement;
@@ -148,7 +175,7 @@ export function Modal({
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
-        if (!busy) onClose();
+        requestClose();
       }}
     >
       <div className="qa-modal-heading">
@@ -159,7 +186,7 @@ export function Modal({
           aria-label="Close dialog"
           title="Close dialog"
           disabled={busy}
-          onClick={onClose}
+          onClick={requestClose}
         >
           <X size={20} />
         </button>

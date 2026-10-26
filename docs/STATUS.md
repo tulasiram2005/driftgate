@@ -1,5 +1,15 @@
 # Phase status
 
+## Phase 6 final screen matrix prepared (2026-10-26)
+
+Font revision 36db8ca passed every Quality Gates step in run 40258065358.
+Test-case editors now warn before discarding unsaved changes or leaving the page.
+Search and priority choices survive navigation within the signed-in project.
+An expanded real-API browser check covers twelve primary screens, both themes,
+four viewport widths and three engines, with response-time evidence attachments.
+Web typecheck and lint pass; execution of this new matrix remains pending.
+Phase 6 is not yet closed. Phase 7 remains deployment and final demo verification.
+
 ## Phase 6 activity verified and report fonts improved (2026-10-26)
 
 Activity revision fe23f5e passed every gate in run 40257270679, including browser

@@ -5,8 +5,10 @@
 Phase 5 MVP is closed: see PHASE5_EXIT.md. Phase 6 is active, starting with a
 real-data overview using project-wide defect metrics and a bounded release list.
 Overview browser checks passed in runs 40223355251 and 40255495102, including
-light/dark accessibility and keyboard recovery. Dark overview screenshots were
-reviewed at four widths. Later readiness layout/recovery changes await CI.
+light/dark accessibility and keyboard recovery. Readiness, activity and report
+font changes subsequently passed CI, most recently run 40258065358 on 36db8ca.
+The expanded twelve-screen theme/width matrix and unsaved-edit/filter retention
+checks await execution and screenshot review. Response-time evidence is also pending.
 Two phases remain: Phase 6 product polish and Phase 7 deployment/demo. The older
 Phase 5 implementation checklist below is retained as history; hosted migrations,
 continuous worker operation and live recovery/disconnect checks belong to Phase 7.
