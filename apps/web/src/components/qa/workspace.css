@@ -1049,6 +1049,28 @@
   font-weight: 600;
   overflow-wrap: anywhere;
 }
+.qa-readiness-status {
+  margin-top: 16px;
+  font-weight: 600;
+}
+.qa-readiness-checks {
+  margin-block: 16px;
+  padding: 0;
+  list-style: none;
+  max-width: 640px;
+}
+.qa-readiness-checks li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding-block: 10px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.qa-readiness-checks strong {
+  font-weight: 600;
+}
 @media (prefers-reduced-motion: no-preference) {
   .qa-loading > svg {
     animation: qa-loading-turn 1.4s linear infinite;

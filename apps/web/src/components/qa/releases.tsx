@@ -326,7 +326,7 @@ function ReleaseApprovals({
       <ErrorNotice error={query.error} />
       {query.data && !query.isFetching && !query.isError && (
         <>
-          <p role="status">
+          <p className="qa-readiness-status" role="status">
             {query.data.verification.valid
               ? `Audit chain verified: ${query.data.verification.count} recorded approvals`
               : "Audit verification failed. Sign-off is blocked."}
@@ -500,13 +500,15 @@ export function GateReadiness({
           <p>
             Checked {new Date(query.data.assessedAt).toLocaleString()}. This is not an approval.
           </p>
-          <ul>
+          <ul className="qa-readiness-checks" aria-label={`${gate.environment} evidence checks`}>
             {query.data.components.map((part) => (
               <li key={part.name}>
-                {labels[part.name] ?? part.name}:{" "}
-                {part.reason
-                  ? part.reason.toLowerCase().replaceAll("_", " ")
-                  : `${part.points}/${part.weight}`}
+                <span>{labels[part.name] ?? part.name}:</span>{" "}
+                <strong>
+                  {part.reason
+                    ? part.reason.toLowerCase().replaceAll("_", " ")
+                    : `${part.points}/${part.weight}`}
+                </strong>
               </li>
             ))}
           </ul>

@@ -1,5 +1,12 @@
 # Measured evidence
 
+## Readiness presentation follow-up (2026-10-26)
+
+- Added spacing and wrapping label/result rows to the shared readiness display.
+  Preserved check names, scores, missing-evidence reasons and approval wording.
+- Web typecheck and lint PASS. Rendered validation of this presentation change
+  remains pending. No database or cloud configuration changed.
+
 ## Phase 6 overview CI checkpoint (2026-10-26)
 
 - Run 40223355251 / e9d18de: all quality steps PASS. Web browser suite:

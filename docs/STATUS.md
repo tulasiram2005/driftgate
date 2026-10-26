@@ -1,5 +1,12 @@
 # Phase status
 
+## Phase 6 readiness presentation (2026-10-26)
+
+Screenshot review identified cramped readiness text. Evidence checks now use
+spaced, wrapping label/result rows and a separated status summary in both
+Releases and Overview. Web typecheck and lint pass. Updated rendered screenshots
+are pending; this is not a Phase 6 completion claim.
+
 ## Phase 6 overview verified (2026-10-26)
 
 Quality Gates run 40223355251 on e9d18de passed every step, including 69 web
