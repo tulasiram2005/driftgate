@@ -1,5 +1,15 @@
 # Measured evidence
 
+## Expanded overview verification (2026-10-26)
+
+- Run 40255495102 / 5df4874: all steps PASS, including browser/accessibility,
+  build, unit coverage, SQL integration, runner fixtures and dependency audit.
+- Overview retry is activated by keyboard; dark/light themes are checked for
+  accessibility and page overflow at 360/768/1280/1920 in three browser engines.
+- Added release readiness regression coverage for a 503 refresh, hiding cached
+  status/checks, and successful retry. Local typecheck/lint PASS; this newly
+  added regression has not yet run in a browser.
+
 ## Readiness presentation follow-up (2026-10-26)
 
 - Added spacing and wrapping label/result rows to the shared readiness display.

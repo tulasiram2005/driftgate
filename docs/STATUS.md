@@ -1,5 +1,12 @@
 # Phase status
 
+## Phase 6 theme and keyboard checks passed (2026-10-26)
+
+Run 40255495102 on 5df4874 passed all quality gates, including overview keyboard
+retry and light/dark accessibility checks at four widths across three browsers.
+Readiness presentation improvements and a failed-refresh recovery regression
+test are saved next. Their browser verification remains pending.
+
 ## Phase 6 readiness presentation (2026-10-26)
 
 Screenshot review identified cramped readiness text. Evidence checks now use

@@ -115,6 +115,26 @@ test("real API: release gates persist environment-specific run selection", async
   await overviewGate.getByRole("button", { name: "Check readiness for STAGING" }).click();
   await expect(overviewGate.getByRole("status")).toContainText("Not ready for sign-off");
   await expect(overviewGate.getByText(/This is not an approval/)).toBeVisible();
+  const readinessUrl = `**/api/v1${base}/releases/*/gates/STAGING/readiness`;
+  await page.route(readinessUrl, (route) =>
+    route.fulfill({
+      status: 503,
+      json: { error: { code: "UNAVAILABLE", message: "Demo readiness temporarily unavailable" } },
+    }),
+  );
+  await overviewGate.getByRole("button", { name: "Check readiness for STAGING" }).click();
+  await expect(overviewGate.getByRole("alert")).toContainText(
+    "Demo readiness temporarily unavailable",
+  );
+  await expect(overviewGate.getByRole("status")).toHaveCount(0);
+  await expect(overviewGate.getByRole("list", { name: "STAGING evidence checks" })).toHaveCount(0);
+  await page.unroute(readinessUrl);
+  await overviewGate.getByRole("button", { name: "Check readiness for STAGING" }).click();
+  await expect(overviewGate.getByRole("alert")).toHaveCount(0);
+  await expect(overviewGate.getByRole("status")).toContainText("Not ready for sign-off");
+  await expect(
+    overviewGate.getByRole("list", { name: "STAGING evidence checks" }).getByRole("listitem"),
+  ).toHaveCount(5);
   for (const width of [360, 768, 1280, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
