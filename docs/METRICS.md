@@ -11,6 +11,13 @@
 - Expanded recovery test adds keyboard activation, light/dark accessibility and
   screenshots at 360/768/1280/1920. Its execution remains pending.
 - Loading motion is enabled only when reduced motion is not requested.
+- Manually inspected artifact 12610144440 Chromium overview screenshots at
+  360, 768, 1280 and 1920 pixels. Expanded readiness content and actions remain
+  readable without overlapping controls; narrow navigation scrolls horizontally.
+  Project names truncate in the native selector, while the page heading retains
+  the full name. Light-theme screenshots still await the expanded run.
+- Expanded checks and motion saved as 5df4874; local web typecheck/lint PASS.
+  Follow-up CI run 40255495102 is in progress, not yet a passing result.
 
 ## Phase 6 overview readiness (2026-10-26)
 
