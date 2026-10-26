@@ -1030,6 +1030,20 @@
   padding-top: 24px;
   border-top: 1px solid var(--border);
 }
+.qa-activity-list {
+  list-style: none;
+  padding: 0;
+  margin-block: 16px;
+}
+.qa-activity-list li {
+  padding-block: 16px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.qa-activity-list time {
+  color: var(--text-dim);
+  font-size: var(--type-sm);
+}
 .qa-overview-gates summary {
   cursor: pointer;
   padding-block: 12px;

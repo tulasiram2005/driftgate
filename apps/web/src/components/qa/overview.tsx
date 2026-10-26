@@ -6,6 +6,7 @@ import { Empty, ErrorNotice, Loading, SectionHeading } from "./ui";
 import { GateReadiness } from "./releases";
 
 type Metrics = { open: number; closed: number; openS1: number; oldestOpenHours: number | null };
+type Activity = { id: string; occurredAt: string; title: string; detail: string };
 type Release = {
   id: string;
   name: string;
@@ -28,16 +29,21 @@ export function Overview({
     queryKey: ["project", projectId, "overview-releases"],
     queryFn: () => page<Release>(projectPath(projectId, "/releases"), null),
   });
+  const activity = useQuery({
+    queryKey: ["project", projectId, "overview-activity"],
+    queryFn: () => api<Activity[]>(projectPath(projectId, "/activity")),
+  });
   return (
     <>
       <SectionHeading title="Overview" description="Your project’s quality signals and next steps.">
         <button
           className="qa-button"
           type="button"
-          disabled={metrics.isFetching || releases.isFetching}
+          disabled={metrics.isFetching || releases.isFetching || activity.isFetching}
           onClick={() => {
             void metrics.refetch();
             void releases.refetch();
+            void activity.refetch();
           }}
         >
           Refresh overview
@@ -143,6 +149,32 @@ export function Overview({
             Manage test cases
           </button>
         </div>
+      </section>
+      <section className="qa-overview-releases" aria-label="Recent activity">
+        <h2>Recent activity</h2>
+        <p>Latest ten run creations, release creations and defect status events in this project.</p>
+        <ErrorNotice error={activity.error} retry={() => void activity.refetch()} />
+        {activity.isPending ? (
+          <Loading label="Loading recent activity" />
+        ) : !activity.isError && activity.data ? (
+          activity.data.length ? (
+            <ol className="qa-activity-list">
+              {activity.data.map((item) => (
+                <li key={item.id}>
+                  <strong>{item.title}</strong>
+                  <p>{item.detail}</p>
+                  <time dateTime={item.occurredAt}>
+                    {new Date(item.occurredAt).toLocaleString()}
+                  </time>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <Empty title="No activity yet">
+              Create a run or release to begin recording activity.
+            </Empty>
+          )
+        ) : null}
       </section>
     </>
   );

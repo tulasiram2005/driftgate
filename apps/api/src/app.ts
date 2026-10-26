@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { recentActivity } from "./activity.js";
 import express from "express";
 import type { ErrorRequestHandler, Request, RequestHandler } from "express";
 import cookieParser from "cookie-parser";
@@ -395,6 +396,10 @@ export function createApp(
   });
   document("post", "/api/v1/projects", projectBody);
   const base = "/api/v1/projects/:projectId";
+  app.get(`${base}/activity`, guard(), async (req, res) => {
+    res.json({ data: await recentActivity(db, param(req, "projectId")) });
+  });
+  document("get", `${base}/activity`);
   mountSnapshots(app, db, guard, fail);
   mountComparisons(app, db, guard, fail);
   mountVisualBaselines(app, db, guard, fail);

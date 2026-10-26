@@ -1,5 +1,14 @@
 # Phase status
 
+## Phase 6 recent activity implemented (2026-10-26)
+
+Overview now shows the latest ten run creations, release creations and defect
+status events, ordered by recorded time. The authenticated endpoint is scoped to
+project membership and returns summaries without private comments or evidence.
+Loading, empty and retry states are independent of the other overview panels.
+API tests: 196 PASS; API/web typecheck and lint PASS. New populated-feed and
+failure/retry browser scenarios are added but await execution.
+
 ## Phase 6 theme and keyboard checks passed (2026-10-26)
 
 Run 40255495102 on 5df4874 passed all quality gates, including overview keyboard

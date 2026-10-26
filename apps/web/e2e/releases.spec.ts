@@ -99,6 +99,9 @@ test("real API: release gates persist environment-specific run selection", async
   ).toBeVisible();
   await page.getByRole("button", { name: "Overview", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+  const activity = page.getByRole("region", { name: "Recent activity", exact: true });
+  await expect(activity.getByText("Release created", { exact: true })).toBeVisible();
+  await expect(activity.getByText("Manual run created", { exact: true })).toHaveCount(2);
   await expect(
     page
       .getByRole("region", { name: "Saved releases" })

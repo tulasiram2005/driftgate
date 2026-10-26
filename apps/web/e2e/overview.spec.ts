@@ -7,8 +7,18 @@ test("overview distinguishes unavailable metrics from zero and recovers independ
   test.setTimeout(120_000);
   const project = { id: "demo-overview", name: "Demo overview", role: "DEVELOPER" };
   let metricsCalls = 0;
+  let activityCalls = 0;
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/activity")) {
+      activityCalls++;
+      return activityCalls === 1
+        ? route.fulfill({
+            status: 503,
+            json: { error: { code: "UNAVAILABLE", message: "Demo activity unavailable" } },
+          })
+        : route.fulfill({ json: { data: [] } });
+    }
     if (path.endsWith("/defects/metrics")) {
       metricsCalls++;
       if (metricsCalls === 1)
@@ -49,6 +59,12 @@ test("overview distinguishes unavailable metrics from zero and recovers independ
   await expect(signals.getByRole("alert")).toContainText("Demo metrics unavailable");
   await expect(signals.getByText("Open S1 blockers", { exact: true })).toHaveCount(0);
   await expect(page.getByText("No releases yet", { exact: true })).toBeVisible();
+  const recent = page.getByRole("region", { name: "Recent activity", exact: true });
+  await expect(recent.getByRole("alert")).toContainText("Demo activity unavailable");
+  await expect(recent.getByText("No activity yet", { exact: true })).toHaveCount(0);
+  await recent.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(recent.getByRole("alert")).toHaveCount(0);
+  await expect(recent.getByText("No activity yet", { exact: true })).toBeVisible();
   const retry = signals.getByRole("button", { name: "Retry", exact: true });
   await retry.focus();
   await expect(retry).toBeFocused();

@@ -395,6 +395,81 @@ describe("phase 2 end-to-end API", () => {
       (await request(app).get(path("/runs")).set(auth())).body.data[0].results[0].version,
     ).toBe(1);
   });
+  it("returns bounded chronological activity without leaking other projects or private details", async () => {
+    expect((await request(app).get(path("/activity"))).status).toBe(401);
+    const foreign = await db.project.create({
+      data: {
+        name: "Demo private activity",
+        members: { create: { userId: otherId, role: "ADMIN" } },
+      },
+    });
+    try {
+      expect(
+        (await request(app).get(`/api/v1/projects/${foreign.id}/activity`).set(auth())).status,
+      ).toBe(404);
+      expect(
+        (await request(app).get(`/api/v1/projects/${foreign.id}/activity`).set(auth(b))).body.data,
+      ).toEqual([]);
+    } finally {
+      await db.project.delete({ where: { id: foreign.id } });
+    }
+    const start = Date.now() + 60_000;
+    await db.release.createMany({
+      data: Array.from({ length: 12 }, (_, index) => ({
+        projectId: project,
+        createdBy: adminId,
+        name: `Demo activity release ${index}`,
+        createdAt: new Date(start + index * 1000),
+      })),
+    });
+    const activityRun = await db.run.create({
+      data: {
+        projectId: project,
+        environment: "UAT",
+        browser: "Chromium",
+        device: "Desktop",
+        createdAt: new Date(start + 12_000),
+      },
+    });
+    await db.defect.create({
+      data: {
+        projectId: project,
+        resultId: `demo-activity-${suffix}`,
+        title: "Demo activity defect",
+        severity: "S2",
+        createdBy: adminId,
+        reproduction: { private: "must-not-leak" },
+        events: {
+          create: {
+            actorId: adminId,
+            toStatus: "NEW",
+            comment: "must-not-leak",
+            createdAt: new Date(start + 13_000),
+          },
+        },
+      },
+    });
+    const response = await request(app).get(path("/activity")).set(auth());
+    expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("no-store");
+    const items = response.body.data;
+    expect(items).toHaveLength(10);
+    expect(items[0].detail).toBe("Demo activity defect");
+    expect(items[1].id).toBe(`run:${activityRun.id}`);
+    expect(items[2].detail).toBe("Demo activity release 11");
+    expect(items.map((item: { occurredAt: string }) => item.occurredAt)).toEqual(
+      items
+        .map((item: { occurredAt: string }) => item.occurredAt)
+        .sort()
+        .reverse(),
+    );
+    expect(JSON.stringify(items)).not.toContain("must-not-leak");
+    expect(
+      items.every(
+        (item: object) => Object.keys(item).sort().join(",") === "detail,id,occurredAt,title",
+      ),
+    ).toBe(true);
+  });
   it("serves Zod-derived OpenAPI and rate limits rapid bad login attempts", async () => {
     const spec = await request(app).get("/openapi.json");
     expect(spec.status).toBe(200);

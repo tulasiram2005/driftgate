@@ -80,8 +80,9 @@ verification and the operational work explicitly assigned to Phase 7.
 
 ## Phase 6: required product polish
 
-1. Finish dashboard scope: recent activity is still missing. Defect summaries,
-   saved releases and on-demand readiness are implemented and tested.
+1. Finish dashboard verification: recent activity is implemented with 196 passing
+   API tests; its browser scenarios remain pending. Defect summaries, saved
+   releases and on-demand readiness are implemented and browser-tested.
 2. Complete application-wide light/dark screenshot and keyboard review across
    projects/cases, runs, comparisons/baselines, SQL, defects, releases and Jira.
    Existing browser coverage is substantial but not a completed manual review.

@@ -1,5 +1,17 @@
 # Measured evidence
 
+## Recent activity implementation (2026-10-26)
+
+- API: 196 tests / 21 files PASS against the isolated local driftgate_test
+  database. Activity checks cover authentication, foreign-project denial, empty
+  results, newest-first merging, ten-item cap and exclusion of private details.
+- API/web typecheck and lint PASS. No database migration required.
+- Each source query returns at most ten summaries; the merged feed returns ten.
+  The feed describes creation/status events, not a complete audit history.
+- Real-API browser test checks saved release and run activity. Mocked browser
+  scenario checks activity failure/retry independently of metric failure/retry.
+  These additions still require browser execution and screenshot review.
+
 ## Expanded overview verification (2026-10-26)
 
 - Run 40255495102 / 5df4874: all steps PASS, including browser/accessibility,
