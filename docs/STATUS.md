@@ -1,5 +1,24 @@
 # Phase status
 
+## Hosted recovery and code health (2026-11-25)
+
+The public Render API returned ready. Neon accepted a query and recorded all
+24 migrations after the nine outstanding migrations were deployed. Supabase
+restored the evidence project. The storage integration check passed signed
+upload/download, exact bytes, metadata, rejection of unsigned and modified
+requests, and cleanup of the verification object.
+
+The saved local GitHub runner credential returned HTTP 401 on workflow lookup.
+The configured Redis hostname failed DNS resolution. Renew the repository-scoped
+runner credential, confirm the active Upstash endpoint and recheck dispatch,
+queue consumption and callbacks together. Jira access was last demonstrated
+locally in October. A current Jira export/sync and the hosted frontend still
+need verification.
+
+[Quality Gates 40259119632](https://github.com/tulasiram2005/driftgate/actions/runs/40259119632)
+passed for the Phase 6 matrix. Its evidence artifacts were unavailable during
+this review. Screenshot review and workflow timing analysis remain open.
+
 ## Phase 6 final screen matrix prepared (2026-10-26)
 
 Font revision 36db8ca passed every Quality Gates step in run 40258065358.
