@@ -1,5 +1,11 @@
 # Phase status
 
+## Phase 6 closed; Phase 7 in progress (2026-11-25)
+
+Revision `c4f685f` passed the full Quality Gates workflow. Review covered 288 primary-screen screenshots and populated dashboard and recovery examples. The four measured read endpoints had median response times of 4.37–8.83 ms in CI. See [measurements](METRICS.md#phase-6-exit-review-2026-11-25) and the [successful run](https://github.com/tulasiram2005/driftgate/actions/runs/45482162232).
+
+Phase 7 has a verified hosted application schema and private evidence storage. Outstanding work includes restoring the runner credential and queue, deploying the final web/API revision and Threadline data, verifying the hosted SQL and Jira paths, and measuring the complete seeded-defect demo.
+
 ## Hosted recovery and code health (2026-11-25)
 
 The public Render API returned ready. Neon accepted a query and recorded all

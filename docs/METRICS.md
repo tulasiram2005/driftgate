@@ -988,3 +988,19 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   UTC timestamp arithmetic matches Prisma timestamp storage.
 - Extended browser scenario for metrics visibility and four-width screenshots;
   new browser assertions and image review are NOT VERIFIED locally.
+
+## Phase 6 exit review (2026-11-25)
+
+Application revision `c4f685f` passed all Quality Gates, including database integration, production builds, browser and accessibility tests, runner fixtures and dependency audit. Local checks passed 336 tests across tooling, web, API, runner and demo store. [CI run and evidence](https://github.com/tulasiram2005/driftgate/actions/runs/45482162232)
+
+Reviewed contact sheets for all 288 captures of 12 primary screens across light/dark themes, four CSS viewport widths (360, 768, 1280, 1920) and Chromium, Firefox and WebKit. The narrow layout stacked controls and metrics; wider screens retained the sidebar and aligned content. No overlap was apparent in the sheets. CI checked document overflow and automated WCAG A/AA rules at every matrix point. Separate populated overview captures showed release readiness, missing evidence and recent activity. Recovery captures showed S1 blockers in both narrow and wide layouts. Keyboard assertions covered skip navigation, focus return and recovery actions. The matrix used a new project and emulated viewports. Hosted latency and physical-device testing remain outside these measurements.
+
+Median elapsed time in milliseconds for five sequential authenticated reads through the CI-local web proxy on an empty project:
+
+| Browser suite | Cases | Defect metrics | Activity | Releases |
+| ------------- | ----: | -------------: | -------: | -------: |
+| Chromium      |  4.71 |           4.96 |     6.56 |     5.36 |
+| Firefox       |  5.23 |           4.37 |     5.79 |     4.50 |
+| WebKit        |  8.83 |           4.98 |     5.95 |     4.81 |
+
+The slowest individual request among the 60 samples was 18.83 ms. These measurements cover API responses and exclude page rendering and hosted cold starts.

@@ -80,7 +80,9 @@ Notifications, AI assistance and performance budgets remain excluded from MVP.
 The above list records pre-closure gaps. PHASE5_EXIT.md records the completed MVP
 verification and the operational work explicitly assigned to Phase 7.
 
-## Phase 6: required product polish
+## Phase 6: product polish (closed 2026-11-25)
+
+The four acceptance groups below record the original scope. The [exit review](METRICS.md#phase-6-exit-review-2026-11-25) records the completed checks.
 
 1. Finish dashboard visual review: recent activity passed all CI checks in 40257270679. Its latest screenshots still need review. Defect summaries, saved
    releases and on-demand readiness are implemented and browser-tested.
@@ -104,7 +106,7 @@ Basic accessibility and correct error handling remain requirements in every phas
 
 ## Phase 7: deployment and final demonstration
 
-- Deploy/update all required services and apply outstanding application migrations.
+- Deploy/update the final application revision. All 24 hosted DriftGate migrations were verified on 2026-11-25.
   Some infrastructure already exists; that does not establish whole-app completion.
 - Set up the separate hosted Threadline database, a restricted read-only SQL role
   and project binding, then verify live SQL execution through the hosted API.
