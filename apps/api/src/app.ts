@@ -159,7 +159,6 @@ export function createApp(
       },
     }),
   );
-  app.use(cookieParser());
   app.use((req, _res, next) => {
     const origin = req.get("origin");
     if (origin && !config.API_CORS_ORIGINS.includes(origin))
@@ -316,32 +315,38 @@ export function createApp(
       });
     },
   });
-  app.post("/api/v1/auth/refresh", refreshLimit, protectCookieWrite, async (req, res) => {
-    const token = z.string().max(200).safeParse(req.cookies[cookieName]);
-    if (!token.success) fail(401, "SESSION_EXPIRED", "Please sign in again");
-    const id = token.data.split(".")[0]!;
-    const old = await db.session.findUnique({
-      where: { id },
-      include: { user: { select: publicUser } },
-    });
-    if (
-      !old ||
-      old.revokedAt ||
-      old.expiresAt <= new Date() ||
-      old.tokenHash !== hash(token.data)
-    ) {
-      res.clearCookie(cookieName, cookieOptions);
-      fail(401, "SESSION_EXPIRED", "Please sign in again");
-    }
-    const changed = await db.session.updateMany({
-      where: { id, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
-    if (changed.count !== 1) fail(401, "SESSION_EXPIRED", "Please sign in again");
-    await issue(res, old.user);
-  });
+  app.post(
+    "/api/v1/auth/refresh",
+    refreshLimit,
+    cookieParser(),
+    protectCookieWrite,
+    async (req, res) => {
+      const token = z.string().max(200).safeParse(req.cookies[cookieName]);
+      if (!token.success) fail(401, "SESSION_EXPIRED", "Please sign in again");
+      const id = token.data.split(".")[0]!;
+      const old = await db.session.findUnique({
+        where: { id },
+        include: { user: { select: publicUser } },
+      });
+      if (
+        !old ||
+        old.revokedAt ||
+        old.expiresAt <= new Date() ||
+        old.tokenHash !== hash(token.data)
+      ) {
+        res.clearCookie(cookieName, cookieOptions);
+        fail(401, "SESSION_EXPIRED", "Please sign in again");
+      }
+      const changed = await db.session.updateMany({
+        where: { id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      if (changed.count !== 1) fail(401, "SESSION_EXPIRED", "Please sign in again");
+      await issue(res, old.user);
+    },
+  );
   document("post", "/api/v1/auth/refresh", undefined, false);
-  app.post("/api/v1/auth/logout", protectCookieWrite, async (req, res) => {
+  app.post("/api/v1/auth/logout", cookieParser(), protectCookieWrite, async (req, res) => {
     const token: unknown = req.cookies[cookieName];
     if (typeof token === "string")
       await db.session.updateMany({

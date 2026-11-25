@@ -25,113 +25,117 @@ export function mountJiraExport(
   fail: (status: number, code: string, message: string) => never,
 ) {
   const path = "/api/v1/projects/:projectId/defects/:defectId/jira";
-  app.post([`${path}/sync`, `${path}/reconcile`], guard(false, true), async (req, res) => {
-    const reconcile = req.path.endsWith("/reconcile");
-    const recovery = reconcile ? jiraReconcileBody.parse(req.body) : null;
-    const input = recovery ?? jiraExportBody.parse(req.body);
-    const projectId = String(req.params.projectId);
-    const defect = await db.defect.findFirst({
-      where: { id: String(req.params.defectId), projectId },
-      include: { jiraExport: true },
-    });
-    if (!defect) return fail(404, "NOT_FOUND", "Defect not found");
-    const record = defect.jiraExport;
-    if (reconcile && (!record || !canReconcile(record)))
-      return fail(
-        409,
-        "NOT_REVIEWABLE",
-        "Export must need review or have been pending for at least five minutes",
-      );
-    if (!reconcile && (!record || record.state !== "LINKED" || !record.issueKey))
-      return fail(409, "NOT_LINKED", "A confirmed Jira ticket is required");
-    if (!record) return fail(409, "NOT_LINKED", "A Jira export is required");
-    if (record.syncRevision !== input.revision)
-      return fail(409, "CONFLICT", "Jira status changed; reload before syncing");
-    const key = config.INTEGRATION_ENCRYPTION_KEY;
-    if (!key) return fail(503, "NOT_CONFIGURED", "Integration encryption is not configured");
-    const integration = await db.jiraIntegration.findUnique({ where: { projectId } });
-    if (!integration?.connected)
-      return fail(409, "NOT_CONFIGURED", "Configure Jira before syncing");
-    // Never use credentials from a replacement site to read the original ticket.
-    if (integration.site !== record.site || integration.jiraProjectKey !== record.jiraProjectKey)
-      return fail(409, "TARGET_CHANGED", "Jira settings no longer match this ticket");
-    let client: ReturnType<typeof createJiraClient>;
-    try {
-      const credentials = z
-        .object({ email: z.string().email(), token: z.string().min(1) })
-        .parse(
-          JSON.parse(
-            decryptIntegrationSecret(integration.encryptedCredentials, key, projectId, "jira"),
-          ),
+  const updateStatus =
+    (reconcile: boolean): RequestHandler =>
+    async (req, res) => {
+      const recovery = reconcile ? jiraReconcileBody.parse(req.body) : null;
+      const input = recovery ?? jiraExportBody.parse(req.body);
+      const projectId = String(req.params.projectId);
+      const defect = await db.defect.findFirst({
+        where: { id: String(req.params.defectId), projectId },
+        include: { jiraExport: true },
+      });
+      if (!defect) return fail(404, "NOT_FOUND", "Defect not found");
+      const record = defect.jiraExport;
+      if (reconcile && (!record || !canReconcile(record)))
+        return fail(
+          409,
+          "NOT_REVIEWABLE",
+          "Export must need review or have been pending for at least five minutes",
         );
-      client = createJiraClient({
-        ...credentials,
-        site: integration.site,
-        projectKey: integration.jiraProjectKey,
-        issueTypeId: integration.issueTypeId,
-      });
-    } catch {
-      return fail(503, "NOT_CONFIGURED", "Jira credentials could not be loaded");
-    }
-    let status: Awaited<ReturnType<typeof client.getIssueStatus>>;
-    try {
-      status = recovery
-        ? await client.verifyExport(recovery.issueKey, defect.id)
-        : await client.getIssueStatus(record.issueKey!);
-    } catch (error) {
-      const code = error instanceof JiraRequestError ? error.code : "UNAVAILABLE";
-      return fail(
-        502,
-        `JIRA_${code}`,
-        reconcile
-          ? "Jira ticket could not be verified for this defect; the export remains unchanged"
-          : "Jira status could not be refreshed; the last saved status is unchanged",
-      );
-    }
-    const current = await db.jiraIntegration.findUnique({ where: { projectId } });
-    if (!current || current.revision !== integration.revision)
-      return fail(409, "CONFLICT", "Jira settings changed; retry with the current settings");
-    // Compare-and-set prevents a slower concurrent response overwriting a saved snapshot.
-    // QA transitions and their audit history are deliberately untouched.
-    const updated = await db.$transaction(async (tx) => {
-      const updated = await tx.jiraDefectExport.updateMany({
-        where: {
-          defectId: defect.id,
-          syncRevision: input.revision,
-          state: record.state,
-        },
-        data: {
-          ...(reconcile
-            ? {
-                state: "LINKED" as const,
-                issueKey: status.key,
-                issueUrl: `${record.site}/browse/${status.key}`,
-                errorCode: null,
-              }
-            : {}),
-          jiraStatusId: status.id,
-          jiraStatusName: status.name,
-          jiraStatusCategory: status.statusCategory.key,
-          statusSyncedAt: new Date(),
-          syncRevision: { increment: 1 },
-        },
-      });
-      if (reconcile && updated.count)
-        await tx.jiraIntegrationEvent.create({
+      if (!reconcile && (!record || record.state !== "LINKED" || !record.issueKey))
+        return fail(409, "NOT_LINKED", "A confirmed Jira ticket is required");
+      if (!record) return fail(409, "NOT_LINKED", "A Jira export is required");
+      if (record.syncRevision !== input.revision)
+        return fail(409, "CONFLICT", "Jira status changed; reload before syncing");
+      const key = config.INTEGRATION_ENCRYPTION_KEY;
+      if (!key) return fail(503, "NOT_CONFIGURED", "Integration encryption is not configured");
+      const integration = await db.jiraIntegration.findUnique({ where: { projectId } });
+      if (!integration?.connected)
+        return fail(409, "NOT_CONFIGURED", "Configure Jira before syncing");
+      // Never use credentials from a replacement site to read the original ticket.
+      if (integration.site !== record.site || integration.jiraProjectKey !== record.jiraProjectKey)
+        return fail(409, "TARGET_CHANGED", "Jira settings no longer match this ticket");
+      let client: ReturnType<typeof createJiraClient>;
+      try {
+        const credentials = z
+          .object({ email: z.string().email(), token: z.string().min(1) })
+          .parse(
+            JSON.parse(
+              decryptIntegrationSecret(integration.encryptedCredentials, key, projectId, "jira"),
+            ),
+          );
+        client = createJiraClient({
+          ...credentials,
+          site: integration.site,
+          projectKey: integration.jiraProjectKey,
+          issueTypeId: integration.issueTypeId,
+        });
+      } catch {
+        return fail(503, "NOT_CONFIGURED", "Jira credentials could not be loaded");
+      }
+      let status: Awaited<ReturnType<typeof client.getIssueStatus>>;
+      try {
+        status = recovery
+          ? await client.verifyExport(recovery.issueKey, defect.id)
+          : await client.getIssueStatus(record.issueKey!);
+      } catch (error) {
+        const code = error instanceof JiraRequestError ? error.code : "UNAVAILABLE";
+        return fail(
+          502,
+          `JIRA_${code}`,
+          reconcile
+            ? "Jira ticket could not be verified for this defect; the export remains unchanged"
+            : "Jira status could not be refreshed; the last saved status is unchanged",
+        );
+      }
+      const current = await db.jiraIntegration.findUnique({ where: { projectId } });
+      if (!current || current.revision !== integration.revision)
+        return fail(409, "CONFLICT", "Jira settings changed; retry with the current settings");
+      // Compare-and-set prevents a slower concurrent response overwriting a saved snapshot.
+      // QA transitions and their audit history are deliberately untouched.
+      const updated = await db.$transaction(async (tx) => {
+        const updated = await tx.jiraDefectExport.updateMany({
+          where: {
+            defectId: defect.id,
+            syncRevision: input.revision,
+            state: record.state,
+          },
           data: {
-            projectId,
-            actorId: res.locals.userId as string,
-            revision: integration.revision,
-            action: `RECONCILED:${defect.id}:${status.key}`,
+            ...(reconcile
+              ? {
+                  state: "LINKED" as const,
+                  issueKey: status.key,
+                  issueUrl: `${record.site}/browse/${status.key}`,
+                  errorCode: null,
+                }
+              : {}),
+            jiraStatusId: status.id,
+            jiraStatusName: status.name,
+            jiraStatusCategory: status.statusCategory.key,
+            statusSyncedAt: new Date(),
+            syncRevision: { increment: 1 },
           },
         });
-      return updated;
-    });
-    if (!updated.count) return fail(409, "CONFLICT", "Jira status changed; reload before syncing");
-    return res.json({
-      data: await db.jiraDefectExport.findUniqueOrThrow({ where: { defectId: defect.id } }),
-    });
-  });
+        if (reconcile && updated.count)
+          await tx.jiraIntegrationEvent.create({
+            data: {
+              projectId,
+              actorId: res.locals.userId as string,
+              revision: integration.revision,
+              action: `RECONCILED:${defect.id}:${status.key}`,
+            },
+          });
+        return updated;
+      });
+      if (!updated.count)
+        return fail(409, "CONFLICT", "Jira status changed; reload before syncing");
+      return res.json({
+        data: await db.jiraDefectExport.findUniqueOrThrow({ where: { defectId: defect.id } }),
+      });
+    };
+  app.post(`${path}/sync`, guard(false, true), updateStatus(false));
+  app.post(`${path}/reconcile`, guard(false, true), updateStatus(true));
   app.get(path, guard(), async (req, res) => {
     const defect = await db.defect.findFirst({
       where: { id: String(req.params.defectId), projectId: String(req.params.projectId) },
