@@ -335,15 +335,36 @@ describe("phase 2 end-to-end API", () => {
     expect(await db.testCase.count({ where: { projectId: project } })).toBe(count);
   });
   it("rotates refresh tokens, rejects replay and revokes old access sessions", async () => {
-    const r = await request(app).post("/api/v1/auth/refresh").set("Cookie", firstCookie);
+    expect(
+      (await request(app).post("/api/v1/auth/refresh").set("Cookie", firstCookie)).status,
+    ).toBe(403);
+    expect((await request(app).post("/api/v1/auth/logout").set("Cookie", firstCookie)).status).toBe(
+      403,
+    );
+    const r = await request(app)
+      .post("/api/v1/auth/refresh")
+      .set("X-DriftGate-Session", "1")
+      .set("Cookie", firstCookie);
     expect(r.status).toBe(200);
     expect((await request(app).get(path()).set(auth())).status).toBe(401);
     expect(
-      (await request(app).post("/api/v1/auth/refresh").set("Cookie", firstCookie)).status,
+      (
+        await request(app)
+          .post("/api/v1/auth/refresh")
+          .set("X-DriftGate-Session", "1")
+          .set("Cookie", firstCookie)
+      ).status,
     ).toBe(401);
     a = r.body.data.accessToken;
     const cookie = String(r.headers["set-cookie"]?.[0]).split(";")[0]!;
-    expect((await request(app).post("/api/v1/auth/logout").set("Cookie", cookie)).status).toBe(200);
+    expect(
+      (
+        await request(app)
+          .post("/api/v1/auth/logout")
+          .set("Origin", "http://127.0.0.1:3100")
+          .set("Cookie", cookie)
+      ).status,
+    ).toBe(200);
     expect((await request(app).get(path()).set(auth())).status).toBe(401);
     const login = await request(app)
       .post("/api/v1/auth/login")

@@ -128,6 +128,7 @@ describe("memory-only authentication", () => {
     fetchMock.mockResolvedValueOnce(ok(session)).mockResolvedValueOnce(ok([]));
     expect(await refreshSession()).toEqual(user);
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/v1/auth/refresh", {
+      headers: { "X-DriftGate-Session": "1" },
       method: "POST",
       credentials: "include",
       cache: "no-store",

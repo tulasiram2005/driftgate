@@ -83,8 +83,10 @@ export function mountComparisons(
     const projectId = identifier.parse(req.params.projectId);
     const data = await db.$transaction(async (tx) => {
       const project = await tx.project.findUniqueOrThrow({ where: { id: projectId } });
-      const sets = ruleSets.parse(project.expectedRuleSets);
-      sets[pairKey(...body.environments)] = body.rules;
+      const sets = {
+        ...ruleSets.parse(project.expectedRuleSets),
+        [pairKey(...body.environments)]: body.rules,
+      };
       const result = await tx.project.updateMany({
         where: { id: projectId, expectedRulesRevision: body.revision },
         data: {

@@ -1,4 +1,5 @@
-import { readFile, readdir, realpath } from "node:fs/promises";
+import { constants } from "node:fs";
+import { open, readdir, realpath } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { callback } from "./callback.js";
 import { createStore, safeKey } from "./storage.js";
@@ -11,9 +12,17 @@ const files = (await readdir(spool)).filter((name) => /^\d{3}\.json$/.test(name)
 if (!files.length || files.length > checks.length * 9 + 1) throw new Error("Invalid spool length");
 const events = [];
 for (const file of files) {
-  const text = await readFile(resolve(spool, file), "utf8");
-  if (text.length > 1024 * 1024) throw new Error("Spool event too large");
-  events.push(JSON.parse(text));
+  const handle = await open(
+    resolve(spool, file),
+    constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK,
+  );
+  try {
+    const stat = await handle.stat();
+    if (!stat.isFile() || stat.size > 1024 * 1024) throw new Error("Invalid spool event file");
+    events.push(JSON.parse(await handle.readFile("utf8")));
+  } finally {
+    await handle.close();
+  }
 }
 if (events.at(-1)?.type !== "completed") throw new Error("Incomplete runner spool");
 const remote = process.env.RUNNER_S3_BUCKET ? await createStore(process.env, false) : undefined;

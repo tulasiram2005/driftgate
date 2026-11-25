@@ -86,6 +86,7 @@ export function refreshSession(): Promise<User | null> {
   if (!refreshRequest) {
     refreshRequest = (async () => {
       const response = await fetch("/api/v1/auth/refresh", {
+        headers: { "X-DriftGate-Session": "1" },
         method: "POST",
         credentials: "include",
         cache: "no-store",
@@ -120,6 +121,7 @@ async function authorizedFetch(path: string, init: RequestInit = {}) {
       credentials: "include",
       cache: "no-store",
       headers: {
+        ...(path === "/auth/logout" ? { "X-DriftGate-Session": "1" } : {}),
         ...(init.body ? { "Content-Type": "application/json" } : {}),
         ...init.headers,
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),

@@ -11,7 +11,11 @@ export async function callback(
 ): Promise<void> {
   const destination = new URL(url);
   if (
-    (!local && destination.protocol !== "https:") ||
+    (destination.protocol === "http:" &&
+      (!local ||
+        !["localhost", "127.0.0.1", "[::1]", "host.docker.internal", "api"].includes(
+          destination.hostname,
+        ))) ||
     !["https:", "http:"].includes(destination.protocol) ||
     destination.username ||
     destination.password ||

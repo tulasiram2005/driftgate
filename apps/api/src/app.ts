@@ -123,7 +123,27 @@ export function createApp(
   });
   app.disable("x-powered-by");
   app.use(helmet());
-  app.use(pinoHttp({ logger: log }));
+  app.use(
+    pinoHttp({
+      logger: log,
+      serializers: {
+        req: (req) => ({ id: req.id, method: req.method }),
+        res: (res) => ({ statusCode: res.statusCode }),
+      },
+    }),
+  );
+  app.use(
+    "/api/v1",
+    rateLimit({
+      windowMs: 60_000,
+      limit: 1200,
+      message: {
+        error: { code: "RATE_LIMITED", message: "Too many requests. Try again in a minute." },
+      },
+      standardHeaders: "draft-8",
+      legacyHeaders: false,
+    }),
+  );
   app.use(
     cors({
       origin: (origin, callback) =>
@@ -271,6 +291,17 @@ export function createApp(
     await issue(res, { id: user.id, name: user.name, email: user.email });
   });
   document("post", "/api/v1/auth/login", credentials, false);
+  const protectCookieWrite: RequestHandler = (req, _res, next) => {
+    if (req.cookies[cookieName] && !req.get("origin") && req.get("X-DriftGate-Session") !== "1")
+      return next(
+        new ApiError(
+          403,
+          "ORIGIN_DENIED",
+          "Cookie requests require an allowed origin or session header",
+        ),
+      );
+    next();
+  };
   const refreshLimit = rateLimit({
     windowMs: 60000,
     limit: 60,
@@ -285,7 +316,7 @@ export function createApp(
       });
     },
   });
-  app.post("/api/v1/auth/refresh", refreshLimit, async (req, res) => {
+  app.post("/api/v1/auth/refresh", refreshLimit, protectCookieWrite, async (req, res) => {
     const token = z.string().max(200).safeParse(req.cookies[cookieName]);
     if (!token.success) fail(401, "SESSION_EXPIRED", "Please sign in again");
     const id = token.data.split(".")[0]!;
@@ -310,7 +341,7 @@ export function createApp(
     await issue(res, old.user);
   });
   document("post", "/api/v1/auth/refresh", undefined, false);
-  app.post("/api/v1/auth/logout", async (req, res) => {
+  app.post("/api/v1/auth/logout", protectCookieWrite, async (req, res) => {
     const token: unknown = req.cookies[cookieName];
     if (typeof token === "string")
       await db.session.updateMany({
@@ -330,6 +361,7 @@ export function createApp(
         issuer: "driftgate",
         audience: "driftgate-web",
         algorithms: ["HS256"],
+        requiredClaims: ["sub", "sid", "exp"],
       });
       const session = await db.session.findFirst({
         where: {
