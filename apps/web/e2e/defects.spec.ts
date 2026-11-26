@@ -85,6 +85,16 @@ test("real API defect history with mocked Jira export confirmation", async ({ pa
   await page.getByRole("button", { name: "Clear filters", exact: true }).click();
   await page.getByLabel("Search defects").fill("checkout");
   await page.getByRole("button", { name: "Search", exact: true }).click();
+  await page.getByRole("button", { name: "Board view", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Board view", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(
+    page
+      .getByRole("region", { name: "NEW defects", exact: true })
+      .getByRole("button", { name: "Demo checkout total", exact: true }),
+  ).toBeVisible();
   for (const width of [360, 768, 1280, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -103,6 +113,18 @@ test("real API defect history with mocked Jira export confirmation", async ({ pa
   await page.getByRole("button", { name: "Update status", exact: true }).click();
   await expect(page.getByText("Demo triage confirmed", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Next status")).toHaveValue("IN_PROGRESS");
+  await page.getByRole("button", { name: "All defects", exact: true }).click();
+  await expect(
+    page
+      .getByRole("region", { name: "OPEN defects", exact: true })
+      .getByRole("button", { name: "Demo checkout total", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "NEW defects", exact: true })
+      .getByRole("button", { name: "Demo checkout total", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Demo checkout total", exact: true }).click();
   await page.getByRole("button", { name: "Export to Jira", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("reproduction snapshot");
   await page.getByRole("button", { name: "Confirm export", exact: true }).click();

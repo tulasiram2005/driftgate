@@ -51,6 +51,9 @@ test("real API: release gates persist environment-specific run selection", async
   await page.getByLabel("Release name").fill("Demo October release");
   await page.getByRole("button", { name: "Create release", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Demo October release" })).toBeVisible();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export release PDF", exact: true }).click();
+  expect((await download).suggestedFilename()).toBe("driftgate-release.pdf");
   await page.getByRole("button", { name: "Select runs for UAT" }).click();
   const dialog = page.getByRole("dialog", { name: "UAT runs" });
   await expect(dialog.getByText(other.id, { exact: true })).toHaveCount(0);
@@ -68,6 +71,12 @@ test("real API: release gates persist environment-specific run selection", async
     page.getByRole("region", { name: "UAT gate" }).getByText(run.id, { exact: true }),
   ).toBeVisible();
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.getByRole("button", { name: "Verify chain and approvals" }).click();
+  await expect(page.getByText("Audit chain verified: 0 recorded approvals")).toBeVisible();
+  await expect(
+    page.getByText("A project member with the Approver role must sign off."),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Sign off / })).toHaveCount(0);
   for (const width of [360, 768, 1280, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -88,4 +97,58 @@ test("real API: release gates persist environment-specific run selection", async
   await expect(
     page.getByRole("region", { name: "UAT gate" }).getByText("0 linked runs", { exact: true }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Overview", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+  const activity = page.getByRole("region", { name: "Recent activity", exact: true });
+  await expect(activity.getByText("Release created", { exact: true })).toBeVisible();
+  await expect(activity.getByText("Manual run created", { exact: true })).toHaveCount(2);
+  await expect(
+    page
+      .getByRole("region", { name: "Saved releases" })
+      .getByText("Demo October release", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("No open S1 defects. Other release checks may still block approval."),
+  ).toBeVisible();
+  await page.getByText("Inspect readiness for Demo October release", { exact: true }).click();
+  const overviewGate = page.getByRole("region", {
+    name: "Demo October release STAGING readiness",
+    exact: true,
+  });
+  await overviewGate.getByRole("button", { name: "Check readiness for STAGING" }).click();
+  await expect(overviewGate.getByRole("status")).toContainText("Not ready for sign-off");
+  await expect(overviewGate.getByText(/This is not an approval/)).toBeVisible();
+  const readinessUrl = `**/api/v1${base}/releases/*/gates/STAGING/readiness`;
+  await page.route(readinessUrl, (route) =>
+    route.fulfill({
+      status: 503,
+      json: { error: { code: "UNAVAILABLE", message: "Demo readiness temporarily unavailable" } },
+    }),
+  );
+  await overviewGate.getByRole("button", { name: "Check readiness for STAGING" }).click();
+  await expect(overviewGate.getByRole("alert")).toContainText(
+    "Demo readiness temporarily unavailable",
+  );
+  await expect(overviewGate.getByRole("status")).toHaveCount(0);
+  await expect(overviewGate.getByRole("list", { name: "STAGING evidence checks" })).toHaveCount(0);
+  await page.unroute(readinessUrl);
+  await overviewGate.getByRole("button", { name: "Check readiness for STAGING" }).click();
+  await expect(overviewGate.getByRole("alert")).toHaveCount(0);
+  await expect(overviewGate.getByRole("status")).toContainText("Not ready for sign-off");
+  await expect(
+    overviewGate.getByRole("list", { name: "STAGING evidence checks" }).getByRole("listitem"),
+  ).toHaveCount(5);
+  for (const width of [360, 768, 1280, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    expect(
+      (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+        .violations,
+    ).toEqual([]);
+    await page.screenshot({ path: info.outputPath(`overview-${width}.png`), fullPage: true });
+  }
+  await page.getByRole("button", { name: "Review releases", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Releases", exact: true })).toBeVisible();
 });

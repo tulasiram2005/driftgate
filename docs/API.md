@@ -69,3 +69,5 @@ Case success returns the above data plus id, projectId, version, archived and cr
 Errors: 400 INVALID_INPUT/INVALID_CSV, 401 UNAUTHORIZED/INVALID_CREDENTIALS/SESSION_EXPIRED, 403 FORBIDDEN/ORIGIN_DENIED, 404 NOT_FOUND (also for nonmembers), 409 CONFLICT/VERSION_CONFLICT/ARCHIVED_CASE/ADMIN_PROTECTED, 429 RATE_LIMITED, 503 UNAVAILABLE. Invalid JSON and oversized bodies return sanitized errors. CORS is an exact-origin allowlist and state-changing cross-site requests are rejected.
 
 Update this document from the actual route contracts in each phase; include method, auth, body, success/error examples and validation details.
+
+Cookie-authenticated refresh and logout requests require an allowed Origin or, for clients without an Origin header, `X-DriftGate-Session: 1`. The web client supplies this header. Cross-site requests and unlisted origins are rejected.

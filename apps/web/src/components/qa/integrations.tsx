@@ -2,9 +2,9 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { Pencil, RefreshCw } from "lucide-react";
 import { api, ApiError, getJiraSettings, projectPath, type JiraSettings } from "../../lib/qa-api";
-import { Empty, ErrorNotice, Field, Loading, SectionHeading, Submit } from "./ui";
+import { Empty, ErrorNotice, Field, Loading, Modal, SectionHeading, Submit } from "./ui";
 
 export function IntegrationsView({ projectId, isAdmin }: { projectId: string; isAdmin: boolean }) {
   const client = useQueryClient();
@@ -32,7 +32,9 @@ export function IntegrationsView({ projectId, isAdmin }: { projectId: string; is
         />
       ) : (
         <>
-          {settings.data.data && settings.data.available === true ? (
+          {settings.data.data &&
+          settings.data.data.connected !== false &&
+          settings.data.available === true ? (
             <JiraAccessCheck
               key={`jira-access-${projectId}-${settings.data.data.revision}`}
               projectId={projectId}
@@ -40,7 +42,11 @@ export function IntegrationsView({ projectId, isAdmin }: { projectId: string; is
             />
           ) : (
             <p role="status">
-              {settings.data.data ? "Settings saved. Connection not verified." : "Not configured"}
+              {settings.data.data?.connected === false
+                ? "Jira disconnected. Saved credentials removed."
+                : settings.data.data
+                  ? "Settings saved. Connection not verified."
+                  : "Not configured"}
             </p>
           )}
           {settings.data.available !== true ? (
@@ -60,7 +66,82 @@ export function IntegrationsView({ projectId, isAdmin }: { projectId: string; is
               }}
             />
           )}
+          {settings.data.data && settings.data.data.connected !== false && (
+            <JiraDisconnect
+              projectId={projectId}
+              revision={settings.data.data.revision}
+              onSaved={(data) => {
+                client.setQueryData(queryKey, { data, available: settings.data.available });
+                void client.invalidateQueries({ queryKey: ["project", projectId] });
+              }}
+              onReload={() => {
+                void settings.refetch();
+              }}
+            />
+          )}
         </>
+      )}
+    </>
+  );
+}
+
+function JiraDisconnect({
+  projectId,
+  revision,
+  onSaved,
+  onReload,
+}: {
+  projectId: string;
+  revision: number;
+  onSaved: (data: JiraSettings) => void;
+  onReload: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const disconnect = useMutation({
+    mutationFn: () =>
+      api<JiraSettings>(projectPath(projectId, "/integrations/jira/disconnect"), "POST", {
+        revision,
+      }),
+    retry: false,
+    onSuccess: onSaved,
+  });
+  return (
+    <>
+      <button
+        className="qa-button"
+        type="button"
+        onClick={() => {
+          disconnect.reset();
+          setOpen(true);
+        }}
+      >
+        Disconnect Jira
+      </button>
+      {open && (
+        <Modal title="Disconnect Jira?" busy={disconnect.isPending} onClose={() => setOpen(false)}>
+          <p>
+            This removes saved Jira credentials and stops future Jira checks and exports. Existing
+            ticket links and QA history stay available. Requests already sent may still finish. Your
+            Atlassian token is not revoked.
+          </p>
+          <ErrorNotice error={disconnect.error} retry={onReload} />
+          <button
+            className="qa-button"
+            type="button"
+            disabled={disconnect.isPending}
+            onClick={() => setOpen(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className="qa-button"
+            type="button"
+            disabled={disconnect.isPending}
+            onClick={() => disconnect.mutate()}
+          >
+            {disconnect.isPending ? "Disconnecting..." : "Confirm disconnect"}
+          </button>
+        </Modal>
       )}
     </>
   );
@@ -109,6 +190,7 @@ function JiraForm({
   onReload: () => void;
 }) {
   const [pending, setPending] = useState(false);
+  const [editing, setEditing] = useState(!initial || initial.connected === false);
   const [error, setError] = useState<Error | null>(null);
   const inFlight = useRef(false);
   const conflict = error instanceof ApiError && error.status === 409;
@@ -142,6 +224,24 @@ function JiraForm({
       inFlight.current = false;
       setPending(false);
     }
+  }
+  if (initial && !editing) {
+    return (
+      <section className="qa-integration-summary" aria-label="Saved Jira settings">
+        <dl>
+          <dt>Site URL</dt>
+          <dd>{initial.site}</dd>
+          <dt>Project key</dt>
+          <dd>{initial.jiraProjectKey}</dd>
+          <dt>Issue type ID</dt>
+          <dd>{initial.issueTypeId}</dd>
+        </dl>
+        <button type="button" className="qa-button" onClick={() => setEditing(true)}>
+          <Pencil size={16} aria-hidden="true" />
+          Edit Jira settings
+        </button>
+      </section>
+    );
   }
   return (
     <form
@@ -207,6 +307,19 @@ function JiraForm({
         />
       </Field>
       <div className="qa-form-footer">
+        {initial && (
+          <button
+            type="button"
+            className="qa-button"
+            disabled={pending}
+            onClick={() => {
+              setError(null);
+              setEditing(false);
+            }}
+          >
+            Cancel
+          </button>
+        )}
         {conflict ? (
           <button type="button" className="qa-button" onClick={onReload}>
             <RefreshCw size={16} aria-hidden="true" />

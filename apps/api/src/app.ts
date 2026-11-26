@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { recentActivity } from "./activity.js";
 import express from "express";
 import type { ErrorRequestHandler, Request, RequestHandler } from "express";
 import cookieParser from "cookie-parser";
@@ -20,13 +21,18 @@ import type { Config } from "./config.js";
 import { mountSnapshots, snapshotBody } from "./snapshots.js";
 import { mountComparisons, comparisonBody, savedRulesBody } from "./comparisons.js";
 import { mountVisualBaselines, ignoreRegionsBody } from "./visual-baselines.js";
-import { mountVisualComparisons, visualComparisonBody } from "./visual-comparisons.js";
+import {
+  mountVisualComparisons,
+  visualComparisonBody,
+  visualReviewBody,
+} from "./visual-comparisons.js";
 import { storage } from "./storage.js";
 import { mountSqlResults, sqlRunBody, type SqlExecutor } from "./sql-results.js";
 import { mountDefects, defectBody, defectTransitionBody } from "./defects.js";
 import { mountJiraSettings, jiraSettingsBody, jiraVerifyBody } from "./jira-settings.js";
-import { mountJiraExport, jiraExportBody } from "./jira-export.js";
+import { mountJiraExport, jiraExportBody, jiraReconcileBody } from "./jira-export.js";
 import { mountReleases, releaseBody, gateRunsBody } from "./releases.js";
+import { signoffBody } from "./release-signoffs.js";
 import { mountCallback, mountExecution, publicRun } from "./execution.js";
 import { automatedRunBody, callbackBody, screenshotBody } from "./execution-contracts.js";
 import type { EvidenceStorage } from "./storage.js";
@@ -117,7 +123,27 @@ export function createApp(
   });
   app.disable("x-powered-by");
   app.use(helmet());
-  app.use(pinoHttp({ logger: log }));
+  app.use(
+    pinoHttp({
+      logger: log,
+      serializers: {
+        req: (req) => ({ id: req.id, method: req.method }),
+        res: (res) => ({ statusCode: res.statusCode }),
+      },
+    }),
+  );
+  app.use(
+    "/api/v1",
+    rateLimit({
+      windowMs: 60_000,
+      limit: 1200,
+      message: {
+        error: { code: "RATE_LIMITED", message: "Too many requests. Try again in a minute." },
+      },
+      standardHeaders: "draft-8",
+      legacyHeaders: false,
+    }),
+  );
   app.use(
     cors({
       origin: (origin, callback) =>
@@ -133,7 +159,6 @@ export function createApp(
       },
     }),
   );
-  app.use(cookieParser());
   app.use((req, _res, next) => {
     const origin = req.get("origin");
     if (origin && !config.API_CORS_ORIGINS.includes(origin))
@@ -265,6 +290,19 @@ export function createApp(
     await issue(res, { id: user.id, name: user.name, email: user.email });
   });
   document("post", "/api/v1/auth/login", credentials, false);
+  const protectCookieWrite: RequestHandler = (req, _res, next) => {
+    // The global origin allowlist and Fetch Metadata checks run before these routes.
+    // Guard even a cookie-less logout: its response can expire a browser cookie.
+    if (!req.get("origin") && req.get("X-DriftGate-Session") !== "1")
+      return next(
+        new ApiError(
+          403,
+          "ORIGIN_DENIED",
+          "Cookie requests require an allowed origin or session header",
+        ),
+      );
+    next();
+  };
   const refreshLimit = rateLimit({
     windowMs: 60000,
     limit: 60,
@@ -279,32 +317,38 @@ export function createApp(
       });
     },
   });
-  app.post("/api/v1/auth/refresh", refreshLimit, async (req, res) => {
-    const token = z.string().max(200).safeParse(req.cookies[cookieName]);
-    if (!token.success) fail(401, "SESSION_EXPIRED", "Please sign in again");
-    const id = token.data.split(".")[0]!;
-    const old = await db.session.findUnique({
-      where: { id },
-      include: { user: { select: publicUser } },
-    });
-    if (
-      !old ||
-      old.revokedAt ||
-      old.expiresAt <= new Date() ||
-      old.tokenHash !== hash(token.data)
-    ) {
-      res.clearCookie(cookieName, cookieOptions);
-      fail(401, "SESSION_EXPIRED", "Please sign in again");
-    }
-    const changed = await db.session.updateMany({
-      where: { id, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
-    if (changed.count !== 1) fail(401, "SESSION_EXPIRED", "Please sign in again");
-    await issue(res, old.user);
-  });
+  app.post(
+    "/api/v1/auth/refresh",
+    refreshLimit,
+    protectCookieWrite,
+    cookieParser(),
+    async (req, res) => {
+      const token = z.string().max(200).safeParse(req.cookies[cookieName]);
+      if (!token.success) fail(401, "SESSION_EXPIRED", "Please sign in again");
+      const id = token.data.split(".")[0]!;
+      const old = await db.session.findUnique({
+        where: { id },
+        include: { user: { select: publicUser } },
+      });
+      if (
+        !old ||
+        old.revokedAt ||
+        old.expiresAt <= new Date() ||
+        old.tokenHash !== hash(token.data)
+      ) {
+        res.clearCookie(cookieName, cookieOptions);
+        fail(401, "SESSION_EXPIRED", "Please sign in again");
+      }
+      const changed = await db.session.updateMany({
+        where: { id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      if (changed.count !== 1) fail(401, "SESSION_EXPIRED", "Please sign in again");
+      await issue(res, old.user);
+    },
+  );
   document("post", "/api/v1/auth/refresh", undefined, false);
-  app.post("/api/v1/auth/logout", async (req, res) => {
+  app.post("/api/v1/auth/logout", protectCookieWrite, cookieParser(), async (req, res) => {
     const token: unknown = req.cookies[cookieName];
     if (typeof token === "string")
       await db.session.updateMany({
@@ -324,6 +368,7 @@ export function createApp(
         issuer: "driftgate",
         audience: "driftgate-web",
         algorithms: ["HS256"],
+        requiredClaims: ["sub", "sid", "exp"],
       });
       const session = await db.session.findFirst({
         where: {
@@ -390,6 +435,10 @@ export function createApp(
   });
   document("post", "/api/v1/projects", projectBody);
   const base = "/api/v1/projects/:projectId";
+  app.get(`${base}/activity`, guard(), async (req, res) => {
+    res.json({ data: await recentActivity(db, param(req, "projectId")) });
+  });
+  document("get", `${base}/activity`);
   mountSnapshots(app, db, guard, fail);
   mountComparisons(app, db, guard, fail);
   mountVisualBaselines(app, db, guard, fail);
@@ -400,14 +449,20 @@ export function createApp(
   document("get", `${base}/defects/:defectId/jira`);
   document("post", `${base}/defects/:defectId/jira`, jiraExportBody);
   document("post", `${base}/defects/:defectId/jira/sync`, jiraExportBody);
+  document("post", `${base}/defects/:defectId/jira/reconcile`, jiraReconcileBody);
   document("get", `${base}/integrations/jira`);
   document("post", `${base}/integrations/jira/verify`, jiraVerifyBody);
+  document("post", `${base}/integrations/jira/disconnect`, jiraVerifyBody);
   document("put", `${base}/integrations/jira`, jiraSettingsBody);
   mountReleases(app, db, guard, fail);
   document("post", `${base}/releases`, releaseBody);
   document("get", `${base}/releases`);
   document("get", `${base}/releases/:releaseId`);
   document("put", `${base}/releases/:releaseId/gates/:environment/runs`, gateRunsBody);
+  document("get", `${base}/releases/:releaseId/gates/:environment/readiness`);
+  document("get", `${base}/releases/:releaseId/signoffs`);
+  document("get", `${base}/releases/:releaseId/report.pdf`);
+  document("post", `${base}/releases/:releaseId/gates/:environment/signoff`, signoffBody);
   document("post", `${base}/defects`, defectBody);
   document("get", `${base}/defects`);
   document("get", `${base}/defects/metrics`);
@@ -418,6 +473,7 @@ export function createApp(
   document("put", `${base}/visual-baselines/:baselineId/ignore-regions`, ignoreRegionsBody);
   mountVisualComparisons(app, db, guard, fail, evidenceStorage ?? storage(config));
   document("post", `${base}/visual-comparisons`, visualComparisonBody);
+  document("post", `${base}/visual-comparisons/:comparisonId/review`, visualReviewBody);
   document("get", `${base}/visual-comparisons`);
   document("get", `${base}/visual-comparisons/:comparisonId/url`);
   document("post", `${base}/comparisons`, comparisonBody);

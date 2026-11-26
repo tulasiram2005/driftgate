@@ -4,6 +4,12 @@
 !pnpm-workspace.yaml
 !tsconfig.base.json
 !tsconfig.json
+!packages
+!packages/drift
+!packages/drift/package.json
+!packages/drift/tsconfig.json
+!packages/drift/src
+!packages/drift/src/*.ts
 !apps
 !apps/runner
 !apps/runner/**

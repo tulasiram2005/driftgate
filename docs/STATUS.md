@@ -1,5 +1,312 @@
 # Phase status
 
+## Hosted staging runner verified (2026-11-27)
+
+After Redis recovery, DriftGate queued a Chromium desktop catalogue check. The worker dispatched it on main, where the Docker build failed because its context excluded the shared drift package. Commit `c44a4a5` includes the required package sources. Re-dispatching the same job on the release branch [passed on GitHub](https://github.com/tulasiram2005/driftgate/actions/runs/45847891784). The hosted API recorded PASS for the run and its result. Authenticated reads of the private screenshot, trace and video matched their recorded byte counts. Production still needs the runner fix before new jobs dispatched on main can use it.
+
+## Phase 6 closed; Phase 7 in progress (2026-11-25)
+
+Revision `c4f685f` passed the full Quality Gates workflow. Review covered 288 primary-screen screenshots and populated dashboard and recovery examples. The four measured read endpoints had median response times of 4.37–8.83 ms in CI. See [measurements](METRICS.md#phase-6-exit-review-2026-11-25) and the [successful run](https://github.com/tulasiram2005/driftgate/actions/runs/45482162232).
+
+Phase 7 has a verified hosted application schema and private evidence storage. Outstanding work includes restoring the runner credential and queue, deploying the final web/API revision and Threadline data, verifying the hosted SQL and Jira paths, and measuring the complete seeded-defect demo.
+
+## Hosted recovery and code health (2026-11-25)
+
+The public Render API returned ready. Neon accepted a query and recorded all
+24 migrations after the nine outstanding migrations were deployed. Supabase
+restored the evidence project. The storage integration check passed signed
+upload/download, exact bytes, metadata, rejection of unsigned and modified
+requests, and cleanup of the verification object.
+
+The saved local GitHub runner credential returned HTTP 401 on workflow lookup.
+The configured Redis hostname failed DNS resolution. Renew the repository-scoped
+runner credential, confirm the active Upstash endpoint and recheck dispatch,
+queue consumption and callbacks together. Jira access was last demonstrated
+locally in October. A current Jira export/sync and the hosted frontend still
+need verification.
+
+[Quality Gates 40259119632](https://github.com/tulasiram2005/driftgate/actions/runs/40259119632)
+passed for the Phase 6 matrix. Its evidence artifacts were unavailable during
+this review. Screenshot review and workflow timing analysis remain open.
+
+## Phase 6 final screen matrix prepared (2026-10-26)
+
+Font revision 36db8ca passed every Quality Gates step in run 40258065358.
+Test-case editors now warn before discarding unsaved changes or leaving the page.
+Search and priority choices survive navigation within the signed-in project.
+An expanded real-API browser check covers twelve primary screens, both themes,
+four viewport widths and three engines, with response-time evidence attachments.
+Web typecheck and lint pass; execution of this new matrix remains pending.
+Phase 6 is not yet closed. Phase 7 remains deployment and final demo verification.
+
+## Phase 6 activity verified and report fonts improved (2026-10-26)
+
+Activity revision fe23f5e passed every gate in run 40257270679, including browser
+and accessibility checks. Reports now embed licensed Noto Sans Regular/Bold and
+render supported international text natively. Unsupported glyphs retain explicit
+escapes; universal script coverage is not claimed. All 197 API tests pass, as do
+API typecheck/lint. An eight-page synthetic report was rendered and visually
+reviewed. Full CI on the font revision remains pending. Broader workflow/theme
+review and response-time measurements still prevent Phase 6 closure.
+
+## Phase 6 recent activity implemented (2026-10-26)
+
+Overview now shows the latest ten run creations, release creations and defect
+status events, ordered by recorded time. The authenticated endpoint is scoped to
+project membership and returns summaries without private comments or evidence.
+Loading, empty and retry states are independent of the other overview panels.
+API tests: 196 PASS; API/web typecheck and lint PASS. New populated-feed and
+failure/retry browser scenarios are added but await execution.
+
+## Phase 6 theme and keyboard checks passed (2026-10-26)
+
+Run 40255495102 on 5df4874 passed all quality gates, including overview keyboard
+retry and light/dark accessibility checks at four widths across three browsers.
+Readiness presentation improvements and a failed-refresh recovery regression
+test are saved next. Their browser verification remains pending.
+
+## Phase 6 readiness presentation (2026-10-26)
+
+Screenshot review identified cramped readiness text. Evidence checks now use
+spaced, wrapping label/result rows and a separated status summary in both
+Releases and Overview. Web typecheck and lint pass. Updated rendered screenshots
+are pending; this is not a Phase 6 completion claim.
+
+## Phase 6 overview verified (2026-10-26)
+
+Quality Gates run 40223355251 on e9d18de passed every step, including 69 web
+and 24 demo browser tests. Overview recovery, release visibility, on-demand
+readiness, accessibility and responsive checks passed across three browsers.
+Additional keyboard recovery, both-theme screenshots and reduced-motion-safe
+loading feedback are implemented; their expanded browser run remains pending.
+Phase 6 remains active: broader visual review, workflow polish and response-time
+measurements are still required before Phase 7 deployment verification.
+
+## Phase 6 readiness overview (2026-10-26)
+
+Overview releases now expose keyboard-accessible expandable environment checks.
+Scores and blockers come from the existing readiness API on demand; these checks
+do not create approvals. Refresh failures hide stale readiness results. Local
+web typecheck/lint pass; browser validation is pending on this revision.
+
+## Phase 6 overview implementation (2026-10-26)
+
+Added an Overview navigation entry with authenticated project-wide defect
+metrics, bounded saved releases, refresh/retry states and links into defects,
+releases and cases. Readiness is explicitly unevaluated rather than inferred
+from run counts. Web typecheck and lint PASS. Browser scenarios added for real
+release visibility, navigation, accessibility and four widths; not yet executed.
+
+## Phase 5 MVP closed; Phase 6 started (2026-10-25)
+
+Final Quality Gates run 40217298526 passed every step on `0ef5409`. Live Jira
+polling refreshed demo ticket KAN-1 and respected its next-poll interval.
+See PHASE5_EXIT.md for evidence and limits. Hosted deployment and sustained
+worker verification belong to Phase 7 under the delivery contract. The user
+authorized continuing directly to Phase 6; product dashboard/polish is now active.
+Older checkpoints below describe earlier states and are historical.
+
+## Cross-browser Phase 5 verification (2026-10-25)
+
+Quality Gates run 40215957794 passed 66 web browser tests and 24 demo browser
+tests across Chromium, Firefox and WebKit. Release creation, run binding
+persistence, PDF download, admin approval restrictions and empty audit-chain
+verification passed. Release screenshots reviewed at 360/768/1280/1920 pixels.
+Unit tests, SQL integration, production builds and runner fixtures passed.
+The final dependency audit failed on Zod and body-parser advisories. Updated
+Zod and its OpenAPI adapter, migrated record/resolver types, and refreshed
+body-parser. Local typecheck, 195 API tests, 43 web tests and dependency audit
+pass after the update. Full CI must pass again on this dependency revision.
+Live scheduled Jira polling/recovery and hosted migrations remain unverified;
+Phase 5 is not yet closed and Phase 6 has not started.
+
+## Isolated CI verification (2026-10-25)
+
+Saved Phase 5 changes are backed up on `codex/phase5-verification`, without
+deploying main. First run 40190815496 passed typecheck, lint and migrations but
+stopped at web function coverage (89.28%, required 90%). Added PDF download
+success and failure tests; local web suite now passes 43 tests with 96.42%
+function coverage. Browser and remaining CI gates still await a passing run.
+
+## Release PDF export (2026-10-25)
+
+Authenticated release report endpoint and download control are implemented.
+Reports capture readiness, source references, defects and approval history in a
+consistent database snapshot, excluding tokens and private download URLs. Export
+limits reject oversized reports instead of silently omitting records. Synthetic
+populated report rendered and inspected across eight pages. API tests: 195 PASS;
+API/web typecheck, lint and production builds PASS. Browser connection briefly
+worked for reading the workspace, then reported disabled before demo creation.
+Download interaction, responsive screenshots, hosted migration and CI remain
+NOT VERIFIED. Phase 5 implementation is substantially complete, but its exit
+verification is not complete; Phase 6 has not started.
+
+## Release sign-off and gate sequencing (2026-10-25)
+
+Named project Approvers can sign eligible gates in STAGING, UAT, PREPROD, PROD
+order. Required comments, server timestamps, evidence hashes and gate revisions
+are persisted in a hash chain. Replaced or expired evidence invalidates current
+approval; reapproving an earlier gate requires downstream approval again.
+Serializable transactions reject conflicting approvals. The release screen
+provides chain verification, current/stale states and historical reviewer details.
+
+195 API tests, 41 web unit tests, API/web typecheck and lint, and API build passed.
+Migration 24 applied to isolated test and explicitly approved demo databases.
+Chromium still fails to launch with macOS MachPortRendezvous permission denial;
+browser assertions and screenshots are NOT VERIFIED. The defect status board is
+also implemented, with shared filters and existing audited transition controls;
+rendered board verification is pending. Phase 5 remains open for PDF report and
+browser/cloud/CI verification. Phases 6 and 7 follow.
+
+## Visual difference review (2026-10-25)
+
+Admin/Approver review now records ACCEPTED or REJECTED, a required reason,
+reviewer identity and server timestamp. Each comparison accepts one decision;
+concurrent or repeated reviews conflict. Changed baseline settings require a new
+comparison. The UI exposes a review form and saved decision. Accepted differences
+count toward readiness only while source/baseline validation still passes.
+
+194 API tests passed, including permissions, concurrent reviews and readiness
+updates; API/web typecheck and lint passed. Migration 23 applied to test and,
+with explicit user approval, local demo databases. Browser review, cloud rollout,
+sign-off, gate sequencing, PDF and defect board remain pending.
+
+## Visual and accessibility readiness (2026-10-25)
+
+Collectors now use saved automated accessibility matrix results and screenshot
+comparisons. Accessibility requires coverage in every recorded cell and rejects
+unfinished, failed or flaky runs. Visual evidence requires ready screenshots and
+approved active baselines matching check/browser/device/environment, with current
+ignore revisions. Zero differences count as reviewed; changed pixels do not.
+Policy mvp-2 explicitly blocks unreviewed visual differences even at score 90.
+
+194 API tests passed; typecheck and lint passed. Explicit visual-difference review,
+sign-off, sequencing, PDF, defect board and browser/cloud verification remain.
+This increment does not establish Phase 5 completion or authorize a release.
+
+## Drift evidence collection (2026-10-25)
+
+Release readiness now reads the latest saved comparison for each snapshot of
+selected runs. Every selected run needs snapshot coverage. Missing baseline
+snapshots, changed expected-rule revisions and malformed finding counts leave
+drift unavailable. Unexpected findings reduce the drift score. Freshness uses
+the oldest source timestamp, and the evidence hash includes comparison inputs.
+Visual-review and accessibility collection remain pending; gates still cannot
+pass this partial collector. No cloud deployment or browser verification yet.
+
+## Release readiness collection, first increment (2026-10-25)
+
+Readiness API and per-gate Check readiness control now read selected runs, current
+high-priority cases and project defects in a repeatable-read transaction. Missing
+runs, changed environments, old case versions, flaky/failing results and source
+limits fail closed. Source dates are preserved conservatively; evaluation does
+not refresh old evidence. The hash includes release/gate revision and result data.
+
+Drift, visual and accessibility collectors are still missing and explicitly
+returned as unavailable. No release can pass this partial collector. Sign-off,
+gate sequencing and PDF remain pending. Browser appearance is NOT VERIFIED.
+
+## Jira encryption-key rotation (2026-10-25)
+
+Offline dry-run/apply utility and operator runbook added. Connected credentials
+and audit events rotate atomically, disconnected rows are skipped, and settings
+revisions increase. Invalid keys, corrupt envelopes and unconfirmed maintenance
+prevent application. Synthetic local tests cover dry-run immutability, successful
+rotation, deliberate reversal and rollback. No real key or cloud secret changed.
+
+191 API tests passed; API typecheck and lint passed. Full build, CI and real
+maintenance rotation remain NOT VERIFIED. See JIRA_KEY_ROTATION.md. Phase 5
+release gates, sign-off/PDF and remaining verification are still pending.
+
+## Jira disconnect (2026-10-25)
+
+Admin-only disconnect now erases saved encrypted credentials, retains metadata,
+ticket links and audit history, and increments the settings revision. Reconnection
+requires fresh credentials with the current revision. Verification, export, manual
+sync and scheduled polling reject disconnected settings. The UI offers an explicit
+confirmation and explains that already-sent requests may finish and the Atlassian
+token is not revoked. No real connection was disconnected during verification.
+
+187 API tests and 41 web unit tests passed, plus API/web typecheck and lint.
+Migration 22 applied to local test and demo databases. Chromium verification was
+blocked before assertions by macOS MachPortRendezvous permission error 1100.
+Cloud migration, browser screenshots and CI for these changes remain NOT VERIFIED.
+
+## Optional Jira polling (2026-10-25)
+
+Implemented bounded status polling in the existing worker, disabled by default.
+Durable leases prevent overlapping workers; revision checks protect manual sync
+and settings replacement. Linked tickets only, GET requests only, no QA state
+changes. Failures back off from 30 minutes to six hours. Successful checks recur
+after 15 minutes, in batches of five per worker tick.
+
+185 API tests passed; API TypeScript and lint passed. Migration 21 applied to the
+isolated test database and local demo database. Cloud migration, live scheduled
+Jira polling, latest browser recovery checks and CI remain NOT VERIFIED. No
+worker was started and no cloud settings or paid services were changed.
+
+## Interrupted Jira export recovery (2026-10-24)
+
+- PENDING exports become eligible for verified existing-ticket recovery after five
+  minutes, measured server-side. GET exposes canReconcile; refreshing the defect
+  updates UI eligibility. Recent pending exports remain protected.
+- Recovery still verifies the original site/project and exact defect reference.
+  Original export success/failure writes now compare state and revision, so late
+  completion cannot overwrite a recovered link or reopen its review state.
+- Full API suite: 176 tests passed, including late success and late failure races.
+  API/web TypeScript and lint passed. Browser coverage added for stale pending
+  eligibility; execution and screenshots remain NOT VERIFIED.
+- No real Jira ticket, credentials or cloud service changed. Scheduled polling,
+  integration lifecycle, release gates/sign-off/reports and Phase 5 exit checks remain.
+
+## Jira recovery screen (2026-10-24)
+
+- Defects now offer Link existing Jira ticket to project administrators only for
+  REVIEW_REQUIRED exports. The dialog displays the original target and submits
+  the candidate key and saved revision to the recovery API. Failures retain the
+  dialog; success refreshes the saved link/status. PENDING remains read-only.
+- Web TypeScript, lint and 41 unit tests passed. Added isolated browser fixtures
+  for failure then success, role/state restrictions, accessibility and four widths
+  in both themes. All three attempted Chromium cases were blocked at launch by
+  macOS MachPort permissions; new screenshots and browser assertions NOT VERIFIED.
+- No live Jira ticket was changed. PENDING recovery, scheduled polling and the
+  remaining Phase 5 work are still pending.
+
+## Jira uncertain-export recovery API (2026-10-24)
+
+- Added admin-only reconciliation of REVIEW_REQUIRED exports to an existing Jira
+  ticket. Checks original site/project, exact defect reference, saved revision and
+  current configuration. Uses GET only; never retries external issue creation.
+- Saves recovered link/status and actor audit event transactionally. Concurrent
+  recovery has one winner, and QA state/history are unchanged.
+- API TypeScript/lint and 174 tests passed. Jira requests in these regression
+  tests are mocked; no real ticket or credential was changed for recovery testing.
+- Reconciliation UI, interrupted PENDING recovery, polling and remaining Phase 5
+  release/sign-off/report work are still pending. No cloud migration was needed.
+
+## Jira saved-settings clarity (2026-10-24)
+
+- Saved integrations now display non-secret target details instead of an empty
+  credential replacement form. Edit Jira settings opens the form explicitly;
+  cancel unmounts draft credentials, and successful saves return to the summary.
+- Browser regression coverage includes cancel/reopen and revision-conflict recovery.
+  Web TypeScript, lint and 41 unit tests passed. Browser checks remain NOT VERIFIED:
+  in-app control reported disabled and Chromium was denied macOS MachPort registration.
+- This does not invalidate the earlier live Jira export/sync evidence. Scheduled
+  polling, reconciliation and the remaining Phase 5 features are still pending.
+
+## Live Jira happy-path verification (2026-10-24)
+
+- The user configured credentials privately in the local app. Browser access now
+  works through the in-app browser, superseding the earlier disabled-browser note.
+- Created a clearly labelled synthetic case, suite, failed manual result and S4
+  defect in DriftGate Demo. Export through the app created Jira ticket KAN-1.
+- Manual status sync returned To Do at 19:41:21 IST. The defect stayed NEW and
+  its QA history was unchanged. Reopening the defect retained the link and status.
+- This verifies the local API against real Jira, not cloud deployment, scheduled
+  polling, uncertain-export recovery or complete cross-browser coverage.
+- Phase 5 remains in progress. See REMAINING_WORK.md for current outstanding scope.
+
 ## Local browser blocker investigation (2026-10-24)
 
 - Webpack production build passed, including TypeScript and static page generation.
@@ -619,8 +926,8 @@ CI startup diagnosis (2026-10-20): GitHub Actions supplies `GITHUB_WORKFLOW=Qual
 | 3     | Runner, storage, live results, Actions execution            | Local flow and hosted happy path verified              |
 | 4     | Drift, visual regression, contract/SQL/accessibility checks | Complete within approved MVP scope; see PHASE4_EXIT.md |
 | 5     | Defects, Jira, gates, sign-off, PDF                         | In progress; see REMAINING_WORK.md                     |
-| 6     | Dashboard and motion polish                                 | Outside MVP                                            |
-| 7     | Deployment and measured demo                                | Separate follow-up after MVP                           |
+| 6     | Dashboard and motion polish                                 | Required after Phase 5; not started                    |
+| 7     | Deployment and measured demo                                | Required; final deployment/verification pending        |
 
 Optional AI, notifications and performance budgets are deferred for MVP. Public repository: https://github.com/tulasiram2005/driftgate. Some cloud infrastructure and private storage have been verified; full deployment and final-version verification remain Phase 7 work.
 

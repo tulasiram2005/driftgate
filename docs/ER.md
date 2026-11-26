@@ -8,13 +8,17 @@ erDiagram
   Defect ||--o{ DefectEvent : history
   Project ||--o{ Release : owns
   Release ||--|{ ReleaseGate : environments
+  Release ||--o{ ReleaseSignoff : audit_history
 ```
 
 Defects preserve reproduction snapshots and original result IDs. Release gates
 store ordered environment names, optimistic revisions and selected run IDs.
 Run references are validated for project/environment by the API and must be
 revalidated when evaluating readiness. They are not foreign keys, approvals or
-immutable evidence. Sign-off and audit-chain persistence are not implemented yet.
+immutable evidence. ReleaseSignoff records bind reviewer identity, comment, time,
+gate revision and evidence hash to the preceding gate approval and previous audit
+hash. Release.approvalRevision anchors the expected record count. Application
+routes append records only; database administrators can still rewrite history.
 
 ## Implemented Threadline schema
 

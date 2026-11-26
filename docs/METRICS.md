@@ -1,5 +1,273 @@
 # Measured evidence
 
+## Report typography verification (2026-10-26)
+
+- fe23f5e activity CI run 40257270679: all quality steps PASS.
+- Embedded Noto Sans Regular/Bold, with SIL OFL license retained. Fontkit checks
+  actual glyph coverage before rendering; unsupported characters remain escaped.
+- API typecheck/lint PASS; API suite 197 tests in 22 files PASS. International
+  text/glyph fallback test added. Release-export fixture repeated: 5 tests PASS.
+- Rendered and inspected all eight synthetic PDF pages: accented Latin, Greek,
+  Cyrillic, source references, audit records and footers readable without overlap.
+- Poppler rendering succeeded; pdftotext is unavailable in this runtime. Visual
+  inspection and glyph tests provide evidence, not a text-extraction claim.
+
+## Recent activity implementation (2026-10-26)
+
+- API: 196 tests / 21 files PASS against the isolated local driftgate_test
+  database. Activity checks cover authentication, foreign-project denial, empty
+  results, newest-first merging, ten-item cap and exclusion of private details.
+- API/web typecheck and lint PASS. No database migration required.
+- Each source query returns at most ten summaries; the merged feed returns ten.
+  The feed describes creation/status events, not a complete audit history.
+- Real-API browser test checks saved release and run activity. Mocked browser
+  scenario checks activity failure/retry independently of metric failure/retry.
+  These additions still require browser execution and screenshot review.
+
+## Expanded overview verification (2026-10-26)
+
+- Run 40255495102 / 5df4874: all steps PASS, including browser/accessibility,
+  build, unit coverage, SQL integration, runner fixtures and dependency audit.
+- Overview retry is activated by keyboard; dark/light themes are checked for
+  accessibility and page overflow at 360/768/1280/1920 in three browser engines.
+- Added release readiness regression coverage for a 503 refresh, hiding cached
+  status/checks, and successful retry. Local typecheck/lint PASS; this newly
+  added regression has not yet run in a browser.
+
+## Readiness presentation follow-up (2026-10-26)
+
+- Added spacing and wrapping label/result rows to the shared readiness display.
+  Preserved check names, scores, missing-evidence reasons and approval wording.
+- Web typecheck and lint PASS. Rendered validation of this presentation change
+  remains pending. No database or cloud configuration changed.
+
+## Phase 6 overview CI checkpoint (2026-10-26)
+
+- Run 40223355251 / e9d18de: all quality steps PASS. Web browser suite:
+  69 tests in 6.7 minutes; demo browser suite: 24 tests in 1.4 minutes.
+- Includes Chromium, Firefox and WebKit, overview error/retry and permission
+  behavior, real API release readiness, responsive and accessibility checks.
+- Artifact 12610144440 retains screenshots and reports. These results do not
+  establish completion of the entire Phase 6 visual-review checklist.
+- Expanded recovery test adds keyboard activation, light/dark accessibility and
+  screenshots at 360/768/1280/1920. Its execution remains pending.
+- Loading motion is enabled only when reduced motion is not requested.
+- Manually inspected artifact 12610144440 Chromium overview screenshots at
+  360, 768, 1280 and 1920 pixels. Expanded readiness content and actions remain
+  readable without overlapping controls; narrow navigation scrolls horizontally.
+  Project names truncate in the native selector, while the page heading retains
+  the full name. Light-theme screenshots still await the expanded run.
+- Expanded checks and motion saved as 5df4874; local web typecheck/lint PASS.
+  Follow-up CI run 40255495102 is in progress, not yet a passing result.
+
+## Phase 6 overview readiness (2026-10-26)
+
+- Added on-demand environment readiness checks inside each overview release,
+  reusing the authenticated Releases component and its evidence assessment.
+- Fixed stale readiness rendering after a failed refresh. Old success data is
+  not shown while the current query is in error.
+- Web typecheck and lint PASS. Real API browser test extended to assess an
+  incomplete STAGING gate in the overview; execution remains pending.
+
+## Phase 6 state clarity (2026-10-26)
+
+- Overview and shared empty-state changes: web typecheck and lint PASS.
+- Added browser coverage for unavailable metrics, independent empty releases,
+  retry recovery, read-only role navigation and reduced-motion accessibility.
+  This new scenario has not yet executed; CI verification remains pending.
+- Shared empty state now uses an inbox icon instead of a loading-like ring.
+
+## Phase 5 final checkpoint (2026-10-25)
+
+- Quality Gates 40217298526, revision 0ef5409: all steps PASS, including final
+  security audit and browser/accessibility checks after dependency upgrades.
+- Live polling at 18:29:24 UTC: KAN-1 sync revision advanced to 2, status To Do,
+  error null, lease null, next poll 18:44:24 UTC. Immediate repeat left revision
+  unchanged. Existing encrypted local credentials used without printing them.
+- No continuous worker was started; hosted/operational checks remain Phase 7.
+
+## Cross-browser release verification (2026-10-25)
+
+- GitHub run 40215957794: 66 web browser tests PASS (5.2 minutes), 24 demo
+  browser tests PASS. Chromium, Firefox and WebKit; emulation, not real devices.
+- Typecheck, lint, unit coverage, restricted SQL checks, builds and three runner
+  fixture steps PASS. Audit failed on GHSA-mrhx-c7xc-m3w5 and GHSA-27r3-jxmh-p828.
+- Artifact 12607607215 contains browser evidence. Reviewed Chromium release
+  screenshots at 360/768/1280/1920: no visible overlap or clipped controls.
+- After patched validation/parser dependencies: local typecheck, 195 API tests
+  and 43 web tests PASS; audit reports no known vulnerabilities. Browser results
+  above predate this dependency update and must be repeated.
+
+## PDF download coverage (2026-10-25)
+
+- Web: 43 tests / 3 files PASS; statements 99.25%, branches 94.25%, functions
+  96.42%, lines 100%. Web lint PASS.
+- Added authenticated PDF bytes, encoded identifiers, filename, delayed object
+  URL cleanup and report-limit rejection checks.
+- Initial isolated CI run 40190815496 failed web function coverage; browser
+  steps did not run. Coverage threshold retained at 90%.
+
+## PDF release report (2026-10-25)
+
+- 195 API tests / 21 files PASS in 17.24 seconds, including report authentication,
+  outsider isolation, PDF response headers, no-store policy, unsigned and fully
+  approved synthetic report export, and page-count regression coverage.
+- API/web typecheck, lint, API build and webpack web production build PASS.
+- Poppler rendered the populated synthetic report to eight pages; inspected the
+  complete contact sheet. Fixed footer overflow that initially created extra pages.
+- In-app browser read workspace and Releases successfully, but became disabled
+  at demo form submission. No new demo release was confirmed in the user's DB.
+- Browser download scenario added, NOT VERIFIED. CLI Chromium remains restricted;
+  cloud migration and CI for this change remain NOT VERIFIED.
+
+## Release sign-off checkpoint (2026-10-25)
+
+- API: 195 tests / 21 files PASS in 15.42 seconds. Integration scenario covers
+  all four gates with synthetic passing evidence, role restrictions, required
+  comments, stale hashes, concurrent sign-off, tampering, count mismatch,
+  reapproval sequencing and case-version invalidation.
+- Web: 41 unit tests / 3 files PASS in 238 ms. These are existing utility tests,
+  not rendered approval-screen verification.
+- API/web typecheck and lint PASS; API production build PASS.
+- Release sign-off migration 20261025040000_release_signoffs applied to local
+  test database and, after explicit approval, local demo database.
+- Chromium release E2E attempted, FAILED before assertions: macOS
+  MachPortRendezvous bootstrap_check_in permission denied (1100). Screenshots,
+  keyboard/contrast checks, other browsers, hosted CI and cloud rollout NOT VERIFIED.
+- Initial synthetic snapshot fixture failed its source constraint; corrected to
+  RUNNER with browser/device metadata before the passing full API rerun.
+- Web production build (`build:compat`, webpack) PASS for approval screens.
+  Defect board added afterward; web typecheck, lint and webpack production build
+  also PASS with that follow-up. Its browser scenario now asserts card movement after an audited
+  status change, but remains unexecuted due to the same browser-launch failure.
+
+## Visual review persistence (2026-10-25)
+
+194 API tests / 21 files passed in 15.46 seconds. Extended tests exercise
+authentication, QA/developer restrictions, outsider isolation, required reasons,
+concurrent Approver decisions, recorded identity and accepted-difference readiness.
+API/web typecheck and lint passed. Migration 20261025030000_visual_review applied
+to test and explicitly approved local demo databases. Browser screenshots, full
+build, CI and cloud migration remain NOT VERIFIED for this increment.
+
+## Visual and accessibility collectors (2026-10-25)
+
+194 API tests / 21 files passed in 14.65 seconds. Added matrix coverage,
+unfinished/flaky/failed checks, approved-baseline comparison, changed ignore rules
+and score-90 visual-blocker assertions. Fixed test baseline activation metadata
+to satisfy the database constraint. API typecheck and lint passed. Browser,
+full build, CI and cloud verification were not run for this increment.
+
+## Drift readiness collector (2026-10-25)
+
+192 API tests passed across 21 files in 14.53 seconds. Extended release checks
+cover unexpected/expected findings, changed rule revisions and deleted baseline
+snapshots. Initial fixture environment/source constraint failures were corrected
+to match the database contract. API typecheck and lint passed. Browser checks,
+cloud rollout and full build were not run for this increment.
+
+## Release readiness collection (2026-10-25)
+
+- 192 API tests across 21 files passed in 14.34 seconds against isolated local
+  PostgreSQL. Readiness checks cover authorization, missing samples, current case
+  versions, source age, environment changes and evidence hash changes.
+- API/web typecheck and lint passed. An initial suite run exposed an older test's
+  assumption of exactly one release; it now checks the created release is listed.
+- No cloud changes or migrations required. Browser rendering, screenshots, full
+  production build and CI are NOT VERIFIED for this increment.
+
+## Jira key rotation (2026-10-25)
+
+- 191 API tests across 21 files passed in 14.81 seconds using the isolated local
+  test database. Four new rotation tests cover validation, dry runs, disconnected
+  rows, transactional rollback, audit revisions and reverse rotation.
+- API lint passed. API typecheck passed when rerun sequentially after an initial
+  conflict from running two Prisma generation commands concurrently.
+- No real credential rotation, cloud change, browser check or production build
+  performed for this backend maintenance increment.
+
+## Jira disconnect (2026-10-25)
+
+- API: 187 tests / 20 files passed in 14.82 seconds. New checks cover role and
+  tenant restrictions, concurrent disconnects, credential erasure, audit retention,
+  stale-revision rejection, reconnection and polling exclusion.
+- Web: 41 unit tests passed in 216ms. API/web TypeScript and lint passed.
+- Migration 20261025020000_jira_disconnect applied to isolated driftgate_test
+  and the local demo database. No cloud changes or actual Jira disconnect.
+- New confirmation/reconnection browser test could not run: Chromium exited
+  before assertions with MachPortRendezvous permission denied (1100). Browser
+  screenshots, production build and CI not verified for this increment.
+
+## Jira polling (2026-10-25)
+
+- API suite: 185 tests across 20 files passed in 14.04 seconds, isolated local
+  PostgreSQL with mocked Jira HTTP. Includes overlapping claims, active/expired
+  leases, rate-limit backoff, changed project, settings/manual-sync races,
+  disabled polling and exclusion of uncertain exports.
+- API typecheck and lint passed. Migration 20261025010000_jira_polling applied
+  successfully to driftgate_test and the local driftgate demo database.
+- These are local checks, not proof of live scheduled Jira or cloud deployment.
+  Browser checks, full build and CI were not run for this increment.
+
+## Interrupted Jira export races (2026-10-24)
+
+- API: 176 tests across 19 files passed in 14.97 seconds with configured coverage
+  thresholds, using isolated driftgate_test and mocked Jira responses.
+- New races keep the original create request in flight, reject immediate recovery,
+  age the reservation, recover an existing matching ticket, then release either a
+  successful or failed original response. Both preserve the recovered link/revision
+  and NEW QA status; exactly one remote create was attempted in each fixture.
+- API/web TypeScript and lint passed. New stale-pending UI browser assertion is
+  added but NOT VERIFIED; no browser screenshots or live recovery claimed.
+
+## Jira recovery UI (2026-10-24)
+
+- Web TypeScript and lint passed; 41 existing unit tests passed in 222 ms.
+- Added three mocked browser cases for admin recovery with a failed verification,
+  no issue-creation requests, QA access restriction and PENDING restriction.
+  Accessibility and dark/light screenshots at 360/768/1280/1920 are included.
+- All three Chromium cases were blocked before assertions by macOS MachPort
+  registration permission denied (1100). In-app browser control reported disabled.
+  Browser behavior and screenshot review remain NOT VERIFIED, not passing evidence.
+
+## Jira recovery API (2026-10-24)
+
+- Full API regression: 174 tests across 19 files passed in 14.19 seconds against
+  isolated local driftgate_test. Configured coverage thresholds passed.
+- API TypeScript and lint passed after correcting a union-narrowing type error.
+- Recovery tests cover admin/project isolation, original-target mismatch, stale
+  revisions, malformed provenance, exact marker matching, pending-state refusal,
+  concurrent single-winner recovery, actor audit and unchanged QA state/history.
+- Remote Jira requests were mocked and asserted GET-only. No real recovery,
+  recovery browser UI, hosted migration or deployment is claimed verified.
+
+## Saved Jira settings summary (2026-10-24)
+
+- Web TypeScript and lint: PASS. Web unit suite: 41 tests passed in 200 ms.
+- Updated browser regression for saved-summary display, explicit editing, cancel
+  clearing draft credentials, and revision-conflict recovery.
+- Chromium integrations suite: all three cases blocked at browser launch by macOS
+  MachPort permission denied (1100), before application assertions. In-app browser
+  control also reported disabled. New UI screenshots and browser checks NOT VERIFIED.
+
+## Live Jira and regression checkpoint (2026-10-24)
+
+- Local in-app browser flow: created a labelled synthetic case/suite/manual FAIL
+  and S4 defect, exported once through DriftGate to Jira KAN-1, then synced To Do
+  at 19:41:21 IST. QA state remained NEW with its single original history entry.
+  Reopening the defect retained the ticket link and saved status.
+- Screenshot captured at /tmp/driftgate-jira-verification.jpg. This temporary
+  local artifact is not a durable CI artifact or multi-viewport verification.
+- Full isolated API suite: 170 tests / 19 files passed in 14.47 seconds. Coverage
+  thresholds passed: statements 92.02%, branches 71.66%, functions 86.66%,
+  lines 93.78% for the configured coverage scope, not the entire application.
+- Web suite: 41 tests / 3 files passed in 198 ms, including coverage thresholds.
+- An earlier focused client/encryption invocation passed 42 assertions but exited
+  nonzero because whole-API coverage thresholds were unmet by that subset. The
+  subsequent full API suite above passed without weakening coverage thresholds.
+- No new cloud deployment, worker start, paid resource or credential change.
+  Scheduled polling, reconciliation and cloud Jira verification remain pending.
+
 ## Local compatibility build (2026-10-24)
 
 - next build --webpack: PASS, compiled in 2.5 seconds; TypeScript and all static
@@ -720,3 +988,19 @@ Screenshots of all four widths were visually reviewed; representative Chromium i
   UTC timestamp arithmetic matches Prisma timestamp storage.
 - Extended browser scenario for metrics visibility and four-width screenshots;
   new browser assertions and image review are NOT VERIFIED locally.
+
+## Phase 6 exit review (2026-11-25)
+
+Application revision `c4f685f` passed all Quality Gates, including database integration, production builds, browser and accessibility tests, runner fixtures and dependency audit. Local checks passed 336 tests across tooling, web, API, runner and demo store. [CI run and evidence](https://github.com/tulasiram2005/driftgate/actions/runs/45482162232)
+
+Reviewed contact sheets for all 288 captures of 12 primary screens across light/dark themes, four CSS viewport widths (360, 768, 1280, 1920) and Chromium, Firefox and WebKit. The narrow layout stacked controls and metrics; wider screens retained the sidebar and aligned content. No overlap was apparent in the sheets. CI checked document overflow and automated WCAG A/AA rules at every matrix point. Separate populated overview captures showed release readiness, missing evidence and recent activity. Recovery captures showed S1 blockers in both narrow and wide layouts. Keyboard assertions covered skip navigation, focus return and recovery actions. The matrix used a new project and emulated viewports. Hosted latency and physical-device testing remain outside these measurements.
+
+Median elapsed time in milliseconds for five sequential authenticated reads through the CI-local web proxy on an empty project:
+
+| Browser suite | Cases | Defect metrics | Activity | Releases |
+| ------------- | ----: | -------------: | -------: | -------: |
+| Chromium      |  4.71 |           4.96 |     6.56 |     5.36 |
+| Firefox       |  5.23 |           4.37 |     5.79 |     4.50 |
+| WebKit        |  8.83 |           4.98 |     5.95 |     4.81 |
+
+The slowest individual request among the 60 samples was 18.83 ms. These measurements cover API responses and exclude page rendering and hosted cold starts.

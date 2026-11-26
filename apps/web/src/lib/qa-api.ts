@@ -86,6 +86,7 @@ export function refreshSession(): Promise<User | null> {
   if (!refreshRequest) {
     refreshRequest = (async () => {
       const response = await fetch("/api/v1/auth/refresh", {
+        headers: { "X-DriftGate-Session": "1" },
         method: "POST",
         credentials: "include",
         cache: "no-store",
@@ -120,6 +121,7 @@ async function authorizedFetch(path: string, init: RequestInit = {}) {
       credentials: "include",
       cache: "no-store",
       headers: {
+        ...(path === "/auth/logout" ? { "X-DriftGate-Session": "1" } : {}),
         ...(init.body ? { "Content-Type": "application/json" } : {}),
         ...init.headers,
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
@@ -157,6 +159,7 @@ export async function api<T>(
 }
 
 export type JiraSettings = {
+  connected: boolean;
   projectId: string;
   site: string;
   jiraProjectKey: string;
@@ -206,6 +209,19 @@ export async function exportCases(projectId: string) {
   const link = document.createElement("a");
   link.href = url;
   link.download = "driftgate-test-cases.csv";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export async function exportRelease(projectId: string, releaseId: string) {
+  const response = await authorizedFetch(
+    projectPath(projectId, `/releases/${encodeURIComponent(releaseId)}/report.pdf`),
+  );
+  if (!response.ok) await readData(response);
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "driftgate-release.pdf";
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

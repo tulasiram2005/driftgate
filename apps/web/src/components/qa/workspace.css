@@ -328,6 +328,21 @@
 .qa-integration-form {
   max-width: 640px;
 }
+.qa-integration-summary {
+  max-width: 640px;
+  min-width: 0;
+}
+.qa-integration-summary dl {
+  display: grid;
+  gap: 8px;
+}
+.qa-integration-summary dt {
+  color: var(--text-dim);
+}
+.qa-integration-summary dd {
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
 
 .qa-form {
   display: grid;
@@ -978,17 +993,114 @@
     flex-wrap: wrap;
   }
 }
+.qa-defect-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  align-items: start;
+  gap: 16px;
+  margin-block: 24px;
+}
+.qa-defect-column {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.qa-defect-column h2,
+.qa-defect-card h3 {
+  font-size: var(--type-base);
+}
+.qa-defect-card {
+  overflow-wrap: anywhere;
+  padding-block: 16px;
+  border-top: 1px solid var(--border);
+}
+.qa-defect-card p,
+.qa-defect-card time {
+  font-size: var(--type-sm);
+}
 .qa-defect-metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
   gap: 16px;
   margin-block: 16px 24px;
 }
+.qa-overview-releases {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.qa-activity-list {
+  list-style: none;
+  padding: 0;
+  margin-block: 16px;
+}
+.qa-activity-list li {
+  padding-block: 16px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.qa-activity-list time {
+  color: var(--text-dim);
+  font-size: var(--type-sm);
+}
+.qa-overview-gates summary {
+  cursor: pointer;
+  padding-block: 12px;
+  font-weight: 600;
+}
+.qa-overview-gates summary:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+}
+.qa-overview-gates section {
+  padding-block: 16px;
+  border-top: 1px solid var(--border);
+}
 .qa-defect-metrics dd {
   margin: 6px 0 0;
   font-size: 20px;
   font-weight: 600;
   overflow-wrap: anywhere;
+}
+.qa-readiness-status {
+  margin-top: 16px;
+  font-weight: 600;
+}
+.qa-readiness-checks {
+  margin-block: 16px;
+  padding: 0;
+  list-style: none;
+  max-width: 640px;
+}
+.qa-readiness-checks li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding-block: 10px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.qa-readiness-checks strong {
+  font-weight: 600;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .qa-loading > svg {
+    animation: qa-loading-turn 1.4s linear infinite;
+  }
+  .qa-button,
+  .qa-nav-button {
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease,
+      color 140ms ease;
+  }
+}
+@keyframes qa-loading-turn {
+  to {
+    transform: rotate(360deg);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .qa-root *,

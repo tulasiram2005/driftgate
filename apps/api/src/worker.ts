@@ -2,6 +2,7 @@ import { Queue, Worker } from "bullmq";
 import { PrismaClient } from "../generated/client/index.js";
 import { readConfig } from "./config.js";
 import { launchSandbox } from "./sandbox.js";
+import { pollJiraStatuses } from "./jira-polling.js";
 
 const config = readConfig();
 if (!config.REDIS_URL || !config.RUNNER_CALLBACK_SECRET)
@@ -142,10 +143,22 @@ async function loop() {
   }
 }
 const polling = loop();
+async function jiraLoop() {
+  while (!stopping && config.JIRA_POLLING_ENABLED) {
+    try {
+      await pollJiraStatuses(db, config);
+    } catch {
+      console.error("Jira polling failed; retrying later");
+    }
+    for (let second = 0; second < 60 && !stopping; second++)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+}
+const jiraPolling = jiraLoop();
 for (const signal of ["SIGINT", "SIGTERM"])
   process.once(signal, () => {
     stopping = true;
-    void polling
+    void Promise.all([polling, jiraPolling])
       .then(() => worker.close())
       .then(() => queue.close())
       .then(() => db.$disconnect());

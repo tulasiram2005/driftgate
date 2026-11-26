@@ -6,6 +6,16 @@ import { createJiraClient, JiraRequestError } from "./jira-client.js";
 import { decryptIntegrationSecret } from "./integration-secrets.js";
 
 export const jiraExportBody = z.object({ revision: z.number().int().nonnegative() }).strict();
+export const jiraReconcileBody = jiraExportBody.extend({
+  issueKey: z.string().regex(/^[A-Z][A-Z0-9_]{1,19}-[1-9][0-9]*$/),
+});
+
+function canReconcile(record: { state: string; createdAt: Date }, now = Date.now()) {
+  return (
+    record.state === "REVIEW_REQUIRED" ||
+    (record.state === "PENDING" && now - record.createdAt.getTime() >= 5 * 60 * 1000)
+  );
+}
 
 export function mountJiraExport(
   app: Express,
@@ -15,82 +25,154 @@ export function mountJiraExport(
   fail: (status: number, code: string, message: string) => never,
 ) {
   const path = "/api/v1/projects/:projectId/defects/:defectId/jira";
-  app.post(`${path}/sync`, guard(false, true), async (req, res) => {
-    const input = jiraExportBody.parse(req.body);
-    const projectId = String(req.params.projectId);
-    const defect = await db.defect.findFirst({
-      where: { id: String(req.params.defectId), projectId },
-      include: { jiraExport: true },
-    });
-    if (!defect) return fail(404, "NOT_FOUND", "Defect not found");
-    const record = defect.jiraExport;
-    if (!record || record.state !== "LINKED" || !record.issueKey)
-      return fail(409, "NOT_LINKED", "A confirmed Jira ticket is required");
-    if (record.syncRevision !== input.revision)
-      return fail(409, "CONFLICT", "Jira status changed; reload before syncing");
-    const key = config.INTEGRATION_ENCRYPTION_KEY;
-    if (!key) return fail(503, "NOT_CONFIGURED", "Integration encryption is not configured");
-    const integration = await db.jiraIntegration.findUnique({ where: { projectId } });
-    if (!integration) return fail(409, "NOT_CONFIGURED", "Configure Jira before syncing");
-    // Never use credentials from a replacement site to read the original ticket.
-    if (integration.site !== record.site || integration.jiraProjectKey !== record.jiraProjectKey)
-      return fail(409, "TARGET_CHANGED", "Jira settings no longer match this ticket");
-    let client: ReturnType<typeof createJiraClient>;
-    try {
-      const credentials = z
-        .object({ email: z.string().email(), token: z.string().min(1) })
-        .parse(
-          JSON.parse(
-            decryptIntegrationSecret(integration.encryptedCredentials, key, projectId, "jira"),
-          ),
-        );
-      client = createJiraClient({
-        ...credentials,
-        site: integration.site,
-        projectKey: integration.jiraProjectKey,
-        issueTypeId: integration.issueTypeId,
+  type JiraClient = ReturnType<typeof createJiraClient>;
+  type StatusRequest = {
+    revision: number;
+    readStatus: (
+      client: JiraClient,
+      defectId: string,
+      linkedKey: string | null,
+    ) => ReturnType<JiraClient["getIssueStatus"]>;
+  };
+  const updateStatus =
+    (reconcile: boolean, parse: (body: unknown) => StatusRequest): RequestHandler =>
+    async (req, res) => {
+      const input = parse(req.body);
+      const projectId = String(req.params.projectId);
+      const defect = await db.defect.findFirst({
+        where: { id: String(req.params.defectId), projectId },
+        include: { jiraExport: true },
       });
-    } catch {
-      return fail(503, "NOT_CONFIGURED", "Jira credentials could not be loaded");
-    }
-    let status: Awaited<ReturnType<typeof client.getIssueStatus>>;
-    try {
-      status = await client.getIssueStatus(record.issueKey);
-    } catch (error) {
-      const code = error instanceof JiraRequestError ? error.code : "UNAVAILABLE";
-      return fail(
-        502,
-        `JIRA_${code}`,
-        "Jira status could not be refreshed; the last saved status is unchanged",
-      );
-    }
-    const current = await db.jiraIntegration.findUnique({ where: { projectId } });
-    if (!current || current.revision !== integration.revision)
-      return fail(409, "CONFLICT", "Jira settings changed; retry with the current settings");
-    // Compare-and-set prevents a slower concurrent response overwriting a saved snapshot.
-    // QA transitions and their audit history are deliberately untouched.
-    const updated = await db.jiraDefectExport.updateMany({
-      where: { defectId: defect.id, syncRevision: input.revision, state: "LINKED" },
-      data: {
-        jiraStatusId: status.id,
-        jiraStatusName: status.name,
-        jiraStatusCategory: status.statusCategory.key,
-        statusSyncedAt: new Date(),
-        syncRevision: { increment: 1 },
-      },
-    });
-    if (!updated.count) return fail(409, "CONFLICT", "Jira status changed; reload before syncing");
-    return res.json({
-      data: await db.jiraDefectExport.findUniqueOrThrow({ where: { defectId: defect.id } }),
-    });
-  });
+      if (!defect) return fail(404, "NOT_FOUND", "Defect not found");
+      const record = defect.jiraExport;
+      if (reconcile && (!record || !canReconcile(record)))
+        return fail(
+          409,
+          "NOT_REVIEWABLE",
+          "Export must need review or have been pending for at least five minutes",
+        );
+      if (!reconcile && (!record || record.state !== "LINKED" || !record.issueKey))
+        return fail(409, "NOT_LINKED", "A confirmed Jira ticket is required");
+      if (!record) return fail(409, "NOT_LINKED", "A Jira export is required");
+      if (record.syncRevision !== input.revision)
+        return fail(409, "CONFLICT", "Jira status changed; reload before syncing");
+      const key = config.INTEGRATION_ENCRYPTION_KEY;
+      if (!key) return fail(503, "NOT_CONFIGURED", "Integration encryption is not configured");
+      const integration = await db.jiraIntegration.findUnique({ where: { projectId } });
+      if (!integration?.connected)
+        return fail(409, "NOT_CONFIGURED", "Configure Jira before syncing");
+      // Never use credentials from a replacement site to read the original ticket.
+      if (integration.site !== record.site || integration.jiraProjectKey !== record.jiraProjectKey)
+        return fail(409, "TARGET_CHANGED", "Jira settings no longer match this ticket");
+      let client: ReturnType<typeof createJiraClient>;
+      try {
+        const credentials = z
+          .object({ email: z.string().email(), token: z.string().min(1) })
+          .parse(
+            JSON.parse(
+              decryptIntegrationSecret(integration.encryptedCredentials, key, projectId, "jira"),
+            ),
+          );
+        client = createJiraClient({
+          ...credentials,
+          site: integration.site,
+          projectKey: integration.jiraProjectKey,
+          issueTypeId: integration.issueTypeId,
+        });
+      } catch {
+        return fail(503, "NOT_CONFIGURED", "Jira credentials could not be loaded");
+      }
+      let status: Awaited<ReturnType<typeof client.getIssueStatus>>;
+      try {
+        status = await input.readStatus(client, defect.id, record.issueKey);
+      } catch (error) {
+        const code = error instanceof JiraRequestError ? error.code : "UNAVAILABLE";
+        return fail(
+          502,
+          `JIRA_${code}`,
+          reconcile
+            ? "Jira ticket could not be verified for this defect; the export remains unchanged"
+            : "Jira status could not be refreshed; the last saved status is unchanged",
+        );
+      }
+      const current = await db.jiraIntegration.findUnique({ where: { projectId } });
+      if (!current || current.revision !== integration.revision)
+        return fail(409, "CONFLICT", "Jira settings changed; retry with the current settings");
+      // Compare-and-set prevents a slower concurrent response overwriting a saved snapshot.
+      // QA transitions and their audit history are deliberately untouched.
+      const updated = await db.$transaction(async (tx) => {
+        const updated = await tx.jiraDefectExport.updateMany({
+          where: {
+            defectId: defect.id,
+            syncRevision: input.revision,
+            state: record.state,
+          },
+          data: {
+            ...(reconcile
+              ? {
+                  state: "LINKED" as const,
+                  issueKey: status.key,
+                  issueUrl: `${record.site}/browse/${status.key}`,
+                  errorCode: null,
+                }
+              : {}),
+            jiraStatusId: status.id,
+            jiraStatusName: status.name,
+            jiraStatusCategory: status.statusCategory.key,
+            statusSyncedAt: new Date(),
+            syncRevision: { increment: 1 },
+          },
+        });
+        if (reconcile && updated.count)
+          await tx.jiraIntegrationEvent.create({
+            data: {
+              projectId,
+              actorId: res.locals.userId as string,
+              revision: integration.revision,
+              action: `RECONCILED:${defect.id}:${status.key}`,
+            },
+          });
+        return updated;
+      });
+      if (!updated.count)
+        return fail(409, "CONFLICT", "Jira status changed; reload before syncing");
+      return res.json({
+        data: await db.jiraDefectExport.findUniqueOrThrow({ where: { defectId: defect.id } }),
+      });
+    };
+  app.post(
+    `${path}/sync`,
+    guard(false, true),
+    updateStatus(false, (body) => ({
+      revision: jiraExportBody.parse(body).revision,
+      readStatus: (client, _defectId, linkedKey) => client.getIssueStatus(linkedKey!),
+    })),
+  );
+  app.post(
+    `${path}/reconcile`,
+    guard(false, true),
+    updateStatus(true, (body) => {
+      const { revision, issueKey } = jiraReconcileBody.parse(body);
+      return {
+        revision,
+        readStatus: (client, defectId) => client.verifyExport(issueKey, defectId),
+      };
+    }),
+  );
   app.get(path, guard(), async (req, res) => {
     const defect = await db.defect.findFirst({
       where: { id: String(req.params.defectId), projectId: String(req.params.projectId) },
       include: { jiraExport: true },
     });
     if (!defect) return fail(404, "NOT_FOUND", "Defect not found");
-    res.json({ data: defect.jiraExport });
+    res.json({
+      data: defect.jiraExport
+        ? {
+            ...defect.jiraExport,
+            canReconcile: canReconcile(defect.jiraExport),
+          }
+        : null,
+    });
   });
   app.post(path, guard(false, true), async (req, res) => {
     const input = jiraExportBody.parse(req.body);
@@ -107,7 +189,8 @@ export function mountJiraExport(
     const key = config.INTEGRATION_ENCRYPTION_KEY;
     if (!key) return fail(503, "NOT_CONFIGURED", "Integration encryption is not configured");
     const integration = await db.jiraIntegration.findUnique({ where: { projectId } });
-    if (!integration) return fail(409, "NOT_CONFIGURED", "Configure Jira before exporting");
+    if (!integration?.connected)
+      return fail(409, "NOT_CONFIGURED", "Configure Jira before exporting");
     let client: ReturnType<typeof createJiraClient>;
     try {
       const credentials = z
@@ -150,19 +233,23 @@ export function mountJiraExport(
       });
     try {
       const issue = await client.createIssue({ summary, description });
-      const data = await db.jiraDefectExport.update({
-        where: { defectId: defect.id },
+      // A recovered link wins over late completion of the original request.
+      await db.jiraDefectExport.updateMany({
+        where: { defectId: defect.id, state: "PENDING", syncRevision: 0 },
         data: { state: "LINKED", issueKey: issue.key, issueUrl: issue.url },
       });
-      return res.json({ data });
+      return res.json({
+        data: await db.jiraDefectExport.findUniqueOrThrow({ where: { defectId: defect.id } }),
+      });
     } catch (error) {
       // A lost response (or failed local save) may still mean a ticket exists in Jira.
       const errorCode = error instanceof JiraRequestError ? error.code : "UNAVAILABLE";
-      const data = await db.jiraDefectExport.update({
-        where: { defectId: defect.id },
+      await db.jiraDefectExport.updateMany({
+        where: { defectId: defect.id, state: "PENDING", syncRevision: 0 },
         data: { state: "REVIEW_REQUIRED", errorCode },
       });
-      return res.status(202).json({ data });
+      const data = await db.jiraDefectExport.findUniqueOrThrow({ where: { defectId: defect.id } });
+      return res.status(data.state === "LINKED" ? 200 : 202).json({ data });
     }
   });
 }

@@ -45,6 +45,7 @@ import {
   SectionHeading,
   Submit,
   useWrite,
+  useProjectViewState,
 } from "./ui";
 
 export function useCases(projectId: string) {
@@ -73,8 +74,8 @@ export function CasesView({ projectId, canWrite }: { projectId: string; canWrite
   const [history, setHistory] = useState<TestCase | null>(null);
   const [deleting, setDeleting] = useState<TestCase | null>(null);
   const [importing, setImporting] = useState(false);
-  const [search, setSearch] = useState("");
-  const [priority, setPriority] = useState("");
+  const [search, setSearch] = useProjectViewState(projectId, "case-search", "");
+  const [priority, setPriority] = useProjectViewState(projectId, "case-priority", "");
   const [sorting, setSorting] = useState<SortingState>([]);
   const exportMutation = useMutation({ mutationFn: () => exportCases(projectId) });
   const columns = useMemo<ColumnDef<typeof features, TestCase>[]>(
@@ -396,6 +397,7 @@ function CaseEditor({
       title={record ? "Edit test case" : "New test case"}
       onClose={onClose}
       busy={mutation.isPending}
+      dirty={form.formState.isDirty}
     >
       <form
         className="qa-form"

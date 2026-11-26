@@ -96,7 +96,7 @@ export function BaselinesView({ projectId, canReview }: { projectId: string; can
           onClose={() => setSelected(null)}
         />
       )}
-      <VisualComparisons projectId={projectId} />
+      <VisualComparisons projectId={projectId} canReview={canReview} />
     </>
   );
 }

@@ -88,6 +88,7 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     environment:
+      RUNNER_JOB_BASE64: ${RUNNER_JOB_BASE64:?Supply a base64 v1 job}
       RUNNER_EVIDENCE_DIR: /evidence
       RUNNER_SPOOL_DIR: /spool
       RUNNER_CALLBACK_URL: ${RUNNER_CALLBACK_URL:-}

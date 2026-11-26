@@ -344,7 +344,7 @@ it("syncs Jira status without changing QA state and protects snapshots from erro
   expect(failed.status).toBe(502);
   expect(JSON.stringify(failed.body)).not.toContain("secret-token");
   const read = await request(app).get(`${path()}/${defect.id}/jira`).set(auth("QA"));
-  expect(read.body.data).toEqual(saved);
+  expect(read.body.data).toEqual({ ...saved, canReconcile: false });
   send.mockImplementationOnce(async () => {
     await db.jiraIntegration.update({ where: { projectId }, data: { revision: { increment: 1 } } });
     return Response.json({
@@ -359,6 +359,174 @@ it("syncs Jira status without changing QA state and protects snapshots from erro
       .jiraStatusName,
   ).toBe("Done");
 });
+
+it("reconciles an uncertain export once with remote provenance and an admin audit event", async () => {
+  const projectId = projects[0]!;
+  const defect = await db.defect.findFirstOrThrow({
+    where: { projectId, resultId: "demo-ambiguous" },
+  });
+  const endpoint = `${path()}/${defect.id}/jira/reconcile`;
+  const send = vi.fn<typeof fetch>().mockImplementation(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    return Response.json({
+      id: "124",
+      key: "KAN-2",
+      fields: {
+        status: { id: "1", name: "To Do", statusCategory: { key: "new" } },
+        description: {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: `DriftGate defect: ${defect.id}\nSeverity: S2`,
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+  });
+  vi.stubGlobal("fetch", send);
+  const recover = (role = "ADMIN", revision = 0) =>
+    request(app).post(endpoint).set(auth(role)).send({ revision, issueKey: "KAN-2" });
+  expect((await request(app).post(endpoint).send({ revision: 0, issueKey: "KAN-2" })).status).toBe(
+    401,
+  );
+  expect((await recover("QA")).status).toBe(403);
+  expect((await recover("OUTSIDER")).status).toBe(404);
+  expect((await recover("ADMIN", 1)).status).toBe(409);
+  expect((await recover()).body.error.code).toBe("TARGET_CHANGED");
+  expect(send).not.toHaveBeenCalled();
+  await db.jiraIntegration.update({
+    where: { projectId },
+    data: { site: "https://other.atlassian.net", revision: { increment: 1 } },
+  });
+  await db.jiraDefectExport.update({ where: { defectId: defect.id }, data: { state: "PENDING" } });
+  expect((await recover()).body.error.code).toBe("NOT_REVIEWABLE");
+  expect(send).not.toHaveBeenCalled();
+  await db.jiraDefectExport.update({
+    where: { defectId: defect.id },
+    data: { state: "REVIEW_REQUIRED" },
+  });
+  send.mockResolvedValueOnce(Response.json({ id: "124", key: "KAN-2", fields: {} }));
+  expect((await recover()).status).toBe(502);
+  expect(
+    (await db.jiraDefectExport.findUniqueOrThrow({ where: { defectId: defect.id } })).state,
+  ).toBe("REVIEW_REQUIRED");
+  const results = await Promise.all([recover(), recover()]);
+  expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
+  expect(results.find((r) => r.status === 200)!.body.data).toMatchObject({
+    state: "LINKED",
+    issueKey: "KAN-2",
+    issueUrl: "https://other.atlassian.net/browse/KAN-2",
+    syncRevision: 1,
+    jiraStatusName: "To Do",
+    errorCode: null,
+  });
+  expect(
+    await db.jiraIntegrationEvent.count({
+      where: { projectId, action: `RECONCILED:${defect.id}:KAN-2`, actorId: users.ADMIN!.id },
+    }),
+  ).toBe(1);
+  expect((await db.defect.findUniqueOrThrow({ where: { id: defect.id } })).status).toBe("NEW");
+  expect(await db.defectEvent.count({ where: { defectId: defect.id } })).toBe(0);
+  expect((await recover("ADMIN", 1)).status).toBe(409);
+  expect(send.mock.calls.every(([, options]) => options?.method === "GET")).toBe(true);
+});
+
+it.each(["success", "failure"])(
+  "recovers stale pending exports and preserves the link after late %s",
+  async (outcome) => {
+    const projectId = projects[0]!;
+    const defect = await db.defect.create({
+      data: {
+        projectId,
+        resultId: `demo-late-${outcome}`,
+        title: "Demo interrupted export",
+        severity: "S4",
+        createdBy: users.ADMIN!.id,
+        reproduction: {},
+      },
+    });
+    const endpoint = `${path()}/${defect.id}/jira`;
+    let started!: () => void;
+    let finish!: () => void;
+    const entered = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const gate = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const send = vi.fn<typeof fetch>().mockImplementation(async (_url, options) => {
+      if (options?.method === "POST") {
+        started();
+        await gate;
+        if (outcome === "failure") throw new Error("demo lost response");
+        return Response.json({ id: "999", key: "KAN-99" });
+      }
+      return Response.json({
+        id: "125",
+        key: "KAN-3",
+        fields: {
+          status: { id: "1", name: "To Do", statusCategory: { key: "new" } },
+          description: {
+            type: "doc",
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: `DriftGate defect: ${defect.id}\nSeverity: S4` }],
+              },
+            ],
+          },
+        },
+      });
+    });
+    vi.stubGlobal("fetch", send);
+    const original = request(app)
+      .post(endpoint)
+      .set(auth())
+      .send({ revision: 0 })
+      .then((r) => r);
+    await entered;
+    try {
+      const recover = () =>
+        request(app)
+          .post(`${endpoint}/reconcile`)
+          .set(auth())
+          .send({ revision: 0, issueKey: "KAN-3" });
+      expect((await request(app).get(endpoint).set(auth())).body.data.canReconcile).toBe(false);
+      expect((await recover()).status).toBe(409);
+      await db.jiraDefectExport.update({
+        where: { defectId: defect.id },
+        data: { createdAt: new Date(Date.now() - 301000) },
+      });
+      expect((await request(app).get(endpoint).set(auth())).body.data.canReconcile).toBe(true);
+      const recovered = await recover();
+      expect(recovered.status).toBe(200);
+      expect(recovered.body.data).toMatchObject({
+        state: "LINKED",
+        issueKey: "KAN-3",
+        syncRevision: 1,
+      });
+    } finally {
+      finish();
+    }
+    const late = await original;
+    expect(late.status).toBe(200);
+    expect(late.body.data).toMatchObject({
+      state: "LINKED",
+      issueKey: "KAN-3",
+      syncRevision: 1,
+      errorCode: null,
+    });
+    expect(send.mock.calls.filter(([, options]) => options?.method === "POST")).toHaveLength(1);
+    expect((await db.defect.findUniqueOrThrow({ where: { id: defect.id } })).status).toBe("NEW");
+  },
+);
 
 it("aggregates project-wide aging and latest closure without counting reopened defects", async () => {
   const projectId = projects[1]!;

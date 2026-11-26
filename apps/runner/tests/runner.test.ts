@@ -138,6 +138,7 @@ test("callbacks sign exact raw bytes and reuse event during bounded retries", as
   assert.equal(bodies.length, 3);
   assert.equal(new Set(bodies).size, 1);
   await assert.rejects(callback("http://api.example", secret, {}, false, send));
+  await assert.rejects(callback("http://api.example", secret, {}, true, send));
   let calls = 0;
   await assert.rejects(
     callback("https://api.example", secret, {}, false, async () => {

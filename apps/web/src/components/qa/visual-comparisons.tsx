@@ -4,9 +4,13 @@ import { useState } from "react";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { Scan, Download } from "lucide-react";
 import { api, page, projectPath } from "../../lib/qa-api";
-import { Empty, ErrorNotice, Loading, useWrite } from "./ui";
+import { Empty, ErrorNotice, Field, Loading, Modal, Submit, useWrite } from "./ui";
 
 type Comparison = {
+  reviewDecision?: string | null;
+  reviewComment?: string | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
   ignoredPixels?: number;
   ignoreRevision?: number;
   id: string;
@@ -93,7 +97,14 @@ function DifferenceDownload({
   );
 }
 
-export function VisualComparisons({ projectId }: { projectId: string }) {
+export function VisualComparisons({
+  projectId,
+  canReview = false,
+}: {
+  projectId: string;
+  canReview?: boolean;
+}) {
+  const [reviewing, setReviewing] = useState<string | null>(null);
   const query = useInfiniteQuery({
     queryKey: ["project", projectId, "visual-comparisons"],
     initialPageParam: null as string | null,
@@ -134,6 +145,28 @@ export function VisualComparisons({ projectId }: { projectId: string }) {
                   {((row.changedPixels / row.comparedPixels) * 100).toFixed(2)}%)
                 </p>
                 <DifferenceDownload projectId={projectId} comparisonId={row.id} />
+                {row.reviewDecision ? (
+                  <div>
+                    <p>
+                      {row.reviewDecision === "ACCEPTED"
+                        ? "Accepted difference"
+                        : "Rejected difference"}{" "}
+                      · {row.reviewedAt ? new Date(row.reviewedAt).toLocaleString() : ""}
+                    </p>
+                    <p>{row.reviewComment}</p>
+                    <small>Reviewer: {row.reviewedBy}</small>
+                  </div>
+                ) : (
+                  canReview && (
+                    <button
+                      className="qa-button"
+                      type="button"
+                      onClick={() => setReviewing(row.id)}
+                    >
+                      Review difference
+                    </button>
+                  )
+                )}
               </article>
             ))}
           </div>
@@ -151,6 +184,64 @@ export function VisualComparisons({ projectId }: { projectId: string }) {
           )}
         </>
       )}
+      {reviewing && (
+        <ReviewDifference projectId={projectId} id={reviewing} close={() => setReviewing(null)} />
+      )}
     </section>
+  );
+}
+
+function ReviewDifference({
+  projectId,
+  id,
+  close,
+}: {
+  projectId: string;
+  id: string;
+  close: () => void;
+}) {
+  const [comment, setComment] = useState("");
+  const [decision, setDecision] = useState("REJECTED");
+  const write = useWrite(projectId, close);
+  return (
+    <Modal title="Review visual difference" onClose={close} busy={write.isPending}>
+      <p>
+        Inspect the difference image before deciding. This decision is permanent for this
+        comparison. Create a new comparison to review again.
+      </p>
+      <form
+        className="qa-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!write.isPending && comment.trim())
+            write.mutate({
+              path: projectPath(projectId, `/visual-comparisons/${id}/review`),
+              body: { decision, comment: comment.trim() },
+            });
+        }}
+      >
+        <Field label="Decision">
+          <select
+            value={decision}
+            disabled={write.isPending}
+            onChange={(event) => setDecision(event.target.value)}
+          >
+            <option value="REJECTED">Reject difference</option>
+            <option value="ACCEPTED">Accept intentional difference</option>
+          </select>
+        </Field>
+        <Field label="Review reason">
+          <textarea
+            required
+            maxLength={2000}
+            value={comment}
+            disabled={write.isPending}
+            onChange={(event) => setComment(event.target.value)}
+          />
+        </Field>
+        <ErrorNotice error={write.error} />
+        <Submit pending={write.isPending}>Record review</Submit>
+      </form>
+    </Modal>
   );
 }

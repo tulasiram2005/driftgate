@@ -1,12 +1,10 @@
 # DriftGate
 
-A release sign-off and QA platform for fictional fashion storefronts. Planned workflows connect requirements, test execution, environment drift, Jira defects and named release approval.
+DriftGate is a QA workspace for deciding whether a storefront release is ready. A team can trace a requirement to a test case, run it, inspect evidence, record a defect, export it to Jira and sign off on a specific release revision. The PDF report preserves the evidence behind the decision.
 
-**Current delivery: Threadline storefront plus Phase 2 QA workspace and API.** DriftGate now supports account sessions, project roles, requirements, versioned test cases, CSV transfer, suites and manual execution with notes. The design preview is at `/design`. Automated store execution, Jira and release approval remain later phases. See [phase status](docs/STATUS.md).
+**Implemented through Phase 5.** The workspace supports manual and automated runs, environment comparisons, approved visual baselines, reusable ignore regions, SQL results, defects, Jira status sync and release approval history. The web app and API run locally. The hosted API, PostgreSQL schema and private evidence bucket have been verified individually. The full hosted release demonstration remains open. [Current project status](docs/STATUS.md) · [End-to-end architecture and technology stack](docs/ARCHITECTURE.md)
 
-Public source repository: https://github.com/tulasiram2005/driftgate
-
-Phase 1 includes a PostgreSQL schema, migrations, seed data, catalogue, cart, simulated checkout and a 15-flag defect bank. See [measured evidence](docs/METRICS.md), [QA workspace setup](docs/PHASE2.md) and [Threadline setup](docs/THREADLINE.md). Deployment and later phases remain pending. This is not a finished assessment submission yet.
+Threadline is the bundled fictional fashion store. Its catalogue, cart and simulated checkout run against PostgreSQL. Fifteen switchable defects let a reviewer compare clean staging with deliberately faulty environments. [Defect catalogue](docs/BUG_BANK.md) · [Measured results](docs/METRICS.md) · [Storefront setup](docs/THREADLINE.md)
 
 ![Threadline demo catalogue](docs/screenshots/threadline-1280.png)
 

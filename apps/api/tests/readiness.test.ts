@@ -15,12 +15,21 @@ function fixture(): ReadinessEvidence {
   };
 }
 describe("versioned MVP readiness", () => {
+  it("blocks unreviewed visual differences even at the score threshold", () => {
+    const input = fixture();
+    input.visual = { ...input.visual!, reviewed: 0, total: 1 };
+    expect(evaluateReadiness(input, now)).toMatchObject({
+      score: 90,
+      eligible: false,
+      blockers: ["UNREVIEWED_VISUAL_DIFFERENCES"],
+    });
+  });
   it("awards 100 only for complete passing evidence and explicitly excludes performance", () => {
     const result = evaluateReadiness(fixture(), now);
     expect(result).toMatchObject({
       score: 100,
       eligible: true,
-      policyVersion: "mvp-1",
+      policyVersion: "mvp-2",
       excluded: ["performance"],
       blockers: [],
     });

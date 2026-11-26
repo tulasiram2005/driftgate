@@ -2,6 +2,47 @@ import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 // Isolated UI fixtures; these do not claim a real Jira connection.
+test("Jira disconnect requires confirmation and reconnect starts with empty credentials", async ({
+  page,
+}) => {
+  await workspace(page);
+  let saved = {
+    projectId: "demo-project",
+    site: "https://demo.atlassian.net",
+    jiraProjectKey: "KAN",
+    issueTypeId: "10011",
+    revision: 1,
+    connected: true,
+    updatedAt: new Date().toISOString(),
+  };
+  let disconnects = 0;
+  await page.route("**/api/v1/projects/demo-project/integrations/jira", (route) =>
+    route.fulfill({ json: { data: saved, available: true } }),
+  );
+  await page.route("**/integrations/jira/disconnect", (route) => {
+    expect(route.request().postDataJSON()).toEqual({ revision: 1 });
+    disconnects++;
+    saved = { ...saved, connected: false, revision: 2 };
+    return route.fulfill({ json: { data: saved } });
+  });
+  await page.goto("/");
+  await page.getByLabel("Current project").selectOption("demo-project");
+  await page.getByRole("button", { name: "Integrations", exact: true }).click();
+  await page.getByRole("button", { name: "Disconnect Jira", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText(
+    "Existing ticket links and QA history stay available",
+  );
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  expect(disconnects).toBe(0);
+  await page.getByRole("button", { name: "Disconnect Jira", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm disconnect" }).click();
+  await expect(page.getByText("Jira disconnected. Saved credentials removed.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Check Jira access" })).toHaveCount(0);
+  await expect(page.getByLabel("API token")).toHaveValue("");
+  await expect(page.getByLabel("Atlassian email")).toHaveValue("");
+  expect(disconnects).toBe(1);
+});
+
 async function workspace(page: Page, role = "ADMIN") {
   const project = { id: "demo-project", name: "Demo Jira project", role };
   await page.route("**/api/v1/**", (route) => {
@@ -78,16 +119,25 @@ test("Jira settings save, clear credentials, and recover from revision conflicts
   await expect(
     page.getByText("Settings saved. Connection not verified.", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByLabel("API token")).toHaveValue("");
-  await expect(page.getByLabel("Atlassian email")).toHaveValue("");
+  await expect(page.getByRole("region", { name: "Saved Jira settings" })).toContainText("KAN");
+  await expect(page.getByLabel("API token")).toHaveCount(0);
   await page.getByRole("button", { name: "Check Jira access", exact: true }).click();
   await expect(page.getByText(/Jira access confirmed at/)).toBeVisible();
+  await page.getByRole("button", { name: "Edit Jira settings" }).click();
+  await expect(page.getByLabel("API token")).toHaveValue("");
+  await expect(page.getByLabel("Atlassian email")).toHaveValue("");
+  await page.getByLabel("API token").fill("discarded-demo-token");
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await page.getByRole("button", { name: "Edit Jira settings" }).click();
+  await expect(page.getByLabel("API token")).toHaveValue("");
   conflict = true;
   await page.getByLabel("Atlassian email").fill("demo@example.test");
   await page.getByLabel("API token").fill("demo-token-not-real");
   await page.getByRole("button", { name: "Replace settings" }).click();
   await expect(page.getByLabel("API token")).toHaveValue("");
   await page.getByRole("button", { name: "Reload saved settings" }).click();
+  await expect(page.getByRole("region", { name: "Saved Jira settings" })).toContainText("NEW");
+  await page.getByRole("button", { name: "Edit Jira settings" }).click();
   await expect(page.getByLabel("Project key")).toHaveValue("NEW");
   await expect(
     page.getByText("Settings saved. Connection not verified.", { exact: true }),

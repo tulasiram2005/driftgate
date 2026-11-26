@@ -334,16 +334,56 @@ describe("phase 2 end-to-end API", () => {
     ).toBe(400);
     expect(await db.testCase.count({ where: { projectId: project } })).toBe(count);
   });
+  it("rejects untrusted session writes before emitting any cookie", async () => {
+    for (const action of ["refresh", "logout"]) {
+      const path = `/api/v1/auth/${action}`;
+      const requests = [
+        request(app).post(path),
+        request(app).post(path).set("Origin", "null").set("X-DriftGate-Session", "1"),
+        request(app)
+          .post(path)
+          .set("Origin", "https://untrusted.example")
+          .set("X-DriftGate-Session", "1"),
+        request(app).post(path).set("Sec-Fetch-Site", "cross-site").set("X-DriftGate-Session", "1"),
+      ];
+      for (const pending of requests) {
+        const response = await pending;
+        expect(response.status).toBe(403);
+        expect(response.headers["set-cookie"]).toBeUndefined();
+      }
+    }
+  });
   it("rotates refresh tokens, rejects replay and revokes old access sessions", async () => {
-    const r = await request(app).post("/api/v1/auth/refresh").set("Cookie", firstCookie);
+    expect(
+      (await request(app).post("/api/v1/auth/refresh").set("Cookie", firstCookie)).status,
+    ).toBe(403);
+    expect((await request(app).post("/api/v1/auth/logout").set("Cookie", firstCookie)).status).toBe(
+      403,
+    );
+    const r = await request(app)
+      .post("/api/v1/auth/refresh")
+      .set("X-DriftGate-Session", "1")
+      .set("Cookie", firstCookie);
     expect(r.status).toBe(200);
     expect((await request(app).get(path()).set(auth())).status).toBe(401);
     expect(
-      (await request(app).post("/api/v1/auth/refresh").set("Cookie", firstCookie)).status,
+      (
+        await request(app)
+          .post("/api/v1/auth/refresh")
+          .set("X-DriftGate-Session", "1")
+          .set("Cookie", firstCookie)
+      ).status,
     ).toBe(401);
     a = r.body.data.accessToken;
     const cookie = String(r.headers["set-cookie"]?.[0]).split(";")[0]!;
-    expect((await request(app).post("/api/v1/auth/logout").set("Cookie", cookie)).status).toBe(200);
+    expect(
+      (
+        await request(app)
+          .post("/api/v1/auth/logout")
+          .set("Origin", "http://127.0.0.1:3100")
+          .set("Cookie", cookie)
+      ).status,
+    ).toBe(200);
     expect((await request(app).get(path()).set(auth())).status).toBe(401);
     const login = await request(app)
       .post("/api/v1/auth/login")
@@ -394,6 +434,81 @@ describe("phase 2 end-to-end API", () => {
     expect(
       (await request(app).get(path("/runs")).set(auth())).body.data[0].results[0].version,
     ).toBe(1);
+  });
+  it("returns bounded chronological activity without leaking other projects or private details", async () => {
+    expect((await request(app).get(path("/activity"))).status).toBe(401);
+    const foreign = await db.project.create({
+      data: {
+        name: "Demo private activity",
+        members: { create: { userId: otherId, role: "ADMIN" } },
+      },
+    });
+    try {
+      expect(
+        (await request(app).get(`/api/v1/projects/${foreign.id}/activity`).set(auth())).status,
+      ).toBe(404);
+      expect(
+        (await request(app).get(`/api/v1/projects/${foreign.id}/activity`).set(auth(b))).body.data,
+      ).toEqual([]);
+    } finally {
+      await db.project.delete({ where: { id: foreign.id } });
+    }
+    const start = Date.now() + 60_000;
+    await db.release.createMany({
+      data: Array.from({ length: 12 }, (_, index) => ({
+        projectId: project,
+        createdBy: adminId,
+        name: `Demo activity release ${index}`,
+        createdAt: new Date(start + index * 1000),
+      })),
+    });
+    const activityRun = await db.run.create({
+      data: {
+        projectId: project,
+        environment: "UAT",
+        browser: "Chromium",
+        device: "Desktop",
+        createdAt: new Date(start + 12_000),
+      },
+    });
+    await db.defect.create({
+      data: {
+        projectId: project,
+        resultId: `demo-activity-${suffix}`,
+        title: "Demo activity defect",
+        severity: "S2",
+        createdBy: adminId,
+        reproduction: { private: "must-not-leak" },
+        events: {
+          create: {
+            actorId: adminId,
+            toStatus: "NEW",
+            comment: "must-not-leak",
+            createdAt: new Date(start + 13_000),
+          },
+        },
+      },
+    });
+    const response = await request(app).get(path("/activity")).set(auth());
+    expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("no-store");
+    const items = response.body.data;
+    expect(items).toHaveLength(10);
+    expect(items[0].detail).toBe("Demo activity defect");
+    expect(items[1].id).toBe(`run:${activityRun.id}`);
+    expect(items[2].detail).toBe("Demo activity release 11");
+    expect(items.map((item: { occurredAt: string }) => item.occurredAt)).toEqual(
+      items
+        .map((item: { occurredAt: string }) => item.occurredAt)
+        .sort()
+        .reverse(),
+    );
+    expect(JSON.stringify(items)).not.toContain("must-not-leak");
+    expect(
+      items.every(
+        (item: object) => Object.keys(item).sort().join(",") === "detail,id,occurredAt,title",
+      ),
+    ).toBe(true);
   });
   it("serves Zod-derived OpenAPI and rate limits rapid bad login attempts", async () => {
     const spec = await request(app).get("/openapi.json");
