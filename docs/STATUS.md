@@ -1,5 +1,9 @@
 # Phase status
 
+## Hosted staging runner verified (2026-11-27)
+
+After Redis recovery, DriftGate queued a Chromium desktop catalogue check. The worker dispatched it on main, where the Docker build failed because its context excluded the shared drift package. Commit `c44a4a5` includes the required package sources. Re-dispatching the same job on the release branch [passed on GitHub](https://github.com/tulasiram2005/driftgate/actions/runs/45847891784). The hosted API recorded PASS for the run and its result. Authenticated reads of the private screenshot, trace and video matched their recorded byte counts. Production still needs the runner fix before new jobs dispatched on main can use it.
+
 ## Phase 6 closed; Phase 7 in progress (2026-11-25)
 
 Revision `c4f685f` passed the full Quality Gates workflow. Review covered 288 primary-screen screenshots and populated dashboard and recovery examples. The four measured read endpoints had median response times of 4.37–8.83 ms in CI. See [measurements](METRICS.md#phase-6-exit-review-2026-11-25) and the [successful run](https://github.com/tulasiram2005/driftgate/actions/runs/45482162232).

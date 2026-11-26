@@ -1,6 +1,6 @@
 # Remaining delivery work
 
-## Current state (2026-11-26)
+## Current state (2026-11-27)
 
 Seven of eight phases are complete. Phase 7 covers the hosted deployment and
 end-to-end demo. Phase 6 closed after browser, accessibility, screenshot and
@@ -8,8 +8,9 @@ response-time verification. See the [phase status](STATUS.md) and
 [measurements](METRICS.md).
 
 The hosted Neon schema and private evidence storage passed verification.
-Remaining work includes restoring runner authentication and Redis connectivity,
-resolving the release security review, deploying the web/API and Threadline
+The restored queue dispatched a staging check, and the hosted API recorded a passing
+callback with three verified evidence files after a release-branch retry.
+Remaining work includes promoting the runner Docker build fix, resolving the release security review, deploying the web/API and Threadline
 demo data, verifying hosted SQL and Jira paths, and measuring the seeded defects
 in a full hosted run. The [release pull request](https://github.com/tulasiram2005/driftgate/pull/5)
 tracks the candidate. Its [Quality Gates run](https://github.com/tulasiram2005/driftgate/actions/runs/45585937194)
