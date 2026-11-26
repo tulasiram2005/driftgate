@@ -291,7 +291,9 @@ export function createApp(
   });
   document("post", "/api/v1/auth/login", credentials, false);
   const protectCookieWrite: RequestHandler = (req, _res, next) => {
-    if (req.cookies[cookieName] && !req.get("origin") && req.get("X-DriftGate-Session") !== "1")
+    // The global origin allowlist and Fetch Metadata checks run before these routes.
+    // Guard even a cookie-less logout: its response can expire a browser cookie.
+    if (!req.get("origin") && req.get("X-DriftGate-Session") !== "1")
       return next(
         new ApiError(
           403,
@@ -318,8 +320,8 @@ export function createApp(
   app.post(
     "/api/v1/auth/refresh",
     refreshLimit,
-    cookieParser(),
     protectCookieWrite,
+    cookieParser(),
     async (req, res) => {
       const token = z.string().max(200).safeParse(req.cookies[cookieName]);
       if (!token.success) fail(401, "SESSION_EXPIRED", "Please sign in again");
@@ -346,7 +348,7 @@ export function createApp(
     },
   );
   document("post", "/api/v1/auth/refresh", undefined, false);
-  app.post("/api/v1/auth/logout", cookieParser(), protectCookieWrite, async (req, res) => {
+  app.post("/api/v1/auth/logout", protectCookieWrite, cookieParser(), async (req, res) => {
     const token: unknown = req.cookies[cookieName];
     if (typeof token === "string")
       await db.session.updateMany({

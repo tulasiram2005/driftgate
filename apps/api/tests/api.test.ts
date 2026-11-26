@@ -334,6 +334,25 @@ describe("phase 2 end-to-end API", () => {
     ).toBe(400);
     expect(await db.testCase.count({ where: { projectId: project } })).toBe(count);
   });
+  it("rejects untrusted session writes before emitting any cookie", async () => {
+    for (const action of ["refresh", "logout"]) {
+      const path = `/api/v1/auth/${action}`;
+      const requests = [
+        request(app).post(path),
+        request(app).post(path).set("Origin", "null").set("X-DriftGate-Session", "1"),
+        request(app)
+          .post(path)
+          .set("Origin", "https://untrusted.example")
+          .set("X-DriftGate-Session", "1"),
+        request(app).post(path).set("Sec-Fetch-Site", "cross-site").set("X-DriftGate-Session", "1"),
+      ];
+      for (const pending of requests) {
+        const response = await pending;
+        expect(response.status).toBe(403);
+        expect(response.headers["set-cookie"]).toBeUndefined();
+      }
+    }
+  });
   it("rotates refresh tokens, rejects replay and revokes old access sessions", async () => {
     expect(
       (await request(app).post("/api/v1/auth/refresh").set("Cookie", firstCookie)).status,
