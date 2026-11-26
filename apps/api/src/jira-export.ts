@@ -25,11 +25,19 @@ export function mountJiraExport(
   fail: (status: number, code: string, message: string) => never,
 ) {
   const path = "/api/v1/projects/:projectId/defects/:defectId/jira";
+  type JiraClient = ReturnType<typeof createJiraClient>;
+  type StatusRequest = {
+    revision: number;
+    readStatus: (
+      client: JiraClient,
+      defectId: string,
+      linkedKey: string | null,
+    ) => ReturnType<JiraClient["getIssueStatus"]>;
+  };
   const updateStatus =
-    (reconcile: boolean): RequestHandler =>
+    (reconcile: boolean, parse: (body: unknown) => StatusRequest): RequestHandler =>
     async (req, res) => {
-      const recovery = reconcile ? jiraReconcileBody.parse(req.body) : null;
-      const input = recovery ?? jiraExportBody.parse(req.body);
+      const input = parse(req.body);
       const projectId = String(req.params.projectId);
       const defect = await db.defect.findFirst({
         where: { id: String(req.params.defectId), projectId },
@@ -76,9 +84,7 @@ export function mountJiraExport(
       }
       let status: Awaited<ReturnType<typeof client.getIssueStatus>>;
       try {
-        status = recovery
-          ? await client.verifyExport(recovery.issueKey, defect.id)
-          : await client.getIssueStatus(record.issueKey!);
+        status = await input.readStatus(client, defect.id, record.issueKey);
       } catch (error) {
         const code = error instanceof JiraRequestError ? error.code : "UNAVAILABLE";
         return fail(
@@ -134,8 +140,25 @@ export function mountJiraExport(
         data: await db.jiraDefectExport.findUniqueOrThrow({ where: { defectId: defect.id } }),
       });
     };
-  app.post(`${path}/sync`, guard(false, true), updateStatus(false));
-  app.post(`${path}/reconcile`, guard(false, true), updateStatus(true));
+  app.post(
+    `${path}/sync`,
+    guard(false, true),
+    updateStatus(false, (body) => ({
+      revision: jiraExportBody.parse(body).revision,
+      readStatus: (client, _defectId, linkedKey) => client.getIssueStatus(linkedKey!),
+    })),
+  );
+  app.post(
+    `${path}/reconcile`,
+    guard(false, true),
+    updateStatus(true, (body) => {
+      const { revision, issueKey } = jiraReconcileBody.parse(body);
+      return {
+        revision,
+        readStatus: (client, defectId) => client.verifyExport(issueKey, defectId),
+      };
+    }),
+  );
   app.get(path, guard(), async (req, res) => {
     const defect = await db.defect.findFirst({
       where: { id: String(req.params.defectId), projectId: String(req.params.projectId) },
