@@ -1,17 +1,19 @@
 # Remaining delivery work
 
-## Current state: 2026-10-26
+## Current state (2026-11-26)
 
-Phase 5 MVP is closed: see PHASE5_EXIT.md. Phase 6 is active, starting with a
-real-data overview using project-wide defect metrics and a bounded release list.
-Overview browser checks passed in runs 40223355251 and 40255495102, including
-light/dark accessibility and keyboard recovery. Readiness, activity and report
-font changes subsequently passed CI, most recently run 40258065358 on 36db8ca.
-The expanded twelve-screen theme/width matrix and unsaved-edit/filter retention
-checks await execution and screenshot review. Response-time evidence is also pending.
-Two phases remain: Phase 6 product polish and Phase 7 deployment/demo. The older
-Phase 5 implementation checklist below is retained as history; hosted migrations,
-continuous worker operation and live recovery/disconnect checks belong to Phase 7.
+Seven of eight phases are complete. Phase 7 covers the hosted deployment and
+end-to-end demo. Phase 6 closed after browser, accessibility, screenshot and
+response-time verification. See the [phase status](STATUS.md) and
+[measurements](METRICS.md).
+
+The hosted Neon schema and private evidence storage passed verification.
+Remaining work includes restoring runner authentication and Redis connectivity,
+resolving the release security review, deploying the web/API and Threadline
+demo data, verifying hosted SQL and Jira paths, and measuring the seeded defects
+in a full hosted run. The [release pull request](https://github.com/tulasiram2005/driftgate/pull/5)
+tracks the candidate. Its [Quality Gates run](https://github.com/tulasiram2005/driftgate/actions/runs/45585937194)
+passed on commit `35b7cd8`.
 
 ### Historical checkpoint before Phase 5 closure
 
@@ -23,14 +25,6 @@ typecheck and audit, with a full CI rerun required. Browser-pending notes below
 remain applicable to untested live integrations and the new dependency revision.
 This is the consolidated roadmap;
 older entries in STATUS.md are historical, not a current pending-work list.
-
-## Phase count
-
-There are eight phases, numbered 0 through 7. Phases 0-4 are recorded complete
-within the approved MVP scope. Phase 5 MVP is closed. The user has explicitly
-requested every phase and a highly polished result: Phase 6 must not be skipped.
-Two phases remain unfinished: complete 6, then complete 7.
-The MVP is an intermediate milestone, not the final delivery.
 
 ## Historical Phase 5 checklist (superseded by PHASE5_EXIT.md)
 
