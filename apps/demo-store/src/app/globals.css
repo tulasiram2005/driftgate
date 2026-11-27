@@ -1014,7 +1014,7 @@ dd {
   }
 }
 /* Deliberate bug-bank fault: only small WebKit viewports lose checkout. */
-@supports (-webkit-touch-callout: none) {
+@supports (-webkit-touch-callout: none) or (background-image: -webkit-named-image(i)) {
   @media (max-width: 600px) {
     .seeded-webkit-hidden {
       display: none;
