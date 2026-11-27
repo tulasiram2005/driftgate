@@ -2,7 +2,9 @@
 
 DriftGate is a QA workspace for deciding whether a storefront release is ready. A team can trace a requirement to a test case, run it, inspect evidence, record a defect, export it to Jira and sign off on a specific release revision. The PDF report preserves the evidence behind the decision.
 
-**Implemented through Phase 5.** The workspace supports manual and automated runs, environment comparisons, approved visual baselines, reusable ignore regions, SQL results, defects, Jira status sync and release approval history. The web app and API run locally. The hosted API, PostgreSQL schema and private evidence bucket have been verified individually. The full hosted release demonstration remains open. [Current project status](docs/STATUS.md) · [End-to-end architecture and technology stack](docs/ARCHITECTURE.md)
+**Live demo.** Open Threadline staging to browse the clean reference storefront. In UAT, compare the displayed Everyday T-Shirt price with its cart quote to see a seeded defect. DriftGate provides the QA workspace for running checks and reviewing evidence. [Threadline staging](https://driftgate-threadline.vercel.app/staging) · [Threadline UAT](https://driftgate-threadline.vercel.app/uat) · [DriftGate workspace](https://driftgate-web.vercel.app)
+
+Phase 6 is complete. Phase 7 has a deployed web app and API, seeded storefront data and passing hosted SQL checks in all four environments. Hosted Jira export and status sync still require verification. [Current project status](docs/STATUS.md) · [Architecture and technology stack](docs/ARCHITECTURE.md)
 
 Threadline is the bundled fictional fashion store. Its catalogue, cart and simulated checkout run against PostgreSQL. Fifteen switchable defects let a reviewer compare clean staging with deliberately faulty environments. [Defect catalogue](docs/BUG_BANK.md) · [Measured results](docs/METRICS.md) · [Storefront setup](docs/THREADLINE.md)
 
