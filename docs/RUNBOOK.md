@@ -1,12 +1,17 @@
 # Runbook
 
-## Phase 0 scope
+## Hosted demo
 
-Use README for the local preview. No deployed DriftGate service exists. Do not reuse Orbit credentials, databases or deployment resources.
+The QA web app and Threadline storefront run on Vercel. Render serves the API.
+After a release, open the workspace, check API readiness, and load the staging catalogue.
+Confirm both Vercel projects and the Render service deployed the intended Git revision.
+[QA workspace](https://driftgate-web.vercel.app) · [API readiness](https://driftgate-api-s2pc.onrender.com/ready) · [Threadline staging](https://driftgate-threadline.vercel.app/staging)
 
-## Planned operations
+New automated runs require a running DriftGate dispatch worker. The demo uses a local worker connected to the hosted queue. For a presentation, use a completed run to inspect stored evidence. For a fresh run, check the worker, submit a staging catalogue check, then verify the GitHub Actions run, its final DriftGate result and its evidence. [Hosted walkthrough](DEMO_SCRIPT.md)
 
-Deployment: Phase 7 will document tested Vercel, Render, Neon and evidence-storage steps with exact project names. Run migrations with the migration role; application roles cannot perform schema changes.
+Apply schema changes using the migration role. Keep the application and read-only SQL assertion credentials separate.
+
+## Recovery and maintenance
 
 Rollback: retain the previous verified deployment and use backward-compatible migrations. Never reverse a database migration blindly or restore a backup over current data without approval.
 

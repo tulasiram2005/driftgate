@@ -1,5 +1,13 @@
 # Phase status
 
+## Phase 7 hosted demo verified (2026-11-27)
+
+Vercel served the QA workspace and Threadline storefront, and Render served the API at `7ccb7c4`. A user signed in through the public workspace and accessed the private Threadline Demo project. The storefront reproduced all 15 seeded defects. All seven Chromium desktop checks passed on staging, including snapshot collection. The UAT accessibility check detected missing alt text, and the simulated production link check detected one unavailable target among eight.
+
+All four environments passed the hosted SQL assertions. Jira export created KAN-2 and status sync returned To Do. The demo release exported a PDF and correctly withheld sign-off. The free-tier demo uses a local worker for new GitHub dispatches. Visitors can browse the storefront independently, and project members can review completed QA runs when the worker is offline.
+
+[Walkthrough](DEMO_SCRIPT.md) · [Measured results](METRICS.md) · [Release PR](https://github.com/tulasiram2005/driftgate/pull/9)
+
 ## Hosted staging runner verified (2026-11-27)
 
 After Redis recovery, DriftGate queued a Chromium desktop catalogue check. The worker dispatched it on main, where the Docker build failed because its context excluded the shared drift package. Commit `c44a4a5` includes the required package sources. Re-dispatching the same job on the release branch [passed on GitHub](https://github.com/tulasiram2005/driftgate/actions/runs/45847891784). The hosted API recorded PASS for the run and its result. Authenticated reads of the private screenshot, trace and video matched their recorded byte counts. Production still needs the runner fix before new jobs dispatched on main can use it.

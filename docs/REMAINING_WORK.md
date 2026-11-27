@@ -2,18 +2,9 @@
 
 ## Current state (2026-11-27)
 
-Seven of eight phases are complete. Phase 7 covers the hosted deployment and
-end-to-end demo. Phase 6 closed after browser, accessibility, screenshot and
-response-time verification. See the [phase status](STATUS.md) and
-[measurements](METRICS.md).
+Phases 0–7 have completed MVP verification. The three public services deployed release revision `7ccb7c4`. Hosted checks covered all 15 seeded defects, all seven staging runner checks, four SQL environments, Jira export and status sync, and release PDF export. The demo release's staging gate is blocked as expected.
 
-The public web app, Render API and four Threadline storefront environments are live.
-Hosted SQL checks passed for all four environments. DriftGate exported the seeded UAT
-shirt-price discrepancy to KAN-2 and synced its To Do status. The clean staging
-runner completed six checks on main. Its separate snapshot check reached the request
-limit while prefetching product pages. The release candidate skips speculative
-fetches and waits for product cards before accessibility and link checks.
-The remaining release check is to verify the candidate through the deployed workflow.
+The free-tier setup uses a local dispatch worker for fresh automated runs. Start it for a live execution demo, or present the saved results. The public storefront and previously saved QA evidence can be viewed independently of that worker. [Walkthrough](DEMO_SCRIPT.md) · [Measurements](METRICS.md)
 
 ### Historical checkpoint before Phase 5 closure
 

@@ -1,5 +1,21 @@
 # Measured evidence
 
+## Hosted demo verification (2026-11-27)
+
+Release revision `7ccb7c4` passed the quality gate, including the production build, browser accessibility checks, runner snapshot fixtures and dependency audit. [CI run](https://github.com/tulasiram2005/driftgate/actions/runs/45962048003)
+
+Three GitHub dispatches on the released revision relayed nine Chromium desktop results to the hosted API. Staging passed catalogue, product, cart, API contract, accessibility, snapshot and link checks. UAT reported one `image-alt` violation. Simulated production reported one broken or unavailable link among eight checked. Each result recorded three private evidence files. [Staging job](https://github.com/tulasiram2005/driftgate/actions/runs/45963597439) · [UAT job](https://github.com/tulasiram2005/driftgate/actions/runs/45963603963) · [Simulated production job](https://github.com/tulasiram2005/driftgate/actions/runs/45963608953)
+
+Storefront API requests and mobile WebKit checks reproduced all fifteen documented defects against the public Threadline deployment. Staging provided the clean reference for these comparisons.
+
+| Environment      | Observed differences from staging                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UAT              | Missing shirt alt text, broken mobile shirt image, displayed ₹44.99 versus a ₹39.99 quote, simultaneous discounts, and advertised stock rejected by the cart. |
+| Preprod          | Hidden WebKit checkout, incorrect canonical URL, missing structured data, tax of 329 versus 330 paise, and an empty quote returning 503 versus 400.           |
+| Prod (simulated) | Stale sale badge, missing tote, broken jacket image, catalogue link to an unavailable product, and incorrect dress title.                                     |
+
+Hosted SQL checks passed three assertions in each of four environments. DriftGate exported the UAT shirt-price defect to Jira and read its To Do status back. The demo release contained four environment gates. Staging was ineligible for sign-off, and its release report downloaded with a valid PDF header (28,549 bytes in the verification download). [Demo walkthrough](DEMO_SCRIPT.md)
+
 ## Report typography verification (2026-10-26)
 
 - fe23f5e activity CI run 40257270679: all quality steps PASS.
