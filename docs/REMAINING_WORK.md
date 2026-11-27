@@ -7,14 +7,13 @@ end-to-end demo. Phase 6 closed after browser, accessibility, screenshot and
 response-time verification. See the [phase status](STATUS.md) and
 [measurements](METRICS.md).
 
-The hosted Neon schema and private evidence storage passed verification.
-The restored queue dispatched a staging check, and the hosted API recorded a passing
-callback with three verified evidence files after a release-branch retry.
-Remaining work includes promoting the runner Docker build fix, resolving the release security review, deploying the web/API and Threadline
-demo data, verifying hosted SQL and Jira paths, and measuring the seeded defects
-in a full hosted run. The [release pull request](https://github.com/tulasiram2005/driftgate/pull/5)
-tracks the candidate. Its [Quality Gates run](https://github.com/tulasiram2005/driftgate/actions/runs/45585937194)
-passed on commit `35b7cd8`.
+The public web app, Render API and four Threadline storefront environments are live.
+Hosted SQL checks passed for all four environments. DriftGate exported the seeded UAT
+shirt-price discrepancy to KAN-2 and synced its To Do status. The clean staging
+runner completed six checks on main. Its separate snapshot check reached the request
+limit while prefetching product pages. The release candidate skips speculative
+fetches and waits for product cards before accessibility and link checks.
+The remaining release check is to verify the candidate through the deployed workflow.
 
 ### Historical checkpoint before Phase 5 closure
 
