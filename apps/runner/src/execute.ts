@@ -48,6 +48,18 @@ export async function execute(
           try {
             await context.route("**/*", async (route) => {
               const request = route.request();
+              // A snapshot navigates to each product explicitly. Speculative Next.js
+              // prefetches consume the request budget without contributing evidence.
+              if (
+                check === "snapshot" &&
+                network.local &&
+                request.method() === "GET" &&
+                allowedRequest(request.url(), request.method(), network.origin) &&
+                request.headers()["next-router-prefetch"] === "1"
+              ) {
+                await route.abort();
+                return;
+              }
               const permitted =
                 allowedRequest(request.url(), request.method(), network.origin) &&
                 ++requests <= 120 &&

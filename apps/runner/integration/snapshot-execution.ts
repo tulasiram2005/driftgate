@@ -9,7 +9,13 @@ import { parseJob } from "../src/schema.js";
 
 // Fixed local demo fixture exercises the actual execution and evidence pipeline.
 let fail = false;
+let prefetchRequests = 0;
 const server = createServer((request, response) => {
+  if (request.url === "/unused-prefetch") {
+    prefetchRequests++;
+    response.writeHead(204).end();
+    return;
+  }
   if (request.url === "/api/staging/products") {
     response.writeHead(200, { "content-type": "application/json" }).end(
       JSON.stringify({
@@ -37,7 +43,7 @@ const server = createServer((request, response) => {
     response
       .writeHead(fail ? 503 : 200, { "content-type": "text/html" })
       .end(
-        '<!doctype html><html><head><title>Demo</title></head><body><div class="detail-info"><h1>Demo</h1></div><div class="detail-price"><span>INR 10.00</span></div><div class="detail-photo"><img src="/demo.png" alt="Demo"></div></body></html>',
+        '<!doctype html><html><head><title>Demo</title></head><body><div class="detail-info"><h1>Demo</h1></div><div class="detail-price"><span>INR 10.00</span></div><div class="detail-photo"><img src="/demo.png" alt="Demo"></div><script>fetch("/unused-prefetch", {headers: {"next-router-prefetch":"1"}}).catch(() => {})</script></body></html>',
       );
   } else response.writeHead(404).end();
 });
@@ -80,6 +86,7 @@ try {
     }
     assert.equal((events[1] as { status: string }).status, fail ? "failed" : "passed");
   }
+  assert.equal(prefetchRequests, 0, "Snapshot prefetches must never reach Threadline");
   console.log(
     "PASS: snapshot execution emits bounded result payload and evidence; failed collection emits no snapshot",
   );
