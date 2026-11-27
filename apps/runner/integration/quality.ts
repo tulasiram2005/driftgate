@@ -45,7 +45,7 @@ const server = createServer((request, response) => {
   }
   response.writeHead(200, { "content-type": "text/html" });
   response.end(
-    `<!doctype html><html lang="en"><head><title>Demo fixture</title></head><body><main><h1>Demo catalogue</h1><input type="search" aria-label="Search products"><a href="/staging/${redirect ? "redirect" : invalid ? "missing" : "product"}">Demo product</a>${invalid ? "<button></button>" : "<button>Search</button>"}</main></body></html>`,
+    `<!doctype html><html lang="en"><head><title>Demo fixture</title></head><body><main><h1>Demo catalogue</h1><input type="search" aria-label="Search products"><a class="product-photo" href="/staging/${redirect ? "redirect" : invalid ? "missing" : "product"}">Demo product</a>${invalid ? "<button></button>" : "<button>Search</button>"}</main></body></html>`,
   );
 });
 await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));

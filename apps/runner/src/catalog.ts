@@ -41,6 +41,9 @@ export async function runCheck(
     timeout: 20000,
   });
   expect(response?.status()).toBe(200);
+  // The search field renders before the asynchronous catalogue request finishes.
+  if (check === "broken-links" || check === "accessibility")
+    await expect(page.locator(".product-photo").first()).toBeVisible();
   if (check === "broken-links") {
     await expect(page.getByRole("searchbox", { name: "Search products" })).toBeVisible();
     await checkLinks(page, origin, environment);

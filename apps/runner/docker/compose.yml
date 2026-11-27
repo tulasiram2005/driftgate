@@ -30,7 +30,6 @@ services:
     network_mode: service:namespace
     environment:
       DATABASE_URL: postgresql://threadline:isolated-demo-only@127.0.0.1:5432/threadline
-      THREADLINE_BUG_FLAGS: none
     depends_on:
       database:
         condition: service_healthy
